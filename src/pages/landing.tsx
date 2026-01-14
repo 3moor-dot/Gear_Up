@@ -69,10 +69,10 @@ const Landing: React.FC = () => {
                         </p>
 
                         <div className="flex gap-4">
-                            <button className="bg-blue-600 text-white h-10 w-50 rounded-xl">
+                            <button className="bg-[#137FEC] text-white h-10 w-50 rounded-xl">
                                 ابدأ الآن
                             </button>
-                            <button className="bg-gray-900 dark:bg-white  dark:text-black h-10 w-40 rounded-xl">
+                            <button className="bg-gray-900 dark:bg-white text-[#F6F7F8] dark:text-[#0F1323] h-10 w-40 rounded-xl">
                                 المزيد
                             </button>
                         </div>
