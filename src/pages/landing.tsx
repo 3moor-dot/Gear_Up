@@ -22,12 +22,19 @@ const Landing: React.FC = () => {
                 <nav className="flex items-center justify-between px-10 py-6">
 
                     {/* LOGO TEXT */}
-                    <h1 className="text-3xl font-black tracking-[-0.03em]">
-                        <span className="text-blue-500">Gear</span>
-                        <span className="text-blue-700">Up</span>
-                    </h1>
+                    <img
+                        src="/gearup-logo.png"
+                        alt="GearUp"
+                        className="w-20 dark:bg-white rounded-full p-2"
+                    />
 
                     <div className="flex items-center gap-4">
+                        <button className="bg-[#137FEC] px-6 py-2 rounded-xl text-white">
+                            اشترك
+                        </button>
+                        <button className="bg-black dark:bg-gray-800 text-white px-6 py-2 rounded-xl">
+                            تسجيل الدخول
+                        </button>
 
                         {/* DARK MODE TOGGLE */}
                         <button
@@ -40,14 +47,6 @@ const Landing: React.FC = () => {
                             >
                                 {dark ? <FaMoon size={12} /> : <FaSun size={12} />}
                             </span>
-                        </button>
-
-                        <button className="bg-black dark:bg-gray-800 text-white px-6 py-2 rounded-xl">
-                            تسجيل الدخول
-                        </button>
-
-                        <button className="bg-blue-600 px-6 py-2 rounded-xl text-white">
-                            اشترك
                         </button>
                     </div>
                 </nav>
@@ -65,7 +64,7 @@ const Landing: React.FC = () => {
                         </h2>
 
                         <p className="text-gray-600 dark:text-gray-300 mb-8">
-                           تعمل منصة GearUp المدعومة بالذكاء الاصطناعي على تبسيط الصيانة والإصلاحات وإدارة الأجزاء، حتى تتمكن من القيادة بثقة.
+                            تعمل منصة GearUp المدعومة بالذكاء الاصطناعي على تبسيط الصيانة والإصلاحات وإدارة الأجزاء، حتى تتمكن من القيادة بثقة.
                         </p>
 
                         <div className="flex gap-4">
