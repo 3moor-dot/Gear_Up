@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import {
     FaBrain,
@@ -10,12 +10,11 @@ import {
     FaSun
 } from "react-icons/fa6";
 import { FaXTwitter } from "react-icons/fa6";
-
+import Footer from "../components/Footer/footer";
+import { useTheme } from "../contexts/ThemeContext";
 const Landing: React.FC = () => {
-    const [dark, setDark] = useState(false);
-
+    const { dark, toggleTheme } = useTheme();
     return (
-        <div className={dark ? "dark" : ""} dir="rtl">
             <div className="dark:bg-primary_BGD text-gray-900 dark:text-white transition-colors duration-500">
 
                 {/* NAVBAR */}
@@ -32,18 +31,20 @@ const Landing: React.FC = () => {
                         <button className="bg-[#137FEC] px-6 py-2 rounded-xl text-white">
                             اشترك
                         </button>
-                        <button className="bg-black dark:bg-gray-800 text-white px-6 py-2 rounded-xl">
+                        <button
+                            onClick={() => window.location.href = '/register'}
+                            className="bg-black dark:bg-gray-800 text-white px-6 py-2 rounded-xl">
                             تسجيل الدخول
                         </button>
 
                         {/* DARK MODE TOGGLE */}
                         <button
-                            onClick={() => setDark(!dark)}
+                            onClick={toggleTheme}
                             className="w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 relative transition"
                         >
                             <span
                                 className={`absolute top-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white transition-all
-                                ${dark ? "right-1" : "left-1"}`}
+        ${dark ? "right-1" : "left-1"}`}
                             >
                                 {dark ? <FaMoon size={12} /> : <FaSun size={12} />}
                             </span>
@@ -68,7 +69,7 @@ const Landing: React.FC = () => {
                         </p>
 
                         <div className="flex gap-4">
-                            <button className="bg-[#137FEC] text-white h-10 w-50 rounded-xl">
+                            <button className="bg-[#137FEC] text-white h-10 w-60 rounded-xl">
                                 ابدأ الآن
                             </button>
                             <button className="bg-gray-900 dark:bg-white text-[#F6F7F8] dark:text-[#0F1323] h-10 w-40 rounded-xl">
@@ -189,7 +190,7 @@ const Landing: React.FC = () => {
                 </section>
 
                 {/* CTA */}
-                <section className="bg-[#137FEC] text-white text-center mx-10 rounded-2xl py-16 mb-20">
+                <section className="bg-[#137FEC] dark:bg-[#137FEC80] text-white text-center mx-10 rounded-2xl py-16 mb-20">
                     <h2 className="text-3xl font-bold mb-4">
                         جاهزون للسيطرة على العناية بسيارتك؟
                     </h2>
@@ -204,11 +205,8 @@ const Landing: React.FC = () => {
                     </div>
                 </section>
                 {/* FOOTER */}
-                <footer className="text-center text-sm text-gray-400 pb-6">
-                    © 2025 GearUp. جميع الحقوق محفوظة
-                </footer>
+                <Footer />
             </div>
-        </div>
     );
 };
 
