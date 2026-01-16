@@ -62,6 +62,7 @@ const Verification = () => {
 
           {/* VERIFY BUTTON */}
           <button 
+            onClick={() => window.location.href = "/reset-password"} 
             className="
               w-full h-12 
               bg-[#137FEC] hover:bg-blue-600 
