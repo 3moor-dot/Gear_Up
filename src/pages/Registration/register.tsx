@@ -133,7 +133,9 @@ const Register: React.FC = () => {
                 {/* LOGIN */}
                 <p className="text-center mt-2  dark:text-white">
                     هل لديك حساب بالفعل؟{" "}
-                    <span className="text-[#137FEC] font-semibold cursor-pointer hover:underline">
+                    <span
+                    onClick={() => window.location.href = "/login"} 
+                    className="text-[#137FEC] font-semibold cursor-pointer hover:underline">
                         تسجيل الدخول
                     </span>
                 </p>

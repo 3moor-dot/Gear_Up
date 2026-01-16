@@ -10,8 +10,8 @@ import {
     FaSun
 } from "react-icons/fa6";
 import { FaXTwitter } from "react-icons/fa6";
-import Footer from "../components/Footer/footer";
-import { useTheme } from "../contexts/ThemeContext";
+import Footer from "../../components/Footer/footer";
+import { useTheme } from "../../contexts/ThemeContext";
 const Landing: React.FC = () => {
     const { dark, toggleTheme } = useTheme();
     return (
@@ -32,7 +32,7 @@ const Landing: React.FC = () => {
                             اشترك
                         </button>
                         <button
-                            onClick={() => window.location.href = '/register'}
+                            onClick={() => window.location.href = '/login'}
                             className="bg-black dark:bg-gray-800 text-white px-6 py-2 rounded-xl">
                             تسجيل الدخول
                         </button>
@@ -196,10 +196,14 @@ const Landing: React.FC = () => {
                     </h2>
 
                     <div className="flex justify-center gap-4 mt-6">
-                        <button className="bg-[#101922] text-white h-10 w-40 rounded-lg">
+                        <button
+                        onClick={() => window.location.href = '/register'} 
+                        className="bg-[#101922] text-white h-10 w-40 rounded-lg">
                             سجل الآن
                         </button>
-                        <button className="border border-[#F6F7F81A] text-white h-10 w-40 rounded-lg">
+                        <button
+                        onClick={() => window.location.href = '/login'} 
+                        className="border border-[#F6F7F81A] text-white h-10 w-40 rounded-lg">
                             تسجيل الدخول
                         </button>
                     </div>

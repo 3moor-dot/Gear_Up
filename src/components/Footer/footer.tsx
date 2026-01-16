@@ -7,8 +7,8 @@ const Footer: React.FC = () => {
       {/* محتوى الفوتر */}
       <div className="flex flex-col md:flex-row items-center justify-between px-10 pb-6 text-sm text-gray-700">
 
-        {/* لينكات (يمين) */}
-        <div className="flex gap-8 order-2 md:order-1">
+        {/* لينكات (شمال) */}
+        <div className="flex gap-8 order-2 md:order-2">
           <a href="#" className="hover:text-blue-600 transition dark:text-white">
             شروط الخدمة
           </a>
@@ -20,8 +20,8 @@ const Footer: React.FC = () => {
           </a>
         </div>
 
-        {/* الحقوق (شمال) */}
-        <div className="order-1 md:order-2 mb-4 md:mb-0 dark:text-white">
+        {/* الحقوق (يمين) */}
+        <div className="order-1 md:order-1 mb-4 md:mb-0 dark:text-white">
           © 2025 GearUp. جميع الحقوق محفوظة.
         </div>
       </div>
