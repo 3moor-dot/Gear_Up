@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import Footer from "../../components/Footer/footer";
+import { FaPhone } from "react-icons/fa6";
+import { FaLock } from "react-icons/fa";
 
 const Login = () => {
   return (
@@ -28,7 +30,7 @@ const Login = () => {
                 العناية الذكية بالسيارة، بشكل مبسط
               </h3>
               <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-               مساعدك المدعم بالذكاء الاصطناعي لصيانة السيارة وتحسين أدائها.
+                مساعدك المدعم بالذكاء الاصطناعي لصيانة السيارة وتحسين أدائها.
               </p>
             </div>
           </div>
@@ -61,8 +63,8 @@ const Login = () => {
                   "
                   placeholder="ادخل البريد الإلكتروني أو رقم الهاتف"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                  📞
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-200 dark:text-gray-400">
+                  <FaPhone />
                 </span>
               </div>
             </div>
@@ -70,7 +72,7 @@ const Login = () => {
             {/* PASSWORD */}
             <div>
               <div className="flex justify-between mb-2">
-                <Link to="#" className="text-[#137FEC] text-sm">
+                <Link to="/forgot-password" className="text-[#137FEC] text-sm">
                   هل نسيت كلمة السر؟
                 </Link>
                 <label className="font-medium">كلمة المرور</label>
@@ -88,8 +90,8 @@ const Login = () => {
                   "
                   placeholder="ادخل كلمة المرور"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                  🔒
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-200 dark:text-gray-400">
+                  <FaLock />
                 </span>
               </div>
             </div>
