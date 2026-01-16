@@ -54,6 +54,7 @@ const ForgotPassword = () => {
 
           {/* BUTTON */}
           <button
+            onClick={() => window.location.href = "/verify-account"} 
             className="
               w-full h-12
               bg-[#137FEC]
