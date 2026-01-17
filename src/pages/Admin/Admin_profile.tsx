@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaMoon, FaSun, FaBell } from "react-icons/fa";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
 import { useTheme } from "../../contexts/ThemeContext";
 
 const AdminProfile: React.FC = () => {

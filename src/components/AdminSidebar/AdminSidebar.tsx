@@ -10,7 +10,7 @@ import {
   FaSignOutAlt,
   FaRegCommentDots,
 } from "react-icons/fa";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const AdminSidebar: React.FC = () => {
   const { dark } = useTheme();
