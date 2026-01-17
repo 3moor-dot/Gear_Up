@@ -6,14 +6,12 @@ import {
     FaCar,
     FaLinkedin,
     FaGlobe,
-    FaMoon,
-    FaSun
+    FaXTwitter,
 } from "react-icons/fa6";
-import { FaXTwitter } from "react-icons/fa6";
 import Footer from "../../components/Footer/footer";
-import { useTheme } from "../../contexts/ThemeContext";
+import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
+
 const Landing: React.FC = () => {
-    const { dark, toggleTheme } = useTheme();
     return (
             <div className="dark:bg-primary_BGD text-gray-900 dark:text-white transition-colors duration-500">
 
@@ -38,17 +36,8 @@ const Landing: React.FC = () => {
                         </button>
 
                         {/* DARK MODE TOGGLE */}
-                        <button
-                            onClick={toggleTheme}
-                            className="w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 relative transition"
-                        >
-                            <span
-                                className={`absolute top-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white transition-all
-        ${dark ? "right-1" : "left-1"}`}
-                            >
-                                {dark ? <FaMoon size={12} /> : <FaSun size={12} />}
-                            </span>
-                        </button>
+                        <ThemeToggle />
+                        
                     </div>
                 </nav>
 

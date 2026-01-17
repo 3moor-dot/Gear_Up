@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { FaMoon, FaSun, FaBell } from "react-icons/fa";
+import { FaBell } from "react-icons/fa";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
 import { useTheme } from "../../contexts/ThemeContext";
+import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
 
 const AdminProfile: React.FC = () => {
-  const { dark, toggleTheme } = useTheme();
+  const { dark } = useTheme();
 
   const [firstName, setFirstName] = useState("Jordan");
   const [lastName, setLastName] = useState("Admin");
@@ -37,18 +38,7 @@ const AdminProfile: React.FC = () => {
             </button>
 
             {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-700 relative transition"
-            >
-              <span
-                className={`absolute top-1 w-6 h-6 rounded-full bg-[#137FEC] flex items-center justify-center text-white transition-all ${
-                  dark ? "right-1" : "left-1"
-                }`}
-              >
-                {dark ? <FaMoon size={12} /> : <FaSun size={12} />}
-              </span>
-            </button>
+            <ThemeToggle />
 
             {/* Save */}
             <button className="bg-[#137FEC] text-white px-6 py-2 rounded-xl transition-all duration-200 hover:bg-[#1A6FD4] hover:scale-105 hover:shadow-lg active:scale-95">
