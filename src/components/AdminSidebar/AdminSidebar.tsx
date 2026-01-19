@@ -1,4 +1,6 @@
+
 import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaUser,
   FaUsers,
@@ -29,16 +31,16 @@ const AdminSidebar: React.FC = () => {
         <h1 className="text-2xl font-bold mb-10">GearUp</h1>
 
         <nav className="space-y-2 text-sm">
-          <SidebarItem icon={<FaUser />} label="لوحة التحكم" dark={dark} />
-          <SidebarItem icon={<FaUsers />} label="المستخدمين" dark={dark} />
-          <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} />
-          <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} />
-          <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} />
-          <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} />
-          <SidebarItem icon={<FaBell />} label="الإشعارات" dark={dark} />
-          <SidebarItem icon={<FaCog />} label="الخدمات" dark={dark} />
-          <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} />
-          <SidebarItem icon={<FaMapMarkedAlt />} label="المدن" dark={dark} />
+          <SidebarItem icon={<FaUser />} label="لوحة التحكم" dark={dark} to="/admin/profile" />
+          <SidebarItem icon={<FaUsers />} label="المستخدمين" dark={dark} to="/admin/users" />
+          <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} to="/admin/mechanics" />
+          <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/admin/bookings" />
+          <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/admin/reviews" />
+          <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} to="/admin/supervisormanagement" />
+          <SidebarItem icon={<FaBell />} label="الإشعارات" dark={dark} to="/admin/notifications" />
+          <SidebarItem icon={<FaCog />} label="الخدمات" dark={dark} to="/admin/services" />
+          <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} to="/admin/governorates" />
+          <SidebarItem icon={<FaMapMarkedAlt />} label="المدن" dark={dark} to="/admin/cities" />
         </nav>
       </div>
 
@@ -98,25 +100,37 @@ const AdminSidebar: React.FC = () => {
 export default AdminSidebar;
 
 /* ---------- SIDEBAR ITEM ---------- */
-
 type SidebarItemProps = {
   icon: React.ReactNode;
   label: string;
   dark: boolean;
+  to?: string;
 };
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark }) => (
-  <div
-    className={`group flex items-center gap-3 px-4 py-2 rounded-xl cursor-pointer transition-all duration-200
-      ${
-        dark
-          ? "text-gray-300 hover:text-white hover:bg-[#1E2A44] hover:shadow-lg hover:shadow-black/30"
-          : "text-[#1E3A5F] hover:text-[#137FEC] hover:bg-[#EAF4FF]"
-      }`}
-  >
-    <span className="text-lg transition-colors duration-200 group-hover:text-[#137FEC]">
-      {icon}
-    </span>
-    <span className="whitespace-nowrap">{label}</span>
-  </div>
-);
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark, to }) => {
+  const navigate = useNavigate();
+  const location = useLocation(); 
+  const isActive = to === location.pathname; 
+
+  return (
+    <div
+      onClick={() => to && navigate(to)}
+      className={`group flex items-center gap-3 px-4 py-2 rounded-xl cursor-pointer transition-all duration-200
+        ${
+          dark
+            ? `text-gray-300 hover:text-white hover:bg-[#1E2A44] hover:shadow-lg hover:shadow-black/30 ${
+                isActive ? 'bg-[#1E2A44] text-white' : ''
+              }`
+            : `text-[#1E3A5F] hover:text-[#137FEC] hover:bg-[#EAF4FF] ${
+                isActive ? 'bg-[#EAF4FF] text-[#137FEC]' : ''
+              }`
+        }`}
+    >
+      <span className="text-lg transition-colors duration-200 group-hover:text-[#137FEC]">
+        {icon}
+      </span>
+      <span className="whitespace-nowrap">{label}</span>
+    </div>
+  );
+};

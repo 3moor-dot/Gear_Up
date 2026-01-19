@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
-import { FaBell } from "react-icons/fa";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
+import NotificationBell from "../../components/NotificationBell";
 import { useTheme } from "../../contexts/ThemeContext";
 import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
 
@@ -27,15 +28,7 @@ const AdminProfile: React.FC = () => {
 
           <div className="flex items-center gap-4">
             {/* Notifications */}
-            <button
-              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-                dark
-                  ? "bg-[#137FEC1A] hover:bg-[#1E2A44]"
-                  : "bg-[#137FEC1A] hover:bg-[#137FEC33]"
-              } hover:scale-110 active:scale-95`}
-            >
-              <FaBell />
-            </button>
+            <NotificationBell onClick={() => console.log("Notifications clicked")} />
 
             {/* Theme Toggle */}
             <ThemeToggle />
