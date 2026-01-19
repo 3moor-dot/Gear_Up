@@ -14,7 +14,7 @@ const Dashboard = () => {
 
                 {/* 3. المحتوى الرئيسي مع مراعاة الهوامش للموبايل */}
                 <main className="p-4 md:p-8 space-y-6 md:space-y-8 mt-12 lg:mt-0">
-                    
+
                     {/* Welcome Text */}
                     <div className="text-right">
                         <h2 className="text-xl md:text-2xl font-bold dark:text-white">أهلاً بعودتك يا جون!</h2>
@@ -26,7 +26,7 @@ const Dashboard = () => {
 
                         {/* المحتوى الأيمن (الرئيسي): السيارة والمواعيد */}
                         <div className="col-span-1 lg:col-span-8 space-y-6">
-                            
+
                             {/* كارت السيارة - متجاوب */}
                             <div className="bg-[#137FEC1A] dark:bg-[#137FEC33] rounded-[25px] md:rounded-[30px] p-6 flex flex-col md:flex-row items-center justify-between border border-blue-50/10 gap-6">
                                 <div className="space-y-4 text-center md:text-right w-full md:w-auto">
@@ -65,7 +65,7 @@ const Dashboard = () => {
 
                         {/* المحتوى الأيسر (الجانبي): ميكانيكي والتاريخ */}
                         <div className="col-span-1 lg:col-span-4 space-y-6">
-                            
+
                             {/* العثور على ميكانيكي */}
                             <div className="bg-[#137FECE5] dark:bg-[#137FEC33] rounded-[25px] md:rounded-[30px] p-6 text-white">
                                 <div className="flex justify-between items-center mb-6">
@@ -73,35 +73,85 @@ const Dashboard = () => {
                                     <button className="text-[10px] underline opacity-80">عرض الكل</button>
                                 </div>
                                 <div className="space-y-4">
-                                    {[1, 2].map((i) => (
-                                        <div key={i} className="bg-white/10 p-3 rounded-2xl flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white/20 rounded-full shrink-0"></div>
-                                            <div className="text-right flex-1 min-w-0">
-                                                <p className="text-xs font-bold truncate">خبراء العناية بالسيارات</p>
-                                                <p className="text-[10px] text-yellow-400">★ 4.9</p>
+                                    {[
+                                        { name: "خبراء العناية بالسيارات", rating: "4.9", img: "/mechanic1.png" },
+                                        { name: "لحن الدقة للمحركات", rating: "4.7", img: "/mechanic2.png" }
+                                    ].map((mechanic, i) => (
+                                        <div key={i} className="bg-white/10 p-3 rounded-2xl flex items-center gap-4 transition-hover hover:bg-white/20">
+                                            {/* حاوية الصورة */}
+                                            <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden border-2 border-white/30 shadow-sm">
+                                                <img
+                                                    src={mechanic.img}
+                                                    alt={mechanic.name}
+                                                    className="w-full h-full object-cover"
+                                                    // هذا السطر يضمن ظهور خلفية بسيطة لو الصورة ممسوحة
+                                                    onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/150" }}
+                                                />
                                             </div>
+
+                                            {/* البيانات الشخصية للميكانيكي */}
+                                            <div className="text-right flex-1 min-w-0">
+                                                <p className="text-sm font-bold truncate text-white">
+                                                    {mechanic.name}
+                                                </p>
+                                                <div className="flex items-center gap-1 mt-0.5">
+                                                    <span className="text-yellow-400 text-xs">★</span>
+                                                    <span className="text-[10px] text-white/80 font-medium">
+                                                        {mechanic.rating} (120 تقييمًا)
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* زر اختياري للمراسلة أو العرض */}
+                                            <button className="text-white/50 hover:text-white transition-colors">
+                                                ←
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             {/* تاريخ الخدمة */}
+                            {/* تاريخ الخدمة */}
                             <div className="bg-[#137FEC1A] dark:bg-[#137FEC33] rounded-[25px] md:rounded-[30px] p-6">
                                 <div className="flex justify-between items-center mb-6">
                                     <h4 className="font-bold text-gray-700 dark:text-white">تاريخ الخدمة</h4>
                                     <button className="text-[10px] text-[#137FEC] underline">عرض الكل</button>
                                 </div>
-                                <div className="space-y-2">
-                                    {["استبدال وسادة الفرامل", "تغيير الزيت والفلتر"].map((item, i) => (
-                                        <div key={i} className="p-3 flex flex-col gap-1 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                                            <p className="text-xs font-bold text-gray-700 dark:text-white">{item}</p>
-                                            <span className="text-[9px] text-gray-400">25 أكتوبر 2023 - 250$</span>
-                                        </div> 
+
+                                <div className="space-y-4">
+                                    {[
+                                        { name: "استبدال وسادة الفرامل", icon: "/brake-icon.png" }, // ضع مسار صورك هنا
+                                        { name: "تغيير الزيت والفلتر", icon: "/oil-icon.png" },
+                                        { name: "استبدال فلتر الهواء", icon: "/air-filter-icon.png" }
+                                    ].map((service, i) => (
+                                        <div key={i} className="bg-[#0F132312] rounded-xl flex items-center gap-3 p-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
+
+                                            {/* مربع الصورة/الأيقونة */}
+                                            <div className="w-12 h-12 shrink-0  rounded-xl flex items-center justify-center overflow-hidden">
+                                                <img
+                                                    src={service.icon}
+                                                    alt={service.name}
+                                                    className="w-8 h-8 object-contain"
+                                                    // في حال لم تجد الصورة، سيظهر لون الخلفية فقط
+                                                    onError={(e) => (e.target as HTMLElement).style.display = 'none'}
+                                                />
+                                            </div>
+
+                                            {/* النصوص (الاسم وتحته التاريخ) */}
+                                            <div className="flex flex-col gap-0.5">
+                                                <p className="text-[13px] font-bold text-gray-700 dark:text-white">
+                                                    {service.name}
+                                                </p>
+                                                <span className="text-[10px] text-gray-400 italic">
+                                                    25 أكتوبر 2023 - 250.00 دولارًا
+                                                </span>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </main>
             </div>
