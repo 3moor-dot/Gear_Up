@@ -159,7 +159,7 @@ const Landing: React.FC = () => {
                                 className="bg-[#137FEC] dark:bg-[#137FEC80] text-white rounded-tr-[60px] rounded-bl-[60px] p-4 h-65 w-60 mx-auto"
                             >
                                 <img
-                                    src="/avatar.png"
+                                    src="/avatar-team.png"
                                     alt="Member"
                                     className="w-20 h-20 rounded-full mx-auto mb-4"
                                 />

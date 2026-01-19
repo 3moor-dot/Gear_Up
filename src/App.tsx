@@ -7,9 +7,10 @@ import LandingPage from "./pages/Landing/landing";
 import Register from "./pages/Registration/register";
 import LogIn from "./pages/LogIn/log_in";
 import ForgotPassword from "./pages/Forgot_Password/forgot_password";
-import AdminProfile from "./pages/Admin/Admin_profile";
+import AdminProfile from "./pages/Admin/admin_profile";
 import SupervisorManagement from "./pages/Admin/supervisor_management";
 import AddSupervisor from "./pages/Admin/add_supervisor";
+import CustomerDashBoard from "./pages/Customer/dashboard";
 
 
 const App: React.FC = () => {
@@ -17,6 +18,8 @@ const App: React.FC = () => {
     <ThemeProvider>
       <Router>
         <Routes>
+          {/* CUSTOMER PAGES */}
+          <Route path="/customer/dashboard" element={<CustomerDashBoard />} />
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
