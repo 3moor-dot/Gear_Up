@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
-import NotificationBell from "../../components/NotificationBell";
+import NotificationBell from "../../components/NotificationBell/notification_bell";
 import { useTheme } from "../../contexts/ThemeContext";
 import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
 

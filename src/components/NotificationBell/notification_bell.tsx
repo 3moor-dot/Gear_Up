@@ -1,7 +1,7 @@
 
 import React from "react";
 import { FaBell } from "react-icons/fa";
-import { useTheme } from "../contexts/ThemeContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface NotificationBellProps {
   onClick?: () => void;
