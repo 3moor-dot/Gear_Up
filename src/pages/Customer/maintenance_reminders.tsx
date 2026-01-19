@@ -4,7 +4,7 @@ import { MdAdd, MdPhone, MdMap, MdCheckCircle } from "react-icons/md";
 
 const MaintenanceReminders = () => {
     return (
-        <div className="flex min-h-screen dark:bg-[#0B1020] bg-[#F8FAFC]" dir="rtl">
+        <div className="flex min-h-screen dark:bg-primary_BGD bg-[#F8FAFC]" dir="rtl">
             {/* استدعاء السايد بار */}
             <Sidebar />
 
@@ -138,8 +138,7 @@ const MaintenanceReminders = () => {
                                 <div className="space-y-4">
                                     <div className="text-center space-y-2">
                                         <div className="w-16 h-16 bg-white rounded-full mx-auto overflow-hidden">
-                                            <img src="/mechanic1
-                                            .png" alt="logo" />
+                                            <img src="/mechanic1.png" alt="logo" />
                                         </div>
                                         <p className="font-bold text-sm dark:text-white">خبراء العناية بالسيارات</p>
                                         <p className="text-yellow-500 text-xs">★ 4.9 (120 تقييماً)</p>
