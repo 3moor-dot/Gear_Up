@@ -13,6 +13,7 @@ import AdminProfile from "./pages/Admin/admin_profile";
 import SupervisorManagement from "./pages/Admin/supervisor_management";
 import AddSupervisor from "./pages/Admin/add_supervisor";
 import CustomerDashBoard from "./pages/Customer/dashboard";
+import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 
 
 const App: React.FC = () => {
@@ -22,6 +23,7 @@ const App: React.FC = () => {
         <Routes>
           {/* CUSTOMER PAGES */}
           <Route path="/customer/dashboard" element={<CustomerDashBoard />} />
+          <Route path="/customer/reminders" element={<MaintenanceReminders />} />
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />

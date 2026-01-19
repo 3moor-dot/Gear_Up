@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { 
-  MdDashboard, MdNotifications, MdHistory, 
+import {
+  MdDashboard, MdNotifications, MdHistory,
   MdBuild, MdAccessTime, MdSmartToy, MdSettings, MdLogout,
-  MdMenu, MdClose 
+  MdMenu, MdClose
 } from 'react-icons/md';
+import { Link } from 'react-router-dom';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // حالة القائمة في الموبايل
 
   const menuItems = [
-    { name: 'لوحة التحكم', icon: <MdDashboard />, active: true },
-    { name: 'تذكير', icon: <MdNotifications /> },
-    { name: 'تاريخ الخدمة', icon: <MdHistory /> },
-    { name: 'حجز صيانة', icon: <MdBuild /> },
-    { name: 'طلب صيانة', icon: <MdAccessTime /> },
-    { name: 'المساعد الذكي', icon: <MdSmartToy /> },
+    { name: 'لوحة التحكم', icon: <MdDashboard />, path: '/customer/dashboard' },
+    { name: 'تذكير', icon: <MdNotifications />, path: '/customer/reminders' },
+    { name: 'تاريخ الخدمة', icon: <MdHistory />, path: '/history' },
+    { name: 'حجز صيانة', icon: <MdBuild />, path: '/booking' },
+    { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/request' },
+    { name: 'المساعد الذكي', icon: <MdSmartToy />, path: '/ai-assistant' },
   ];
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -22,7 +23,7 @@ const Sidebar = () => {
   return (
     <>
       {/* زر الهامبرغر - يظهر فقط في الشاشات الصغيرة (Mobile) */}
-      <button 
+      <button
         onClick={toggleSidebar}
         className="lg:hidden fixed top-5 right-5 z-50 p-2 bg-[#137FEC] text-white rounded-lg shadow-lg"
       >
@@ -31,7 +32,7 @@ const Sidebar = () => {
 
       {/* خلفية معتمة (Overlay) عند فتح السايد بار في الموبايل */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={toggleSidebar}
         ></div>
@@ -44,7 +45,7 @@ const Sidebar = () => {
         ${isOpen ? "translate-x-0" : "translate-x-full"} 
         lg:translate-x-0 lg:static lg:block
       `} dir="rtl">
-        
+
         {/* Logo */}
         <div className="p-8 text-center">
           <h1 className="text-2xl font-bold text-[#1e293b] dark:text-white">GearUp</h1>
@@ -52,36 +53,42 @@ const Sidebar = () => {
 
         {/* Navigation Links */}
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item, index) => (
-            <div
-              key={index}
-              className={`flex items-center gap-4 px-6 py-3 rounded-xl cursor-pointer transition-all ${
-                item.active 
-                ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] dark:text-blue-400 font-bold' 
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2A44] hover:text-[#137FEC]'
-              }`}
-            >
-              <span className="text-2xl">{item.icon}</span>
-              <span className="text-lg">{item.name}</span>
-            </div>
-          ))}
+          {menuItems.map((item, index) => {
+            // التحقق إذا كان هذا العنصر هو الصفحة النشطة حالياً
+            const isActive = location.pathname === item.path;
+
+            return (
+              <Link
+                key={index}
+                to={item.path}
+                onClick={() => setIsOpen(false)} // غلق القائمة عند الضغط في الموبايل
+                className={`flex items-center gap-4 px-6 py-3 rounded-xl cursor-pointer transition-all ${isActive
+                    ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] dark:text-blue-400 font-bold shadow-sm'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2A44] hover:text-[#137FEC]'
+                  }`}
+              >
+                <span className="text-2xl">{item.icon}</span>
+                <span className="text-lg">{item.name}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Profile Section */}
         <div className="p-6 border-t border-gray-50 dark:border-gray-800">
           <div className="rounded-[25px] border border-blue-400/30 p-4 relative bg-gray-50/50 dark:bg-[#137FEC0D]">
             <div className="flex items-center gap-3 mb-6">
-              <img 
-                src="/avatar-path.png" 
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-[#E5F1FD]" 
-                alt="Profile" 
+              <img
+                src="/avatar-path.png"
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-[#E5F1FD]"
+                alt="Profile"
               />
               <div className="text-right">
                 <h4 className="font-bold text-sm dark:text-white truncate">Client Name</h4>
                 <p className="text-[10px] text-gray-400">Client Account</p>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <button className="flex items-center gap-3 w-full text-gray-700 hover:text-[#137FEC] dark:text-gray-300 dark:hover:text-[#137FEC] transition-colors text-sm">
                 <MdSettings className="text-xl" />
