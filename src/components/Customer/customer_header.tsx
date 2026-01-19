@@ -1,6 +1,6 @@
 import { FaSearch } from "react-icons/fa";
-import ThemeToggle from "../../ThemeToggle/theme_toggle"; // تأكد من مسار مكون التبديل لديك
-import NotificationBtn from "../../NotificationBell/notification_bell"; // تأكد من مسار مكون جرس التنبيهات لديك
+import ThemeToggle from "../ThemeToggle/theme_toggle"; // تأكد من مسار مكون التبديل لديك
+import NotificationBtn from "../NotificationBell/notification_bell"; // تأكد من مسار مكون جرس التنبيهات لديك
 
 const Header = () => {
   return (

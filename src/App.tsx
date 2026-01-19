@@ -7,6 +7,8 @@ import LandingPage from "./pages/Landing/landing";
 import Register from "./pages/Registration/register";
 import LogIn from "./pages/LogIn/log_in";
 import ForgotPassword from "./pages/Forgot_Password/forgot_password";
+import VerifyAccount from "./pages/Verfiy_Account/verfiy_account";
+import ResetPassword from "./pages/Reset_Password/reset_password";
 import AdminProfile from "./pages/Admin/admin_profile";
 import SupervisorManagement from "./pages/Admin/supervisor_management";
 import AddSupervisor from "./pages/Admin/add_supervisor";
@@ -25,6 +27,8 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<LogIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* ADMIN PAGES */}
           <Route path="/admin/profile" element={<AdminProfile />} />
