@@ -8,8 +8,8 @@ import Register from "./pages/Registration/register";
 import LogIn from "./pages/LogIn/log_in";
 import ForgotPassword from "./pages/Forgot_Password/forgot_password";
 import AdminProfile from "./pages/Admin/Admin_profile";
-import SupervisorManagement from "./pages/Admin/SupervisorManagement";
-import AddSupervisor from "./pages/Admin/AddSupervisor";
+import SupervisorManagement from "./pages/Admin/supervisor_management";
+import AddSupervisor from "./pages/Admin/add_supervisor";
 
 
 const App: React.FC = () => {
@@ -26,7 +26,9 @@ const App: React.FC = () => {
           {/* ADMIN PAGES */}
           <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/supervisormanagement" element={<SupervisorManagement />} />
-          <Route path="/admin/addsupervisor" element={<AddSupervisor />} />
+          <Route path="/admin/addsupervisor" element={<AddSupervisor dark={false} onClose={function (): void {
+            throw new Error("Function not implemented.");
+          } } />} />
         </Routes>
       </Router>
     </ThemeProvider>

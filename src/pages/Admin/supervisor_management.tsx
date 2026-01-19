@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
-import NotificationBell from "../../components/NotificationBell";
-import ThemeToggle from "../../components/ThemeToggle/Theme_toggle";
+import NotificationBell from "../../components/NotificationBell/notification_bell";
+import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../contexts/ThemeContext";
-import AddSupervisor from "./AddSupervisor"; 
+import AddSupervisor from "./add_supervisor"; 
 
 const SupervisorManagement: React.FC = () => {
   const { dark } = useTheme();
@@ -44,7 +44,7 @@ const SupervisorManagement: React.FC = () => {
         <div className="flex items-center gap-4 mb-6">
           <input
             placeholder="البحث حسب الاسم أو البريد الإلكتروني..."
-            className={`flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-colors
+            className={`flex-1 h-[45px] py-3 rounded-xl text-sm outline-none transition-colors
               ${
                 dark
                   ? "bg-[#0E162A] border border-[#1E2A44] text-white"
@@ -53,7 +53,7 @@ const SupervisorManagement: React.FC = () => {
           />
 
           <select
-            className={`px-4 py-3 rounded-xl text-sm outline-none transition-colors
+            className={`h-[45px] py-2 rounded-xl text-sm outline-none transition-colors
               ${
                 dark
                   ? "bg-[#0E162A] border border-[#1E2A44] text-white"
@@ -64,7 +64,6 @@ const SupervisorManagement: React.FC = () => {
             <option>الحالة: معطل</option>
           </select>
         </div>
-
         {/* ADD BUTTON */}
         <button
           onClick={() => setShowAddModal(true)}
