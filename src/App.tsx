@@ -15,7 +15,7 @@ import AddSupervisor from "./pages/Admin/add_supervisor";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
-import MaintenanceRequest from "./pages/Customer/maintenance_request";
+import MaintenanceRequest from "./pages/Customer/Maintenance_Request/maintenance_request";
 import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenance_bookings";
 import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
