@@ -3,10 +3,12 @@ import Header from "../../../components/Customer/customer_header";
 import { MdAdd } from "react-icons/md";
 import AddBookingModal from "./add_booking_modal";
 import { useState } from "react";
+import RescheduleModal from "./reschedule_modal";
 
 const MaintenanceBookings = () => {
     // 1. حالة التحكم في فتح وإغلاق البوب أب
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
 
     // 2. بيانات الحجوزات
     const bookings = [
@@ -29,7 +31,7 @@ const MaintenanceBookings = () => {
             status: "قيد الانتظار",
             statusColor: "bg-[#EAB3081A] text-[#EAB308]",
             borderColor: "border-r-yellow-500",
-            actions: true 
+            actions: true
         },
         {
             id: 3,
@@ -86,7 +88,7 @@ const MaintenanceBookings = () => {
                         {bookings.map((booking) => (
                             <div key={booking.id} className="relative">
                                 <div className={`bg-[#E5F1FD] dark:bg-[#137FEC33] rounded-2xl p-6 border-r-[6px] ${booking.borderColor} shadow-sm flex flex-col gap-4`}>
-                                    
+
                                     <div className="flex justify-between items-start w-full">
                                         {/* بيانات الحجز */}
                                         <div className="grid grid-cols-2 gap-x-12 gap-y-4 text-right">
@@ -122,7 +124,10 @@ const MaintenanceBookings = () => {
                                             <button className="bg-[#EF4444] text-white px-10 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-red-600 transition-all">
                                                 إلغاء الحجز
                                             </button>
-                                            <button className="bg-[#94A3B8] text-white px-10 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-gray-500 transition-all">
+                                            <button
+                                                onClick={() => setIsRescheduleOpen(true)} // استدعاء حالة فتح البوب أب
+                                                className="bg-[#94A3B8] text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-gray-500 transition-all flex items-center gap-2"
+                                            >
                                                 تغيير الموعد
                                             </button>
                                         </div>
@@ -138,6 +143,11 @@ const MaintenanceBookings = () => {
             <AddBookingModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+            />
+            {/* تأكد من وضع المكون في نهاية الـ return قبل إغلاق الـ div الرئيسي */}
+            <RescheduleModal
+                isOpen={isRescheduleOpen}
+                onClose={() => setIsRescheduleOpen(false)}
             />
         </div>
     );
