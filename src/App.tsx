@@ -10,8 +10,9 @@ import ForgotPassword from "./pages/Forgot_Password/forgot_password";
 import VerifyAccount from "./pages/Verfiy_Account/verfiy_account";
 import ResetPassword from "./pages/Reset_Password/reset_password";
 import AdminProfile from "./pages/Admin/admin_profile";
-import SupervisorManagement from "./pages/Admin/supervisor_management";
-import AddSupervisor from "./pages/Admin/add_supervisor";
+import SupervisorManagement from "./pages/Admin/Supervisor_Management";
+import AddSupervisor from "./pages/Admin/Add_supervisor";
+import AdminDashboard from "./pages/Admin/AdminDashboard/AdminDashboard";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
@@ -48,6 +49,7 @@ const App: React.FC = () => {
 
           {/* ADMIN PAGES */}
           <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/admindashboard" element={<AdminDashboard />} />
           <Route path="/admin/supervisormanagement" element={<SupervisorManagement />} />
           <Route path="/admin/addsupervisor" element={<AddSupervisor dark={false} onClose={function (): void {
             throw new Error("Function not implemented.");
