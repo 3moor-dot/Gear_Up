@@ -4,7 +4,7 @@ import {
   MdBuild, MdAccessTime, MdSmartToy, MdSettings, MdLogout,
   MdMenu, MdClose
 } from 'react-icons/md';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // حالة القائمة في الموبايل
@@ -17,6 +17,9 @@ const Sidebar = () => {
     { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/customer/maintenancerequest' },
     { name: 'المساعد الذكي', icon: <MdSmartToy />, path: '/ai-assistant' },
   ];
+  const location = useLocation();
+  const settingsPath = '/customer/profilesettings';
+  const isSettingsActive = location.pathname === settingsPath;
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -63,8 +66,8 @@ const Sidebar = () => {
                 to={item.path}
                 onClick={() => setIsOpen(false)} // غلق القائمة عند الضغط في الموبايل
                 className={`flex items-center gap-4 px-6 py-3 rounded-xl cursor-pointer transition-all ${isActive
-                    ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] dark:text-blue-400 font-bold shadow-sm'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2A44] hover:text-[#137FEC]'
+                  ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] dark:text-blue-400 font-bold shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2A44] hover:text-[#137FEC]'
                   }`}
               >
                 <span className="text-2xl">{item.icon}</span>
@@ -90,11 +93,20 @@ const Sidebar = () => {
             </div>
 
             <div className="space-y-3">
-              <button className="flex items-center gap-3 w-full text-gray-700 hover:text-[#137FEC] dark:text-gray-300 dark:hover:text-[#137FEC] transition-colors text-sm">
+              {/* تحويل الزر إلى Link لإضافة تأثير الاختيار والـ Hover */}
+              <Link
+                to={settingsPath}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-xl transition-all text-sm ${isSettingsActive
+                    ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] dark:text-blue-400 font-bold shadow-sm'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2A44] hover:text-[#137FEC]'
+                  }`}
+              >
                 <MdSettings className="text-xl" />
                 <span className="font-medium">الاعدادات</span>
-              </button>
-              <button className="flex items-center gap-3 w-full text-red-500 hover:text-red-600 transition-colors text-sm">
+              </Link>
+
+              <button className="flex items-center gap-3 w-full px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all text-sm">
                 <MdLogout className="text-xl rotate-180" />
                 <span className="font-medium">تسجيل خروج</span>
               </button>
