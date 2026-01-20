@@ -21,7 +21,7 @@ const CancelBookingModal = ({ isOpen, onClose }: CancelBookingModalProps) => {
       ></div>
 
       {/* نافذة البوب أب */}
-      <div className="relative w-full max-w-2xl bg-[#0F2847] rounded-[40px] shadow-2xl overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-2xl bg-[#137FEC5C] rounded-[40px] shadow-2xl overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-300">
         
         {/* زر الإغلاق X */}
         <button 

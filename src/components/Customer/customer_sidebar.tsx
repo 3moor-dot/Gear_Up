@@ -14,7 +14,7 @@ const Sidebar = () => {
     { name: 'تذكير', icon: <MdNotifications />, path: '/customer/reminders' },
     { name: 'تاريخ الخدمة', icon: <MdHistory />, path: '/customer/servicehistory' },
     { name: 'حجز صيانة', icon: <MdBuild />, path: '/customer/maintenancebookings' },
-    { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/request' },
+    { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/customer/maintenancerequest' },
     { name: 'المساعد الذكي', icon: <MdSmartToy />, path: '/ai-assistant' },
   ];
 

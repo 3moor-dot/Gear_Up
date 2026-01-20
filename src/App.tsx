@@ -15,6 +15,7 @@ import AddSupervisor from "./pages/Admin/add_supervisor";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
+import MaintenanceRequest from "./pages/Customer/maintenance_request";
 import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenance_bookings";
 import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
@@ -31,6 +32,7 @@ const App: React.FC = () => {
           <Route path="/customer/reminders" element={<MaintenanceReminders />} />
           <Route path="/customer/servicehistory" element={<ServiceHistory />} />
           <Route path="/customer/maintenancebookings" element={<MaintenanceBookings />} />
+          <Route path="/customer/maintenancerequest" element={<MaintenanceRequest />} />
           <Route path="/add-booking" element={<AddBookingModel isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/reschedule-booking" element={<RescheduleModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/cancel-booking" element={<CancelBookingModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
