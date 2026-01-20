@@ -4,11 +4,13 @@ import { MdAdd } from "react-icons/md";
 import AddBookingModal from "./add_booking_modal";
 import { useState } from "react";
 import RescheduleModal from "./reschedule_modal";
+import CancelBookingModal from "./cancel_booking_modal";
 
 const MaintenanceBookings = () => {
     // 1. حالة التحكم في فتح وإغلاق البوب أب
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
     // 2. بيانات الحجوزات
     const bookings = [
@@ -121,7 +123,10 @@ const MaintenanceBookings = () => {
                                     {/* الأزرار (تظهر في حالة قيد الانتظار) */}
                                     {booking.actions && (
                                         <div className="flex justify-center items-center gap-4 mt-2 pt-4 border-t border-blue-200/30">
-                                            <button className="bg-[#EF4444] text-white px-10 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-red-600 transition-all">
+                                            <button
+                                                onClick={() => setIsCancelModalOpen(true)}
+                                                className="bg-[#EF4444] text-white px-10 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-red-600 transition-all"
+                                            >
                                                 إلغاء الحجز
                                             </button>
                                             <button
@@ -144,10 +149,15 @@ const MaintenanceBookings = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
             />
-            {/* تأكد من وضع المكون في نهاية الـ return قبل إغلاق الـ div الرئيسي */}
+            {/* بوب أب تغيير الموعد */}
             <RescheduleModal
                 isOpen={isRescheduleOpen}
                 onClose={() => setIsRescheduleOpen(false)}
+            />
+            {/* بوب أب إلغاء الحجز */}
+            <CancelBookingModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
             />
         </div>
     );
