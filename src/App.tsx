@@ -15,6 +15,7 @@ import AddSupervisor from "./pages/Admin/add_supervisor";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
+import MaintenanceBookings from "./pages/Customer/maintenance_bookings";
 
 
 const App: React.FC = () => {
@@ -26,6 +27,7 @@ const App: React.FC = () => {
           <Route path="/customer/dashboard" element={<CustomerDashBoard />} />
           <Route path="/customer/reminders" element={<MaintenanceReminders />} />
           <Route path="/customer/servicehistory" element={<ServiceHistory />} />
+          <Route path="/customer/maintenancebookings" element={<MaintenanceBookings />} />
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />

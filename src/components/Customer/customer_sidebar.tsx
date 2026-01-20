@@ -13,7 +13,7 @@ const Sidebar = () => {
     { name: 'لوحة التحكم', icon: <MdDashboard />, path: '/customer/dashboard' },
     { name: 'تذكير', icon: <MdNotifications />, path: '/customer/reminders' },
     { name: 'تاريخ الخدمة', icon: <MdHistory />, path: '/customer/servicehistory' },
-    { name: 'حجز صيانة', icon: <MdBuild />, path: '/booking' },
+    { name: 'حجز صيانة', icon: <MdBuild />, path: '/customer/maintenancebookings' },
     { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/request' },
     { name: 'المساعد الذكي', icon: <MdSmartToy />, path: '/ai-assistant' },
   ];
