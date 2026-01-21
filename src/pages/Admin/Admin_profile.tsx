@@ -12,7 +12,7 @@ const AdminProfile: React.FC = () => {
   const [firstName, setFirstName] = useState("Jordan");
   const [lastName, setLastName] = useState("Admin");
   const [email, setEmail] = useState("alex.johnson@example.com");
-  const [avatar, setAvatar] = useState<string>("/AdminProfile.png");
+  const [avatar, setAvatar] = useState<string>("/avatar-path.png");
 
   return (
     <div dir="rtl" className="flex min-h-screen">
@@ -62,7 +62,7 @@ const AdminProfile: React.FC = () => {
           >
             <div className="relative w-24 h-24 mx-auto mb-4">
               <img
-                src={"/avatar-path.png"}
+                src={avatar}
                 alt="profile"
                 className="w-full h-full rounded-full object-cover"
               />

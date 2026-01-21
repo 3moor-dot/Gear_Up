@@ -1,5 +1,4 @@
 
-
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -34,18 +33,20 @@ const AdminSidebar: React.FC = () => {
 </h1>
 
 
+
         <nav className="space-y-2 text-sm">
-          <SidebarItem icon={<FaUser />} label="لوحة التحكم" dark={dark} to="/admin/admindashboard" />
-          <SidebarItem icon={<FaUsers />} label="المستخدمين" dark={dark} to="/admin/users" />
-          <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} to="/admin/mechanics" />
-          <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/admin/bookings" />
-          <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/admin/reviews" />
-          <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} to="/admin/supervisormanagement" />
-          <SidebarItem icon={<FaBell />} label="الإشعارات" dark={dark} to="/admin/notifications" />
-          <SidebarItem icon={<FaCog />} label="الخدمات" dark={dark} to="/admin/services" />
-          <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} to="/admin/governorates" />
-          <SidebarItem icon={<FaMapMarkedAlt />} label="المدن" dark={dark} to="/admin/cities" />
-        </nav>
+  <SidebarItem icon={<FaUser />} label="لوحة التحكم" dark={dark} to="/admin/admindashboard" />
+  <SidebarItem icon={<FaUsers />} label="المستخدمين" dark={dark} to="/admin/usersmanagement" />
+  <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} to="/admin/mechanics" />
+  <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/admin/bookings" />
+  <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/admin/reviews" />
+  <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} to="/admin/supervisormanagement" />
+  <SidebarItem icon={<FaBell />} label="الإشعارات" dark={dark} to="/admin/notifications" />
+  <SidebarItem icon={<FaCog />} label="الخدمات" dark={dark} to="/admin/services" />
+  <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} to="/admin/governorates" />
+  <SidebarItem icon={<FaMapMarkedAlt />} label="المدن" dark={dark} to="/admin/cities" />
+</nav>
+
       </div>
 
       {/* BOTTOM CARD */}
@@ -116,7 +117,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark, to }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = to === location.pathname;
+  // supports subpages
+  const isActive = to ? location.pathname.startsWith(to) : false;
 
   return (
     <div
@@ -131,20 +133,16 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark, to }) => {
               ${isActive ? "bg-[#137FEC1A] text-white" : ""}
             `
             : `
-              text-black   /* خليت اللون أسود بدل أي لون سابق */
+              text-black
               hover:text-[#137FEC]
               hover:bg-[#EAF4FF]
               ${isActive ? "bg-[#EAF4FF] text-[#137FEC]" : ""}
             `
         }`}
     >
-      <span
-        className={`text-lg transition-colors duration-200
-          ${isActive ? "text-[#137FEC]" : "group-hover:text-[#137FEC]"}`}
-      >
+      <span className={`text-lg transition-colors duration-200 ${isActive ? "text-[#137FEC]" : "group-hover:text-[#137FEC]"}`}>
         {icon}
       </span>
-
       <span className="whitespace-nowrap">{label}</span>
     </div>
   );

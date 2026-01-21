@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
@@ -62,7 +63,15 @@ const AdminDashboard: React.FC = () => {
 
 /* ---------------- COMPONENTS ---------------- */
 
-const StatCard = ({ title, value, change, up, icon }: any) => {
+interface StatCardProps {
+  title: string;
+  value: string;
+  change: string;
+  up?: boolean;
+  icon: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, change, up = true, icon }) => {
   const { dark } = useTheme();
   const changeColor = change.includes("6.2") ? "#EF476F" : up ? "#22C55E" : "#EF476F";
 
@@ -74,11 +83,7 @@ const StatCard = ({ title, value, change, up, icon }: any) => {
       `}
     >
       <p className={`mb-2 ${!dark ? "text-[#6B8BB5]" : "text-[#FFFFFF80]"}`}>{title}</p>
-      
-      <h2 className={`text-4xl font-bold transition-all ${!dark ? "text-[#137FEC]" : "text-white"}`}>
-        {value}
-      </h2>
-
+      <h2 className={`text-4xl font-bold transition-all ${!dark ? "text-[#137FEC]" : "text-white"}`}>{value}</h2>
       <div className="flex items-center gap-2 mt-4 text-lg">
         <span className="font-semibold" style={{ color: changeColor }}>
           {change}
@@ -89,19 +94,22 @@ const StatCard = ({ title, value, change, up, icon }: any) => {
   );
 };
 
-const Section = ({ title, children }: any) => {
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+const Section: React.FC<SectionProps> = ({ title, children }) => {
   const { dark } = useTheme();
   return (
     <div className="space-y-4">
-      <h2 className={`text-xl font-bold ${!dark ? "text-black" : "text-white"}`}>
-        {title}
-      </h2>
+      <h2 className={`text-xl font-bold ${!dark ? "text-black" : "text-white"}`}>{title}</h2>
       {children}
     </div>
   );
 };
 
-const Table = () => {
+const Table: React.FC = () => {
   const { dark } = useTheme();
   return (
     <div className={`rounded-2xl overflow-hidden border ${dark ? "border-[#1E2A44]" : "border-[#C6E0FF]"}`}>
@@ -115,7 +123,7 @@ const Table = () => {
             ))}
           </tr>
         </thead>
-        <tbody className={`bg-white ${dark ? "dark:bg-transparent" : ""}`}>
+        <tbody>
           <TableRow status="active" />
           <TableRow status="pending" />
           <TableRow status="rejected" />
@@ -125,8 +133,11 @@ const Table = () => {
   );
 };
 
+interface TableRowProps {
+  status: "active" | "pending" | "rejected";
+}
 
-const TableRow = ({ status }: any) => {
+const TableRow: React.FC<TableRowProps> = ({ status }) => {
   const { dark } = useTheme();
 
   const statusMap = {
@@ -135,16 +146,16 @@ const TableRow = ({ status }: any) => {
     rejected: { label: "مرفوض", light: "bg-[#EF444433] text-[#EF4444]", dark: "bg-[#EF444433] text-[#EF4444]" },
   };
 
-  const icons = dark
-    ? ["/reject.png", "/approve.png"]
-    : ["/rejectdark.png", "/approvedark.png"];
+  const icons = dark ? ["/reject.png", "/approve.png"] : ["/rejectdark.png", "/approvedark.png"];
+  const hoverBg = dark ? "hover:bg-white/10" : "hover:bg-[#EFF6FFCC]";
 
   return (
     <tr
       className={`
         border-t border-black/5 dark:border-white/5
-        transition-colors
-        ${!dark ? "hover:bg-[#137FEC0D]" : ""}
+        transition-colors duration-200
+        cursor-pointer
+        ${hoverBg}
       `}
     >
       <td className="p-4 font-medium dark:text-white">John Doe</td>
@@ -152,22 +163,26 @@ const TableRow = ({ status }: any) => {
       <td className="p-4 text-gray-400">john.doe@example.com</td>
       <td className={`p-4 transition-colors ${dark ? "text-white/50" : "text-gray-500"}`}>2023-10-26</td>
       <td className="p-4">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-          dark
-            ? statusMap[status as keyof typeof statusMap].dark
-            : statusMap[status as keyof typeof statusMap].light
-        }`}>
-          {statusMap[status as keyof typeof statusMap].label}
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-bold ${
+            dark ? statusMap[status].dark : statusMap[status].light
+          }`}
+        >
+          {statusMap[status].label}
         </span>
       </td>
       <td className="p-4 flex gap-2">
         {icons.map((icon, index) => (
-          <img key={index} src={icon} alt="" className="w-6 h-6 cursor-pointer hover:opacity-70 transition-opacity" />
+          <img
+            key={index}
+            src={icon}
+            alt=""
+            className="w-6 h-6 cursor-pointer hover:opacity-70 transition-opacity"
+          />
         ))}
       </td>
     </tr>
   );
 };
-
 
 export default AdminDashboard;
