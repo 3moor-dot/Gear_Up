@@ -37,7 +37,7 @@ const AdminSidebar: React.FC = () => {
         <nav className="space-y-2 text-sm">
   <SidebarItem icon={<FaUser />} label="لوحة التحكم" dark={dark} to="/admin/admindashboard" />
   <SidebarItem icon={<FaUsers />} label="المستخدمين" dark={dark} to="/admin/usersmanagement" />
-  <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} to="/admin/mechanics" />
+  <SidebarItem icon={<FaTools />} label="الميكانيكيين" dark={dark} to="/admin/MechanicsManagement" />
   <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/admin/bookings" />
   <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/admin/reviews" />
   <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} to="/admin/supervisormanagement" />

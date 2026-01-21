@@ -27,10 +27,13 @@ export default function UsersManagementPage() {
   
           {/* Filters */}
           <div className="flex flex-wrap gap-4 mb-6 justify-between">
+        
             <input
-              placeholder="ابحث حسب الاسم أو البريد الإلكتروني أو طراز السيارة..."
-              className="flex-1 px-4 py-2 rounded-xl bg-white dark:bg-[#11162A] border border-slate-200 dark:border-slate-700 outline-none order-1"
-            />
+  placeholder="ابحث حسب الاسم أو البريد الإلكتروني أو طراز السيارة..."
+  className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 outline-none order-1"
+  style={{ backgroundColor: "#137FEC1A" }} // نفس لون الفلاتر
+/>
+
         
             <div className="flex gap-4 order-2">
   <button
