@@ -27,9 +27,7 @@ const AdminDashboard: React.FC = () => {
             <h1 className={`text-3xl font-bold mb-1 transition-colors ${!dark ? "text-black" : "text-white"}`}>
               لوحة التحكم
             </h1>
-            {/* <p className={dark ? "text-white/60" : "text-[#6B8BB5]"}>
-              أهلاً بك مجددًا أيها المدير، إليك ملخصاً لنشاط المنصة.
-            </p> */}
+    
             <p
   className="transition-colors"
   style={{
