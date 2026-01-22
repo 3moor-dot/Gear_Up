@@ -118,16 +118,6 @@ const CitiesManagement: React.FC = () => {
           اسم المدينة
         </label>
 
-{/* <input
-  type="text"
-  placeholder="مثال : قنا"
-  className="w-full p-5 rounded-xl text-center outline-none border-none"
-  style={{
-    backgroundColor: "rgba(11,31,76,0.5)", 
-    color: dark ? "#FFFFFF" : "#0B4C8C", 
-  }}
-  placeholderTextColor={dark ? "#137FEC9C" : "#0B4C8C"} 
-/> */}
 <input
   type="text"
   placeholder="مثال : قنا"
