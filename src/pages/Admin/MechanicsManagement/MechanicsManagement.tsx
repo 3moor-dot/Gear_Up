@@ -87,13 +87,13 @@ const MechanicsManagement: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead className={`${inputButtonBg}`}>
-                <tr className="text-[#1e293b] dark:text-white text-[12px] border-b border-gray-50 dark:border-gray-800 uppercase tracking-wider">
-                  <th className="p-3 font-medium">الاسم</th>
-                  <th className="p-3 font-medium text-center">الحالة</th>
-                  <th className="p-3 font-medium text-center">رقم الهاتف</th>
-                  <th className="p-3 font-medium text-center">البريد</th>
-                  <th className="p-3 font-medium text-center">تاريخ التسجيل</th>
-                  <th className="p-3 font-medium text-center">الإجراءات</th>
+                <tr className="text-[#1e293b] dark:text-white text-[14px] border-b border-gray-50 dark:border-gray-800 uppercase tracking-wider font-semibold">
+                  <th className="p-4">الاسم</th>
+                  <th className="p-4 text-center">الحالة</th>
+                  <th className="p-4 text-center">رقم الهاتف</th>
+                  <th className="p-4 text-center">البريد</th>
+                  <th className="p-4 text-center">تاريخ التسجيل</th>
+                  <th className="p-4 text-center">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
@@ -113,7 +113,7 @@ const MechanicsManagement: React.FC = () => {
                         <button className="hover:opacity-80 transition-opacity">
                           <FaEye size={18} color={dark ? "white" : "black"} />
                         </button>
-                        <span className="text-xl leading-none font-bold">⋮</span>
+                        <span className={dark ? "text-white" : "text-black"}>⋮</span>
                       </div>
                     </td>
                   </tr>

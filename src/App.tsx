@@ -15,6 +15,8 @@ import AddSupervisor from "./pages/Admin/add_supervisor";
 import AdminDashboard from "./pages/Admin/AdminDashboard/AdminDashboard";
 import UsersManagement from "./pages/Admin/UsersManagement/UsersManagement";
 import MechanicsManagement from "./pages/Admin/MechanicsManagement/MechanicsManagement";
+// import BookingManagement from "./pages/Admin/BookingManagement/BookingManagement";
+import CitiesManagement from "./pages/Admin/CitiesManagement/CitiesManagement";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
@@ -55,6 +57,8 @@ const App: React.FC = () => {
           <Route path="/admin/supervisormanagement" element={<SupervisorManagement />} />
           <Route path="/admin/usersmanagement" element={<UsersManagement />} />
           <Route path="/admin/mechanicsmanagement" element={<MechanicsManagement />} />
+          {/* <Route path="/admin/bookingmanagement" element={<BookingManagement />} /> */}
+          <Route path="/admin/citiesmanagement" element={<CitiesManagement />} />
           <Route path="/admin/addsupervisor" element={<AddSupervisor dark={false} onClose={function (): void {
             throw new Error("Function not implemented.");
           } } />} />
