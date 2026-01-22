@@ -117,14 +117,8 @@ const CitiesManagement: React.FC = () => {
         <label className="block text-center text-white mb-4 text-lg font-medium">
           اسم المدينة
         </label>
-{/* <input
-  type="text"
-  placeholder="مثال : قنا"
-  className="w-full p-5 rounded-xl text-center outline-none border-none text-[#137FEC9C] placeholder:text-[#137FEC9C]"
-  style={{ backgroundColor: "rgba(11,31,76,0.5)" }} // كحلي غامق نص شفاف
-/> */}
 
-<input
+{/* <input
   type="text"
   placeholder="مثال : قنا"
   className="w-full p-5 rounded-xl text-center outline-none border-none"
@@ -132,8 +126,19 @@ const CitiesManagement: React.FC = () => {
     backgroundColor: "rgba(11,31,76,0.5)", 
     color: dark ? "#FFFFFF" : "#0B4C8C", 
   }}
-  placeholderTextColor={dark ? "#137FEC9C" : "#0B4C8C"} // لون placeholder للأزرق الغامق في اللايت
+  placeholderTextColor={dark ? "#137FEC9C" : "#0B4C8C"} 
+/> */}
+<input
+  type="text"
+  placeholder="مثال : قنا"
+  className={`w-full p-5 rounded-xl text-center outline-none border-none
+    ${dark ? "placeholder:text-[#137FEC9C] text-white" : "placeholder:text-[#137FEC9C] text-[#0B4C8C]"}
+  `}
+  style={{
+    backgroundColor: "rgba(15,19,35,0.5)", // #0F132380 50%
+  }}
 />
+
 
 
       </div>
