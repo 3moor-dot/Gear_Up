@@ -19,6 +19,7 @@ import BookingManagement from "./pages/Admin/BookingManagement/BookingManagement
 import CitiesManagement from "./pages/Admin/CitiesManagement/CitiesManagement";
 import Reviews from "./pages/Admin/Reviews/Reviews";
 import ServicesManagement from "./pages/Admin/ServicesManagement/ServicesManagement";
+import NotificationsManagement from "./pages/Admin/NotificationsManagement/NotificationsManagement";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
@@ -64,6 +65,7 @@ const App: React.FC = () => {
           <Route path="/admin/citiesmanagement" element={<CitiesManagement />} />
           <Route path="/admin/reviews" element={<Reviews />} />
           <Route path="/admin/services" element={<ServicesManagement />} />
+          <Route path="/admin/notificationsmanagement" element={<NotificationsManagement />} />
           <Route path="/admin/addsupervisor" element={<AddSupervisor dark={false} onClose={function (): void {
             throw new Error("Function not implemented.");
           } } />} />
