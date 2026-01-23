@@ -18,6 +18,7 @@ import MechanicsManagement from "./pages/Admin/MechanicsManagement/MechanicsMana
 import BookingManagement from "./pages/Admin/BookingManagement/BookingManagement";
 import CitiesManagement from "./pages/Admin/CitiesManagement/CitiesManagement";
 import Reviews from "./pages/Admin/Reviews/Reviews";
+import ServicesManagement from "./pages/Admin/ServicesManagement/ServicesManagement";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
@@ -27,6 +28,7 @@ import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenan
 import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
 import CancelBookingModal from "./pages/Customer/Maintenance_Bookings/cancel_booking_modal";
+
 
 
 const App: React.FC = () => {
@@ -61,6 +63,7 @@ const App: React.FC = () => {
           <Route path="/admin/bookingmanagement" element={<BookingManagement />} /> 
           <Route path="/admin/citiesmanagement" element={<CitiesManagement />} />
           <Route path="/admin/reviews" element={<Reviews />} />
+          <Route path="/admin/services" element={<ServicesManagement />} />
           <Route path="/admin/addsupervisor" element={<AddSupervisor dark={false} onClose={function (): void {
             throw new Error("Function not implemented.");
           } } />} />
