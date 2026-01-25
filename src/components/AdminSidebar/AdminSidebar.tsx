@@ -43,7 +43,7 @@ const AdminSidebar: React.FC = () => {
   <SidebarItem icon={<FaUsers />} label="المشرفين" dark={dark} to="/admin/supervisormanagement" />
   <SidebarItem icon={<FaBell />} label="الإشعارات" dark={dark} to="/admin/NotificationsManagement" />
   <SidebarItem icon={<FaCog />} label="الخدمات" dark={dark} to="/admin/Services" />
-  <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} to="/admin/governorates" />
+  {/* <SidebarItem icon={<FaMapMarkedAlt />} label="المحافظات" dark={dark} to="/admin/governorates" /> */}
   <SidebarItem icon={<FaMapMarkedAlt />} label="المدن" dark={dark} to="/admin/CitiesManagement" />
 </nav>
 
