@@ -1,8 +1,8 @@
 
 import React from "react";
 import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
-import NotificationBell from "../../../components/NotificationBell/notification_bell";
-import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
+// import NotificationBell from "../../../components/NotificationBell/notification_bell";
+// import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { FaSyncAlt, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
 
@@ -29,8 +29,8 @@ const BookingDetails: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <ThemeToggle />
-            <NotificationBell size={24} />
+            {/* <ThemeToggle />
+            <NotificationBell size={24} /> */}
           </div>
         </div>
 

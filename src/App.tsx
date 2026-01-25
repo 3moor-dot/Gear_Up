@@ -22,6 +22,7 @@ import Reviews from "./pages/Admin/Reviews/Reviews";
 import ServicesManagement from "./pages/Admin/ServicesManagement/ServicesManagement";
 import NotificationsManagement from "./pages/Admin/NotificationsManagement/NotificationsManagement";
 import UserProfile from "./pages/Admin/UserProfile/UserProfile";
+import MechanicProfile from "./pages/Admin/MechanicProfile/MechanicProfile";
 import CustomerDashBoard from "./pages/Customer/dashboard";
 import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
@@ -67,6 +68,7 @@ const App: React.FC = () => {
           <Route path="/admin/bookingdetails" element={<BookingDetails />} /> 
           <Route path="/admin/citiesmanagement" element={<CitiesManagement />} />
           <Route path="/admin/userprofile" element={<UserProfile />} />
+          <Route path="/admin/mechanicprofile" element={<MechanicProfile />} />
           <Route path="/admin/reviews" element={<Reviews />} />
           <Route path="/admin/services" element={<ServicesManagement />} />
           <Route path="/admin/notificationsmanagement" element={<NotificationsManagement />} />
