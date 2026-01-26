@@ -16,7 +16,7 @@ const BookingDetails: React.FC = () => {
   const cardClass = "bg-[#137FEC1A] border-transparent"; 
 
   return (
-    <div className={`flex min-h-screen font-sans ${themeClass}`} dir="rtl">
+    <div className={`flex min-h-screen ${themeClass}`} dir="rtl">
      
       <AdminSidebar />
 

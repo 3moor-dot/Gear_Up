@@ -8,7 +8,6 @@ import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 const MechanicProfile: React.FC = () => {
   const { dark } = useTheme();
 
-
   const [profileData, setProfileData] = useState({
     fullName: "جون دو",
     phone: "0123456789",
@@ -37,7 +36,7 @@ const MechanicProfile: React.FC = () => {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans transition-colors duration-500 ${bgColor}`} dir="rtl">
+    <div className={`flex min-h-screen  transition-colors duration-500 ${bgColor}`} dir="rtl">
       <AdminSidebar />
 
       <main className="flex-1 p-8 overflow-y-auto">

@@ -100,7 +100,7 @@ const Reviews: React.FC = () => {
   return (
     <div
       dir="rtl"
-      className={`flex min-h-screen font-sans ${
+      className={`flex min-h-screen  ${
         dark ? "bg-primary_BGD" : "bg-white"
       }`}
     >

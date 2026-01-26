@@ -23,7 +23,7 @@ const Services: React.FC = () => {
 
   return (
     <div
-      className={`flex min-h-screen font-sans transition-colors duration-500 ${
+      className={`flex min-h-screen transition-colors duration-500 ${
         dark ? "bg-primary_BGD text-white" : "bg-white text-[#1E3A5F]"
       }`}
       dir="rtl"
