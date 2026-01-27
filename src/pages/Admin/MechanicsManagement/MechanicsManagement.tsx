@@ -45,49 +45,49 @@ const MechanicsManagement: React.FC = () => {
   const inputButtonBg = 'bg-[#137FEC1A] dark:bg-[#137FEC1A]';
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0b1120] overflow-hidden" dir="rtl">
+    <div className="flex min-h-screen bg-white dark:bg-primary_BGD text-[#1e293b] dark:text-white" dir="rtl">
       <AdminSidebar />
 
-      <main className="flex-1 flex flex-col p-6 overflow-y-auto overflow-x-hidden gap-6 bg-white dark:bg-primary_BGD">
+      <main className="flex-1 flex flex-col p-4 md:p-8 overflow-x-hidden w-full mt-12 lg:mt-0">
         
-        {/* Header */}
-        <div className="flex justify-between items-start">
+        {/* Header - Stacks on small screens */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
           <div className="text-right">
-            <h1 className="text-2xl font-bold text-[#1e293b] dark:text-white mb-1">إدارة الميكانيكيين</h1>
-            <p className="text-[#64748b] dark:text-gray-400 text-[13px]">عرض وبحث وإدارة جميع الميكانيكيين المسجلين.</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">إدارة الميكانيكيين</h1>
+            <p className="text-[#64748b] dark:text-gray-400 text-sm">عرض وبحث وإدارة جميع الميكانيكيين المسجلين.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-end sm:self-auto">
             <NotificationBell />
             <ThemeToggle />
           </div>
         </div>
 
-        {/* Filters Section */}
-        <div className="flex items-center gap-3 flex-wrap justify-between">
-          <div className={`flex-1 max-w-md order-1 rounded-lg ${inputButtonBg}`}>
+        {/* Filters Section - Flexible Grid */}
+        <div className="flex flex-col lg:flex-row items-stretch gap-4 mb-6">
+          <div className={`flex-1 rounded-xl ${inputButtonBg}`}>
             <input 
               type="text" 
-              placeholder="ابحث حسب الاسم أو البريد الإلكتروني......." 
-              className="w-full p-2.5 rounded-lg bg-transparent text-right dark:text-white text-sm placeholder:text-[#94a3b8] outline-none border border-transparent focus:border-blue-300 transition-all"
+              placeholder="ابحث حسب الاسم أو البريد الإلكتروني..." 
+              className="w-full p-3 rounded-xl bg-transparent text-right dark:text-white text-sm placeholder:text-[#94a3b8] outline-none border border-transparent focus:border-[#137FEC] transition-all"
             />
           </div>
 
-          <div className="flex gap-3 order-2">
-            <button className={`px-5 py-2.5 rounded-lg ${inputButtonBg} text-[#1e293b] dark:text-gray-300 text-xs font-semibold`}>
+          <div className="flex gap-3">
+            <button className={`flex-1 lg:flex-none px-6 py-3 rounded-xl ${inputButtonBg} text-[#1e293b] dark:text-gray-300 text-xs font-bold whitespace-nowrap`}>
               حالة الحساب: الكل
             </button>
-            <button className={`px-5 py-2.5 rounded-lg ${inputButtonBg} text-[#1e293b] dark:text-gray-300 text-xs font-semibold`}>
+            <button className={`flex-1 lg:flex-none px-6 py-3 rounded-xl ${inputButtonBg} text-[#1e293b] dark:text-gray-300 text-xs font-bold whitespace-nowrap`}>
               تاريخ التسجيل
             </button>
           </div>
         </div>
 
-        {/* Table Section */}
-        <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col mt-6">
+        {/* Table Section - Horizontal Scroll protection */}
+        <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden mb-6">
           <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
+            <table className="w-full text-right min-w-[850px]">
               <thead className={`${inputButtonBg}`}>
-                <tr className="text-[#1e293b] dark:text-white text-[14px] border-b border-gray-50 dark:border-gray-800 uppercase tracking-wider font-semibold">
+                <tr className="text-[#1e293b] dark:text-white text-sm border-b border-gray-50 dark:border-gray-800 font-bold">
                   <th className="p-4">الاسم</th>
                   <th className="p-4 text-center">الحالة</th>
                   <th className="p-4 text-center">رقم الهاتف</th>
@@ -96,24 +96,24 @@ const MechanicsManagement: React.FC = () => {
                   <th className="p-4 text-center">الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800 text-sm">
                 {mechanics.map((mechanic) => (
-                  <tr key={mechanic.id} className="hover:bg-[#EFF6FFCC] dark:hover:bg-[#FFFFFF0D] transition-colors cursor-pointer">
-                    <td className="p-3 text-[#1e293b] dark:text-gray-200 text-sm font-medium">{mechanic.name}</td>
-                    <td className="p-3 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${getStatusStyle(mechanic.status)}`}>
+                  <tr key={mechanic.id} className="hover:bg-[#EFF6FFCC] dark:hover:bg-[#FFFFFF0D] transition-colors cursor-pointer group">
+                    <td className="p-4 font-bold whitespace-nowrap">{mechanic.name}</td>
+                    <td className="p-4 text-center whitespace-nowrap">
+                      <span className={`px-4 py-1 rounded-full text-[11px] font-bold ${getStatusStyle(mechanic.status)}`}>
                         {mechanic.status}
                       </span>
                     </td>
-                    <td className="p-3 text-center text-[#1e293b] dark:text-gray-300 text-sm font-medium">{mechanic.phone}</td>
-                    <td className="p-3 text-center text-[#64748b] dark:text-gray-500 text-xs">{mechanic.email}</td>
-                    <td className="p-3 text-center text-[#94a3b8] dark:text-gray-500 text-xs">{mechanic.regDate}</td>
-                    <td className="p-3 text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <button className="hover:opacity-80 transition-opacity">
-                          <FaEye size={18} color={dark ? "white" : "black"} />
+                    <td className="p-4 text-center whitespace-nowrap font-medium">{mechanic.phone}</td>
+                    <td className="p-4 text-center text-[#64748b] dark:text-gray-400 whitespace-nowrap">{mechanic.email}</td>
+                    <td className="p-4 text-center text-[#94a3b8] dark:text-gray-500 whitespace-nowrap">{mechanic.regDate}</td>
+                    <td className="p-4">
+                      <div className="flex justify-center items-center gap-4">
+                        <button className="p-2 hover:bg-[#137FEC1A] rounded-lg transition-transform hover:scale-110">
+                          <FaEye size={18} color={dark ? "#E5E7EB" : "#1E293B"} />
                         </button>
-                        <span className={dark ? "text-white" : "text-black"}>⋮</span>
+                        <button className="text-xl font-bold opacity-50 hover:opacity-100 px-2">⋮</button>
                       </div>
                     </td>
                   </tr>
@@ -123,15 +123,17 @@ const MechanicsManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-between items-center pt-5">
-          <div className="text-[#94a3b8] text-[11px]">عرض 1 إلى 10 من 2,345 ميكانيكي</div>
-          <div className="flex items-center gap-1">
+        {/* Footer / Pagination - Stacks on mobile */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-4">
+          <div className="text-[#94a3b8] text-xs order-2 md:order-1">عرض 1 إلى 10 من 2,345 ميكانيكي</div>
+          <div className="flex items-center gap-2 order-1 md:order-2">
             {[1, 2, 3, '....', 10].map((item, idx) => (
               <button 
                 key={idx}
-                className={`w-7 h-7 flex items-center justify-center rounded-md text-[12px] font-medium transition-colors
-                  ${item === 1 ? 'bg-[#e2e8f0] dark:bg-[#1e293b] text-[#1e293b] dark:text-white' : 'text-[#94a3b8] hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all
+                  ${item === 1 
+                    ? 'bg-[#137FEC] text-white shadow-lg shadow-blue-500/20' 
+                    : 'bg-[#137FEC1A] text-[#137FEC] hover:bg-[#137FEC] hover:text-white'}`}
               >
                 {item}
               </button>

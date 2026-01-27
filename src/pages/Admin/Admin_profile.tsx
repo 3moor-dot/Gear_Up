@@ -14,17 +14,17 @@ const AdminProfile: React.FC = () => {
   const [avatar, setAvatar] = useState<string>("/avatar-path.png");
 
   return (
-    <div dir="rtl" className="flex min-h-screen">
+    <div dir="rtl" className="flex flex-col lg:flex-row min-h-screen">
       <AdminSidebar />
 
       <main
-        className={`flex-1 p-10 transition-colors duration-500 ${
+        className={`flex-1 p-6 md:p-10 transition-colors duration-500 ${
           dark ? "bg-primary_BGD text-white" : "bg-white text-gray-900"
         }`}
       >
         {/* TOP BAR */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+          <h2 className="text-xl md:text-2xl font-bold">
             لوحة القيادة / الحساب الشخصي
           </h2>
 
@@ -34,28 +34,28 @@ const AdminProfile: React.FC = () => {
           </div>
         </div>
 
-<div className="flex justify-end mb-8 mt-4 pr-4">
-  <button
-    className={`
-      px-6 py-2 rounded-xl text-sm transition-all duration-200
-      hover:scale-105 hover:shadow-md active:scale-95
-      ${
-        dark
-          ? "bg-[#137FEC] text-white hover:bg-[#1A6FD4]"
-          : "bg-[#137FEC80] text-[#0F132380] font-bold"
-      }
-    `}
-  >
-    حفظ التغييرات
-  </button>
-</div>
-
+        {/* SAVE BUTTON */}
+        <div className="flex justify-end mb-6">
+          <button
+            className={`
+              px-6 py-2 rounded-xl text-sm md:text-base transition-all duration-200
+              hover:scale-105 hover:shadow-md active:scale-95
+              ${
+                dark
+                  ? "bg-[#137FEC] text-white hover:bg-[#1A6FD4]"
+                  : "bg-[#137FEC80] text-[#0F132380] font-bold"
+              }
+            `}
+          >
+            حفظ التغييرات
+          </button>
+        </div>
 
         {/* CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-2">
           {/* PROFILE CARD */}
           <div
-            className={`rounded-2xl p-8 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+            className={`rounded-2xl p-6 md:p-8 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
               dark ? "bg-[#137FEC1A]" : "bg-[#EAF4FF]"
             }`}
           >
@@ -85,7 +85,7 @@ const AdminProfile: React.FC = () => {
               }}
             />
 
-            <h4 className="font-bold text-lg">
+            <h4 className="font-bold text-lg md:text-xl">
               {firstName} {lastName}
             </h4>
 
@@ -93,7 +93,7 @@ const AdminProfile: React.FC = () => {
               Member since Jan 2023
             </p>
 
-            <span className="inline-block text-xs px-4 py-1 rounded-full mb-6 bg-[#0BDA6533] text-[#0BDA65]">
+            <span className="inline-block text-xs md:text-sm px-4 py-1 rounded-full mb-6 bg-[#0BDA6533] text-[#0BDA65]">
               مفعل
             </span>
 
@@ -113,19 +113,19 @@ const AdminProfile: React.FC = () => {
 
           {/* PERSONAL DATA */}
           <div
-            className={`lg:col-span-2 rounded-2xl p-8 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
+            className={`lg:col-span-2 rounded-2xl p-6 md:p-8 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
               dark ? "bg-[#137FEC1A]" : "bg-[#EAF4FF]"
             }`}
           >
             <h3
-              className={`font-bold mb-6 ${
+              className={`font-bold mb-6 text-lg md:text-xl ${
                 dark ? "text-white" : "text-[#0F132380]"
               }`}
             >
               البيانات الشخصية
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <Input
                 label="الاسم الأول"
                 value={firstName}
@@ -140,7 +140,7 @@ const AdminProfile: React.FC = () => {
               />
             </div>
 
-            <div className="mt-6">
+            <div className="mt-4 md:mt-6">
               <Input
                 label="البريد الإلكتروني"
                 value={email}
@@ -169,7 +169,7 @@ type InputProps = {
 const Input: React.FC<InputProps> = ({ label, value, onChange, dark }) => (
   <div>
     <label
-      className={`block mb-2 text-sm font-medium ${
+      className={`block mb-2 text-sm md:text-base font-medium ${
         dark ? "text-white" : "text-[#0F132380]"
       }`}
     >
@@ -193,3 +193,4 @@ const Input: React.FC<InputProps> = ({ label, value, onChange, dark }) => (
     />
   </div>
 );
+
