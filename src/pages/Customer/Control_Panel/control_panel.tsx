@@ -1,5 +1,5 @@
-import Header from "../../components/Customer/customer_header";
-import Sidebar from "../../components/Customer/customer_sidebar";
+import Header from "../../../components/Customer/customer_header";
+import Sidebar from "../../../components/Customer/customer_sidebar";
 
 const Dashboard = () => {
     return (

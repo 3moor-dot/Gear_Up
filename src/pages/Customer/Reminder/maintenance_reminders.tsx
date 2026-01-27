@@ -1,8 +1,11 @@
-import Sidebar from "../../components/Customer/customer_sidebar";
-import Header from "../../components/Customer/customer_header";
+import Sidebar from "../../../components/Customer/customer_sidebar";
+import Header from "../../../components/Customer/customer_header";
+import CreateReminderModal from "./create_reminder_modal";
 import { MdAdd, MdPhone, MdMap, MdCheckCircle } from "react-icons/md";
+import { useState } from "react";
 
 const MaintenanceReminders = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
     return (
         <div className="flex min-h-screen dark:bg-primary_BGD bg-[#F8FAFC]" dir="rtl">
             {/* استدعاء السايد بار */}
@@ -39,7 +42,10 @@ const MaintenanceReminders = () => {
                                         </button>
                                     ))}
                                 </div>
-                                <button className="bg-[#137FEC] text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-100">
+                                <button
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="bg-[#137FEC] text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-100 transition-transform active:scale-95"
+                                >
                                     <MdAdd size={20} /> إنشاء تذكير
                                 </button>
                             </div>
@@ -129,7 +135,12 @@ const MaintenanceReminders = () => {
                                 </div>
                                 <h4 className="font-bold">تذكيرات مخصصة</h4>
                                 <p className="text-[10px] opacity-80">لا تنس الأمور الصغيرة. اضبط تذكيرات دورية لتجديد التأمين، وغسيل السيارة، أو التسجيل.</p>
-                                <button className="bg-white text-[#137FEC] w-full py-2 rounded-xl font-bold text-sm">إنشاء تذكير جديد</button>
+                                <button
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="bg-white text-[#137FEC] w-full py-2 rounded-xl font-bold text-sm shadow-inner"
+                                >
+                                    إنشاء تذكير جديد
+                                </button>
                             </div>
 
                             {/* ميكانيكي */}
@@ -158,6 +169,10 @@ const MaintenanceReminders = () => {
                     </div>
                 </main>
             </div>
+            <CreateReminderModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
         </div>
     );
 };

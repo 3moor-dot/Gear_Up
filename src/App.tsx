@@ -23,8 +23,8 @@ import ServicesManagement from "./pages/Admin/ServicesManagement/ServicesManagem
 import NotificationsManagement from "./pages/Admin/NotificationsManagement/NotificationsManagement";
 import UserProfile from "./pages/Admin/UserProfile/UserProfile";
 import MechanicProfile from "./pages/Admin/MechanicProfile/MechanicProfile";
-import CustomerDashBoard from "./pages/Customer/dashboard";
-import MaintenanceReminders from "./pages/Customer/maintenance_reminders";
+import CustomerDashBoard from "./pages/Customer/Control_Panel/control_panel";
+import MaintenanceReminders from "./pages/Customer/Reminder/maintenance_reminders";
 import ServiceHistory from "./pages/Customer/service_history";
 import ProfileSettings from "./pages/Customer/Profile_Settings/profile_settings";
 import MaintenanceRequest from "./pages/Customer/Maintenance_Request/maintenance_request";
