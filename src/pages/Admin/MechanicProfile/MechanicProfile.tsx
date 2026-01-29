@@ -31,24 +31,27 @@ const MechanicProfile: React.FC = () => {
   };
 
   return (
+    // الـ min-h-screen هنا مهمة جداً لضمان تناسق الخلفية
     <div className={`flex flex-col lg:flex-row min-h-screen transition-colors duration-500 ${bgColor}`} dir="rtl">
       
-      {/* SIDEBAR */}
-      <div className="w-full lg:w-72 flex-shrink-0">
+      {/* SIDEBAR WRAPPER */}
+      {/* التعديل الجوهري هنا: جعلنا حاوية السايدبار sticky و h-screen في الشاشات الكبيرة */}
+      <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen z-40">
         <AdminSidebar />
       </div>
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
+      {/* الـ flex-1 بتخلي المحتوى ياخد باقي المساحة، والـ overflow-x-hidden بتمنع أي سكرول عرضي */}
       <main className="flex-1 p-4 md:p-8 w-full overflow-x-hidden">
       
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-  <div className="flex flex-wrap items-center gap-2 text-xl md:text-2xl font-bold">
-    <span className={dark ? "text-white" : "text-black"}>إدارة الميكانيكيين /</span>
-    <span className={dark ? "text-white" : "text-black"}> الملف الشخصي </span>
-    <span className="text-[#137FEC] truncate">John Doe</span> {/* هنا الاسم ثابت */}
-  </div>
-</div>
+          <div className="flex flex-wrap items-center gap-2 text-xl md:text-2xl font-bold">
+            <span className={dark ? "text-white" : "text-black"}>إدارة الميكانيكيين /</span>
+            <span className={dark ? "text-white" : "text-black"}> الملف الشخصي </span>
+            <span className="text-[#137FEC] truncate">John Doe</span>
+          </div>
+        </div>
 
         <div className="w-full space-y-6">
           {/* البيانات الشخصية الأساسية */}
@@ -101,26 +104,25 @@ const MechanicProfile: React.FC = () => {
               </div>
 
               <div>
-  <label className={`block mb-2 font-bold text-sm ${textMain}`}>التخصص الرئيسي</label>
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-[#137FEC1A] rounded-2xl border border-[#137FEC33]">
-    {specialties.map((item) => (
-      <span
-        key={item}
-        onClick={() => setSelectedSpecialty(item)}
-        className={`px-4 py-2 rounded-full text-xs font-bold cursor-pointer transition-all text-center ${
-          selectedSpecialty === item
-            ? "bg-[#137FEC] text-white"
-            : dark
-              ? "bg-[#0B1020] text-white/70"
-              : "bg-white text-[#137FEC] shadow-sm"
-        }`}
-      >
-        {item}
-      </span>
-    ))}
-  </div>
-</div>
-
+                <label className={`block mb-2 font-bold text-sm ${textMain}`}>التخصص الرئيسي</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-[#137FEC1A] rounded-2xl border border-[#137FEC33]">
+                  {specialties.map((item) => (
+                    <span
+                      key={item}
+                      onClick={() => setSelectedSpecialty(item)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold cursor-pointer transition-all text-center ${
+                        selectedSpecialty === item
+                          ? "bg-[#137FEC] text-white"
+                          : dark
+                            ? "bg-[#0B1020] text-white/70"
+                            : "bg-white text-[#137FEC] shadow-sm"
+                      }`}
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className={`block mb-2 font-bold text-sm ${textMain}`}>التخصص الفرعي</label>

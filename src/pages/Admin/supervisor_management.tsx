@@ -120,7 +120,30 @@ const SupervisorManagement: React.FC = () => {
               </div>
             ))}
           </div>
+          
         </div>
+        <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4 text-sm text-center">
+  <span className={dark ? "text-white/50" : "text-[#0F132380]/50"}>
+    عرض 1 إلى 5 من 2,345 مستخدم
+  </span>
+
+  <div className="flex gap-2 flex-row-reverse">
+    {["1", "2", "3", "…", "10"].map((item, idx) => (
+      <button
+        key={idx}
+        className={`
+          w-8 h-8 rounded-lg flex items-center justify-center font-semibold transition-opacity
+          ${item === "…" 
+            ? "cursor-default text-gray-400" 
+            : "hover:opacity-80 text-black bg-[#0F13231A] dark:text-white dark:bg-[#FFFFFF1A]"
+          }
+        `}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+</div>
       </main>
 
       {showAddModal && <AddSupervisor onClose={() => setShowAddModal(false)} dark={dark} />}

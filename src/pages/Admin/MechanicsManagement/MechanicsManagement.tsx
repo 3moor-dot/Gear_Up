@@ -124,22 +124,30 @@ const MechanicsManagement: React.FC = () => {
         </div>
 
         {/* Footer / Pagination - Stacks on mobile */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 py-4">
-          <div className="text-[#94a3b8] text-xs order-2 md:order-1">عرض 1 إلى 10 من 2,345 ميكانيكي</div>
-          <div className="flex items-center gap-2 order-1 md:order-2">
-            {[1, 2, 3, '....', 10].map((item, idx) => (
-              <button 
-                key={idx}
-                className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all
-                  ${item === 1 
-                    ? 'bg-[#137FEC] text-white shadow-lg shadow-blue-500/20' 
-                    : 'bg-[#137FEC1A] text-[#137FEC] hover:bg-[#137FEC] hover:text-white'}`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
+    
+        <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4 text-sm text-center">
+  <span className={dark ? "text-white/50" : "text-[#0F132380]/50"}>
+    عرض 1 إلى 5 من 2,345 مستخدم
+  </span>
+
+  <div className="flex gap-2 flex-row-reverse">
+    {["1", "2", "3", "…", "10"].map((item, idx) => (
+      <button
+        key={idx}
+        className={`
+          w-8 h-8 rounded-lg flex items-center justify-center font-semibold transition-opacity
+          ${item === "…" 
+            ? "cursor-default text-gray-400" 
+            : "hover:opacity-80 text-black bg-[#0F13231A] dark:text-white dark:bg-[#FFFFFF1A]"
+          }
+        `}
+      >
+        {item}
+      </button>
+    ))}
+  </div>
+</div>
+
 
       </main>
     </div>

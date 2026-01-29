@@ -9,15 +9,20 @@ const BookingDetails: React.FC = () => {
 
   const themeClass = dark ? "bg-primary_BGD text-white" : "bg-white text-[#1E3A5F]";
   const cardClass = "bg-[#137FEC1A] border-transparent";
-
-  // عنوان الكارت: أسود في لايت مود، أبيض في دارك مود
   const titleClass = dark ? "text-white font-bold" : "text-black font-bold";
 
   return (
-    <div className={`flex min-h-screen ${themeClass}`} dir="rtl">
-      <AdminSidebar />
+    // التعديل هنا: flex-col للموبايل و flex-row للشاشات الكبيرة مع min-h-screen
+    <div className={`flex flex-col lg:flex-row min-h-screen transition-colors duration-500 ${themeClass}`} dir="rtl">
+      
+      {/* SIDEBAR WRAPPER */}
+      {/* التعديل الجوهري: نضمن إن السايدبار واخد مكانه الثابت ومبيتحركش مع السكرول */}
+      <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen z-40">
+        <AdminSidebar />
+      </div>
 
-      <main className="flex-1 p-4 md:p-8">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-4 md:p-8 w-full overflow-x-hidden">
         {/* Breadcrumb */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div className="text-sm">
@@ -126,7 +131,6 @@ const BookingDetails: React.FC = () => {
 
           {/* Right Column */}
           <div className="space-y-6">
-
             <div className={`p-6 rounded-2xl ${cardClass}`}>
               <h3 className={`text-lg mb-4 text-center ${titleClass}`}>حالة الحجز</h3>
               <div className="flex flex-col items-center gap-2">
@@ -161,23 +165,19 @@ const BookingDetails: React.FC = () => {
                   color="bg-green-500" 
                   title="تم تغيير الحالة إلى قيد التقدم" 
                   date="28 أغسطس (آب) 2024 - 2:15 مساءً" 
-                  bgClass="bg-[#1b2a4e]" 
                 />
                 <TimelineItem 
                   color="bg-[#137FEC]" 
                   title="ميكانيكي معين" 
                   date="28 أغسطس (آب) 2024 - 11:30 صباحاً" 
-                  bgClass="bg-[#1b2a4e]"
                 />
                 <TimelineItem 
                   color="bg-red-500" 
                   title="تم تأكيد الحجز" 
                   date="27 أغسطس (آب) 2024 - 5:45 مساءً" 
-                  bgClass="bg-[#1b2a4e]"
                 />
               </div>
             </div>
-
           </div>
         </div>
       </main>
@@ -185,7 +185,8 @@ const BookingDetails: React.FC = () => {
   );
 };
 
-const TimelineItem = ({ color, title, date }: { color: string, title: string, date: string, bgClass: string }) => (
+// تم مسح bgClass لأنه لم يكن مستخدم في الـ component
+const TimelineItem = ({ color, title, date }: { color: string, title: string, date: string }) => (
   <div className="relative pr-8">
     <div className={`absolute right-0 top-1 w-4 h-4 rounded-full border-2 border-[#f0f7ff] dark:border-[#1e2a44] ${color}`}></div>
     <p className="text-sm font-bold leading-tight">{title}</p>
