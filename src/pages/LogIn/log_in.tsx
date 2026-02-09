@@ -1,9 +1,57 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../components/Footer/footer";
 import { FaPhone } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
 
 const Login = () => {
+  const navigate = useNavigate();
+  
+  // التحكم في البيانات وحالة التحميل
+  const [formData, setFormData] = useState({
+    emailOrPhone: "",
+    password: "",
+    rememberMe: true,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("http://gearupapp.runasp.net/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // حفظ التوكن
+        sessionStorage.setItem("userToken", data.token || data.data?.token);
+        
+        // التوجيه بناءً على الـ Role
+        // إذا كان الباك اند يرسل الـ role كـ "1" للعميل و "2" للميكانيكي
+        const userRole = data.role || data.data?.role; 
+
+        if (userRole === 1) {
+          navigate("/customer/dashboard");
+        } else if (userRole === 2) {
+          navigate("/mechanic/dashboard");
+        } else {
+          // في حال لم يرجع الـ Role صراحة، نقوم بفحصه من البيانات الأخرى أو التوجه لصفحة عامة
+          navigate("/customer/dashboard");
+        }
+      } else {
+        alert(data.message || "بيانات الدخول غير صحيحة");
+      }
+    } catch (err) {
+      alert("فشل الاتصال بالسيرفر");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className="
@@ -53,6 +101,8 @@ const Login = () => {
               </label>
               <div className="relative">
                 <input
+                  value={formData.emailOrPhone}
+                  onChange={(e) => setFormData({...formData, emailOrPhone: e.target.value})}
                   className="
                     w-full h-12 rounded-xl
                     bg-[#8EC1F5] dark:bg-[#137FEC1A]
@@ -72,7 +122,7 @@ const Login = () => {
             {/* PASSWORD */}
             <div>
               <div className="flex justify-between mb-2">
-                <Link to="/forgot-password" className="text-[#137FEC] text-sm">
+                <Link to="/forgot-password" alphabet-sm className="text-[#137FEC] text-sm">
                   هل نسيت كلمة السر؟
                 </Link>
                 <label className="font-medium">كلمة المرور</label>
@@ -80,6 +130,8 @@ const Login = () => {
               <div className="relative">
                 <input
                   type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
                   className="
                     w-full h-12 rounded-xl
                     bg-[#8EC1F5] dark:bg-[#137FEC1A]
@@ -97,13 +149,17 @@ const Login = () => {
             </div>
 
             {/* BUTTON */}
-            <button className="w-full h-12 bg-[#137FEC] rounded-xl text-white font-semibold">
-              تسجيل الدخول
+            <button 
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full h-12 bg-[#137FEC] rounded-xl text-white font-semibold disabled:bg-gray-400"
+            >
+              {loading ? "جاري التحميل..." : "تسجيل الدخول"}
             </button>
 
             <p className="text-center text-sm">
               ليس لديك حساب؟
-              <Link to="/register" className="text-blue-600 mr-1">
+              <Link to="/register" className="text-blue-600 mr-1 font-bold">
                 قم بالتسجيل
               </Link>
             </p>
