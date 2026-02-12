@@ -5,9 +5,7 @@ import {
     FaEnvelope,
     FaLock,
     FaUserTie,
-    FaMapMarkerAlt,
-    FaTools,
-    FaCheckCircle
+    FaTools
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,17 +23,17 @@ const Register: React.FC = () => {
                     إنشاء حسابك
                 </h1>
                 <p className="text-center text-gray-500 mb-8">
-                    {step === 1 ? "ابدأ بإدخال بياناتك الأساسية" : "اختر نوع الحساب لإكمال التسجيل"}
+                    {step === 1 ? "بياناتك الأساسية" : "اختر نوع الحساب لإتمام العملية"}
                 </p>
 
                 <AnimatePresence mode="wait">
-                    {/* STEP 1 – BASIC INFO */}
+                    {/* الخطوة الأولى: البيانات الأساسية فقط */}
                     {step === 1 && (
                         <motion.div
                             key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
                             className="space-y-4"
                         >
                             <div className="grid grid-cols-2 gap-4">
@@ -44,99 +42,76 @@ const Register: React.FC = () => {
                             </div>
                             <FormSection
                                 fields={[
-                                    { label: "رقم الهاتف", icon: <FaPhone />, placeholder: "أدخل رقم الهاتف" },
-                                    { label: "البريد الإلكتروني", icon: <FaEnvelope />, placeholder: "أدخل بريدك الإلكتروني" },
-                                    { label: "كلمة المرور", icon: <FaLock />, placeholder: "أدخل كلمة المرور", type: "password" },
-                                    { label: "تأكيد كلمة المرور", icon: <FaLock />, placeholder: "أعد إدخال كلمة المرور", type: "password" },
+                                    { label: "رقم الهاتف", icon: <FaPhone />, placeholder: "20xxxxxxxx+" },
+                                    { label: "البريد الإلكتروني", icon: <FaEnvelope />, placeholder: "example@mail.com" },
+                                    { label: "كلمة المرور", icon: <FaLock />, placeholder: "********", type: "password" },
                                 ]}
                             />
                         </motion.div>
                     )}
 
-                    {/* STEP 2 – ROLE SELECTION & MECHANIC DATA */}
+                    {/* الخطوة الثانية: اختيار النوع فقط */}
                     {step === 2 && (
                         <motion.div
                             key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="py-10"
                         >
-                            {/* ROLE SWITCH INSIDE STEP 2 */}
-                            <div className="flex justify-center gap-4 mb-8">
+                            <div className="flex flex-col sm:flex-row justify-center gap-6">
                                 <button
                                     onClick={() => setRole("client")}
-                                    className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${role === "client" ? "bg-black text-white scale-105 shadow-lg" : "bg-gray-400 text-white"}`}
+                                    className={`flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all duration-300 ${
+                                        role === "client" 
+                                        ? "border-black bg-black text-white shadow-2xl scale-105" 
+                                        : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
+                                    }`}
                                 >
-                                    <FaUserTie />
-                                    عميل
+                                    <FaUserTie size={40} />
+                                    <span className="font-bold text-lg">سجل كعميل</span>
                                 </button>
+
                                 <button
                                     onClick={() => setRole("mechanic")}
-                                    className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${role === "mechanic" ? "bg-[#137FEC] text-white scale-105 shadow-lg" : "bg-[#8FC1FF] text-white"}`}
+                                    className={`flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all duration-300 ${
+                                        role === "mechanic" 
+                                        ? "border-[#137FEC] bg-[#137FEC] text-white shadow-2xl scale-105" 
+                                        : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
+                                    }`}
                                 >
-                                    <FaTools />
-                                    ميكانيكي
+                                    <FaTools size={40} />
+                                    <span className="font-bold text-lg">سجل كميكانيكي</span>
                                 </button>
                             </div>
-
-                            {/* SHOW MECHANIC FIELDS ONLY IF MECHANIC IS SELECTED */}
-                            <AnimatePresence mode="wait">
-                                {role === "mechanic" ? (
-                                    <motion.div
-                                        key="mechanic-fields"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        className="space-y-4 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/30"
-                                    >
-                                        <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2">بيانات الورشة والعمل:</h3>
-                                        <FormSection
-                                            fields={[
-                                                { label: "موقع الورشة", icon: <FaMapMarkerAlt />, placeholder: "أدخل موقع الورشة" },
-                                                { label: "التخصص الرئيسي", icon: <FaTools />, placeholder: "ميكانيكي / كهربائي / كليهما" },
-                                                { label: "التخصص الفرعي", icon: <FaTools />, placeholder: "ألماني / كوري / ياباني" },
-                                                { label: "إمكانية الزيارة الميدانية", icon: <FaCheckCircle />, placeholder: "نعم / لا" },
-                                            ]}
-                                        />
-                                    </motion.div>
-                                ) : (
-                                    <motion.div 
-                                        initial={{ opacity: 0 }} 
-                                        animate={{ opacity: 1 }}
-                                        className="text-center py-10 text-gray-500 dark:text-gray-400 italic"
-                                    >
-                                        سيتم إنشاء حسابك كعميل، يمكنك إضافة بيانات سيارتك لاحقاً من لوحة التحكم.
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <p className="text-center mt-8 text-sm text-gray-400">
+                                {role === "client" ? "ستتمكن من طلب خدمات الصيانة فوراً" : "سنطلب منك بيانات ورشتك في الخطوة القادمة داخل التطبيق"}
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* NAVIGATION BUTTONS */}
+                {/* الأزرار */}
                 <div className="flex gap-3 mt-8">
                     {step === 2 && (
                         <button
                             onClick={() => setStep(1)}
-                            className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white py-3 rounded-xl text-lg font-semibold hover:bg-gray-300 transition"
+                            className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
                         >
                             السابق
                         </button>
                     )}
                     <button
-                        onClick={() => step === 1 ? setStep(2) : alert("تم التسجيل بنجاح")}
-                        className="flex-[2] bg-[#137FEC] text-white py-3 rounded-xl text-lg font-semibold hover:bg-blue-700 transition shadow-md"
+                        onClick={() => step === 1 ? setStep(2) : alert("تم إنشاء الحساب بنجاح!")}
+                        className="flex-[2] bg-[#137FEC] text-white py-4 rounded-xl text-lg font-bold hover:bg-blue-700 transition shadow-lg"
                     >
-                        {step === 1 ? "التالي" : "إنهاء التسجيل"}
+                        {step === 1 ? "متابعة" : "إنشاء الحساب الآن"}
                     </button>
                 </div>
 
-                {/* LOGIN LINK */}
-                <p className="text-center mt-6 dark:text-white">
-                    هل لديك حساب بالفعل؟{" "}
-                    <span
-                        onClick={() => window.location.href = "/login"}
-                        className="text-[#137FEC] font-semibold cursor-pointer hover:underline">
+                <p className="text-center mt-6 dark:text-white text-sm">
+                    لديك حساب؟{" "}
+                    <span onClick={() => window.location.href = "/login"} className="text-[#137FEC] font-bold cursor-pointer hover:underline">
                         تسجيل الدخول
                     </span>
                 </p>
@@ -147,19 +122,19 @@ const Register: React.FC = () => {
 
 export default Register;
 
-/* ---------------- HELPER COMPONENTS ---------------- */
+/* ---------------- المكونات المساعدة ---------------- */
 
 const FormInput = ({ label, icon, placeholder, type = "text" }: any) => (
     <div className="w-full">
-        <label className="block mb-2 font-semibold dark:text-white text-sm">{label}</label>
+        <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
         <div className="relative">
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0F132333] dark:text-gray-400">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                 {icon}
             </span>
             <input
                 type={type}
                 placeholder={placeholder}
-                className="w-full bg-[#D6E9FF] dark:bg-[#137FEC1A] text-gray-800 dark:text-gray-200 placeholder-[#0F132366] dark:placeholder-gray-500 pr-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 text-sm"
+                className="w-full bg-white dark:bg-[#137FEC1A] border border-gray-200 dark:border-transparent text-gray-800 dark:text-gray-200 pr-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
             />
         </div>
     </div>
