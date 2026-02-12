@@ -32,9 +32,13 @@ import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenan
 import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
 import CancelBookingModal from "./pages/Customer/Maintenance_Bookings/cancel_booking_modal";
-
-
-
+import MachineDashboard from "./pages/Mechanics/MachineDashboard/MachineDashboard";
+import Reviewing from "./pages/Mechanics/Reviewing/Reviewing";
+import Booking from "./pages/Mechanics/Booking/Booking";
+import Schedule from "./pages/Mechanics/Schedule/Schedule";
+import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
+import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
+import Notification from "./pages/Notification/Notification";
 const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -57,7 +61,14 @@ const App: React.FC = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-
+          {/*Machinc pages */}
+          <Route path="/mechanics/machinedashboard" element={<MachineDashboard/>} />
+          <Route path="/mechanics/reviewing" element={<Reviewing/>} />
+          <Route path="/mechanics/schedule" element={<Schedule/>} />
+          <Route path="/mechanics/booking" element={<Booking/>} />
+          <Route path="/mechanics/booking/mbookingdetails/:id"element={<MBookingDetails />}/>
+          <Route path="/mechanics/mprofile" element={<Mprofile />} />
+          <Route path="/notification" element={<Notification />} />
           {/* ADMIN PAGES */}
           <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/admindashboard" element={<AdminDashboard />} />
