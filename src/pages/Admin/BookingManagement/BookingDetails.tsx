@@ -12,11 +12,11 @@ const BookingDetails: React.FC = () => {
   const titleClass = dark ? "text-white font-bold" : "text-black font-bold";
 
   return (
-    // التعديل هنا: flex-col للموبايل و flex-row للشاشات الكبيرة مع min-h-screen
+
     <div className={`flex flex-col lg:flex-row min-h-screen transition-colors duration-500 ${themeClass}`} dir="rtl">
       
       {/* SIDEBAR WRAPPER */}
-      {/* التعديل الجوهري: نضمن إن السايدبار واخد مكانه الثابت ومبيتحركش مع السكرول */}
+
       <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen z-40">
         <AdminSidebar />
       </div>
@@ -185,7 +185,7 @@ const BookingDetails: React.FC = () => {
   );
 };
 
-// تم مسح bgClass لأنه لم يكن مستخدم في الـ component
+
 const TimelineItem = ({ color, title, date }: { color: string, title: string, date: string }) => (
   <div className="relative pr-8">
     <div className={`absolute right-0 top-1 w-4 h-4 rounded-full border-2 border-[#f0f7ff] dark:border-[#1e2a44] ${color}`}></div>

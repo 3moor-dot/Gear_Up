@@ -97,19 +97,20 @@ const mockReviews: Review[] = [
 /* ---------- Main Component ---------- */
 const Reviews: React.FC = () => {
   const { dark } = useTheme();
-  const [isSidebarOpen, setSidebarOpen] = useState(false); // للتحكم في القائمة في الموبايل
+  {/*list for mobile*/}
+  const [isSidebarOpen, setSidebarOpen] = useState(false); 
 
   return (
     <div
       dir="rtl"
       className={`flex min-h-screen ${dark ? "bg-primary_BGD" : "bg-white"}`}
     >
-      {/* Sidebar - مخفي في الموبايل ويظهر عند الضغط */}
+     {/* sidebar for mobile */}
       <div className={`fixed inset-y-0 right-0 z-50 transform ${isSidebarOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 lg:relative lg:translate-x-0 lg:flex`}>
         <AdminSidebar />
       </div>
 
-      {/* Overlay للموبايل عند فتح الـ Sidebar */}
+   
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -121,7 +122,7 @@ const Reviews: React.FC = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            {/* زر القائمة للموبايل */}
+          {/* list for mobile */}
             <button 
               onClick={() => setSidebarOpen(true)}
               className={`lg:hidden p-2 rounded-lg ${dark ? "text-white bg-gray-800" : "text-gray-800 bg-gray-100"}`}
@@ -153,7 +154,7 @@ const Reviews: React.FC = () => {
           <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
         </div>
 
-        {/* Filters - جعلناها Scrollable في الموبايل لكي لا تنكسر */}
+{/* scrollable filters */}
         <div className="flex flex-nowrap lg:flex-wrap gap-3 mb-8 overflow-x-auto pb-2 no-scrollbar">
           <FilterButton label="التقييم: الكل" dark={dark} />
           <FilterButton label="الحالة" dark={dark} />
@@ -164,7 +165,7 @@ const Reviews: React.FC = () => {
         {/* Table/Cards Container */}
         <div className={`rounded-2xl overflow-hidden border ${dark ? "border-[#1E2A44]" : "border-[#E2E8F0]"}`}>
           
-          {/* عرض الجدول للشاشات الكبيرة فقط */}
+     {/* tables for big screens */}
           <div className="hidden lg:block">
             <table className="w-full text-right border-collapse">
               <thead className={`text-sm ${dark ? "bg-[#137FEC1A] text-gray-400" : "bg-[#137FEC1A] text-gray-500"}`}>
@@ -185,7 +186,7 @@ const Reviews: React.FC = () => {
             </table>
           </div>
 
-          {/* عرض الكروت للموبايل والتابلت الصغير */}
+    {/* cards for mobile & tablet */}
           <div className="lg:hidden grid grid-cols-1 divide-y divide-[#1E2A44]/10">
             {mockReviews.map((review, idx) => (
               <ReviewCard key={idx} review={review} dark={dark} />

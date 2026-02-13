@@ -120,31 +120,7 @@ export default function UsersManagementPage() {
         </div>
 
         {/* Pagination - Responsive stacking */}
-        {/* <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4 text-sm text-slate-500">
-          <span className="order-2 md:order-1">عرض 1 إلى 5 من 2,345 مستخدم</span>
-
-          <div className="flex gap-2 order-1 md:order-2">
-            {["10", "…", "3", "2", "1"].map((item, idx) =>
-              item === "…" ? (
-                <span key={idx} className="px-1 self-center">…</span>
-              ) : (
-                <button
-                  key={idx}
-                  className={`
-                    w-9 h-9 rounded-xl flex items-center justify-center transition-all
-                    ${item === "1" 
-                      ? "bg-[#137FEC] text-white shadow-lg shadow-blue-500/30" 
-                      : "bg-[#137FEC1A] text-[#137FEC] hover:bg-[#137FEC] hover:text-white"
-                    }
-                    font-bold
-                  `}
-                >
-                  {item}
-                </button>
-              )
-            )}
-          </div>
-        </div> */}
+  
         <div className="flex flex-col md:flex-row items-center justify-between mt-8 gap-4 text-sm text-center">
   <span className={dark ? "text-white/50" : "text-[#0F132380]/50"}>
     عرض 1 إلى 5 من 2,345 مستخدم

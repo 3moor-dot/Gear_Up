@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
-// استعملي السايدبار اللي ظبطناه سوا عشان الـ logic بتاعه جاهز
 import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 
 const UserProfile: React.FC = () => {
@@ -19,7 +18,6 @@ const UserProfile: React.FC = () => {
     <div className={`flex flex-col lg:flex-row min-h-screen transition-colors duration-500 ${bgColor}`} dir="rtl">
       
       {/* SIDEBAR WRAPPER */}
-      {/* التعديل الجوهري لثبات السايدبار */}
       <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen z-40">
         <AdminSidebar />
       </div>
@@ -43,7 +41,7 @@ const UserProfile: React.FC = () => {
         </div>
 
         <div className="max-w-6xl space-y-6">
-          {/* البيانات الشخصية */}
+        {/* personal Info */}
           <section className={`rounded-2xl md:rounded-3xl border ${borderColor} ${cardBg} p-5 md:p-8 relative shadow-sm`}>
             <h3 className={`text-base md:text-lg font-bold mb-2 text-right pr-2 ${mainTextColor}`}>
               البيانات الشخصية الأساسية
@@ -71,7 +69,7 @@ const UserProfile: React.FC = () => {
             </div>
           </section>
 
-          {/* بيانات السيارات */}
+     {  /* car Info */}
           <section className={`rounded-2xl md:rounded-3xl border ${borderColor} ${cardBg} p-5 md:p-8 relative shadow-sm`}>
             <h3 className={`text-base md:text-lg font-bold mb-2 text-right pr-2 ${mainTextColor}`}>
               بيانات السيارات

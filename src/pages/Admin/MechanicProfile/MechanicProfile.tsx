@@ -31,17 +31,17 @@ const MechanicProfile: React.FC = () => {
   };
 
   return (
-    // الـ min-h-screen هنا مهمة جداً لضمان تناسق الخلفية
+
     <div className={`flex flex-col lg:flex-row min-h-screen transition-colors duration-500 ${bgColor}`} dir="rtl">
       
       {/* SIDEBAR WRAPPER */}
-      {/* التعديل الجوهري هنا: جعلنا حاوية السايدبار sticky و h-screen في الشاشات الكبيرة */}
+    
       <div className="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen z-40">
         <AdminSidebar />
       </div>
 
       {/* MAIN CONTENT */}
-      {/* الـ flex-1 بتخلي المحتوى ياخد باقي المساحة، والـ overflow-x-hidden بتمنع أي سكرول عرضي */}
+
       <main className="flex-1 p-4 md:p-8 w-full overflow-x-hidden">
       
         {/* HEADER */}
