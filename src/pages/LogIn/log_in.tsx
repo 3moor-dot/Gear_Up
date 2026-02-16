@@ -89,7 +89,7 @@ const Login = () => {
 
             {/* EMAIL */}
             <div>
-              <label className="block mb-2 font-medium text-[#137FEC]">البريد الإلكتروني أو رقم الهاتف</label>
+              <label className="block mb-2 font-medium">البريد الإلكتروني أو رقم الهاتف</label>
               <div className="relative">
                 <input
                   value={formData.emailOrPhone}
@@ -106,8 +106,8 @@ const Login = () => {
             {/* PASSWORD */}
             <div>
               <div className="flex justify-between mb-2">
-                <Link to="/forgot-password" alphabet-sm className="text-[#137FEC] text-sm">هل نسيت كلمة السر؟</Link>
                 <label className="font-medium">كلمة المرور</label>
+                <Link to="/forgot-password" alphabet-sm className="text-[#137FEC] text-sm">هل نسيت كلمة السر؟</Link>
               </div>
               <div className="relative">
                 <input
