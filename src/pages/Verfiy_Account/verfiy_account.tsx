@@ -36,14 +36,14 @@ const Verification = () => {
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold">التحقق من حسابك</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-              لضمان سلامتك، يرجى إدخال الرمز المكون من 6 أرقام <br />
+              لضمان سلامتك، يرجى إدخال الرمز المكون من 5 أرقام <br />
               الذي أرسلناه إلى عنوان بريدك الإلكتروني للمتابعة.
             </p>
           </div>
 
           {/* OTP INPUTS */}
           <div className="flex justify-center gap-2 my-8" dir="ltr">
-            {[...Array(6)].map((_, index) => (
+            {[...Array(5)].map((_, index) => (
               <input
                 key={index}
                 type="text"
