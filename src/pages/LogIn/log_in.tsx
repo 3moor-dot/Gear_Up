@@ -40,15 +40,11 @@ const Login = () => {
           navigate("/admin/admindashboard");
         } else if (userRole === 2) {
           // حالة الميكانيكي
-          navigate("/mechanics/machinedashboard");
+          navigate("/mechanics/machineprofile");
         } else if (userRole === 1) {
           // حالة العميل
-          navigate("/customer/dashboard");
-        } else {
-          // توجيه افتراضي في حالة عدم التعرف على الرتبة
-          navigate("/customer/dashboard");
-        }
-
+          navigate("/customer/profilesettings");
+        } 
       } else {
         alert(data.message || "بيانات الدخول غير صحيحة");
       }
