@@ -40,7 +40,7 @@ const Login = () => {
           navigate("/admin/admindashboard");
         } else if (userRole === 2) {
           // حالة الميكانيكي
-          navigate("/mechanic/dashboard");
+          navigate("/mechanics/machinedashboard");
         } else if (userRole === 1) {
           // حالة العميل
           navigate("/customer/dashboard");

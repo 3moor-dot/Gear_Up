@@ -74,18 +74,27 @@ const MachineSidebar: React.FC = () => {
 
             <div className="space-y-2">
               <button
-                onClick={() => { navigate("/mechanics/mprofile"); setIsOpen(false); }}
+                onClick={() => { navigate("/mechanics/machineprofile"); setIsOpen(false); }}
                 className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
                   ${dark ? "bg-[#1E2A44] text-white hover:bg-[#2A3A5B]" : "bg-[#DCEEFF] text-[#1E3A5F] hover:bg-[#CFE6FF]"}`}
               >
                 <FaCog /> الإعدادات
               </button>
-              <button
-                className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
-                  ${dark ? "bg-[#0B1020] text-red-500 hover:bg-[#1A1F2D]" : "bg-[#F2F8FF] text-red-600 hover:bg-[#E4F0FF]"}`}
-              >
-                <FaSignOutAlt /> تسجيل خروج
-              </button>
+             <button
+  onClick={() => { 
+    // Clear authentication data (اختياري)
+    localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    // أو أي حاجة تانية بتخزنيها
+    
+    navigate("/"); // الانتقال للصفحة الرئيسية
+    setIsOpen(false); // قفل الـ sidebar في الموبايل
+  }}
+  className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
+    ${dark ? "bg-[#0B1020] text-red-500 hover:bg-[#1A1F2D]" : "bg-[#F2F8FF] text-red-600 hover:bg-[#E4F0FF]"}`}
+>
+  <FaSignOutAlt /> تسجيل خروج
+</button>
             </div>
           </div>
         </div>

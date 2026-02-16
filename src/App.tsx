@@ -38,6 +38,7 @@ import Booking from "./pages/Mechanics/Booking/Booking";
 import Schedule from "./pages/Mechanics/Schedule/Schedule";
 import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
+import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import Notification from "./pages/Notification/Notification";
 const App: React.FC = () => {
   return (
@@ -68,6 +69,8 @@ const App: React.FC = () => {
           <Route path="/mechanics/booking" element={<Booking/>} />
           <Route path="/mechanics/booking/mbookingdetails/:id"element={<MBookingDetails />}/>
           <Route path="/mechanics/mprofile" element={<Mprofile />} />
+          <Route path="/mechanics/machineprofile" element={<Mechine_profile  />} />
+
           <Route path="/notification" element={<Notification />} />
           {/* ADMIN PAGES */}
           <Route path="/admin/profile" element={<AdminProfile />} />
