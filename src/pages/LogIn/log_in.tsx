@@ -28,8 +28,11 @@ const Login = () => {
 
       if (response.ok) {
         // حفظ التوكن في الـ Session Storage
-        const token = data.token || data.data?.token;
-        sessionStorage.setItem("userToken", token);
+
+        // const token = data.token || data.data?.token;
+        // sessionStorage.setItem("userToken", token);
+        const token = data.accessToken;
+sessionStorage.setItem("userToken", token);
         
         // استخراج الـ Role (تأكد من مسمى الحقل في الـ Response)
         const userRole = data.role || data.data?.role; 
