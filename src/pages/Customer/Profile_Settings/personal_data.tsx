@@ -283,20 +283,15 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
   );
 };
 
+
 // import { useState, useEffect } from "react";
 // import { MdSave, MdCloudUpload, MdEdit, MdClose } from "react-icons/md";
 
 // interface PersonalDataProps {
-//   profileImage: File | null; // خليها File عشان نرفعها للباك
-//   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 //   inputStyle: string;
 // }
 
-// export const PersonalData = ({
-//   profileImage,
-//   handleImageUpload,
-//   inputStyle,
-// }: PersonalDataProps) => {
+// export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //   const [isEditable, setIsEditable] = useState(false);
 //   const [loading, setLoading] = useState(false);
 
@@ -307,11 +302,13 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //     email: "",
 //   });
 
+//   const [profileImage, setProfileImage] = useState<File | string | null>(null);
+
 //   const toggleEdit = () => {
 //     setIsEditable(!isEditable);
 //   };
 
-//   // ✅ جلب بيانات البروفايل
+//   // ✅ جلب بيانات البروفايل من السيرفر
 //   useEffect(() => {
 //     const fetchProfile = async () => {
 //       try {
@@ -332,11 +329,15 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //         const data = await response.json();
 
 //         setFormData({
-//           firstName: data.firstName?.value || data.firstName || "",
-//           lastName: data.lastName?.value || data.lastName || "",
+//           firstName: data.firstName || "",
+//           lastName: data.lastName || "",
 //           phone: data.phone || "",
 //           email: data.email || "",
 //         });
+
+//         if (data.profilePhoto) {
+//           setProfileImage(data.profilePhoto); // URL من السيرفر
+//         }
 //       } catch (error) {
 //         console.error("Error fetching profile:", error);
 //       }
@@ -344,6 +345,13 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 
 //     fetchProfile();
 //   }, []);
+
+//   // ✅ رفع صورة جديدة
+//   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     if (e.target.files && e.target.files[0]) {
+//       setProfileImage(e.target.files[0]); // File محلي مؤقت
+//     }
+//   };
 
 //   // ✅ حفظ التعديلات مع الصورة
 //   const handleSave = async () => {
@@ -366,13 +374,18 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //           method: "PUT",
 //           headers: {
 //             Authorization: `Bearer ${token}`,
-//             // ما تحطش Content-Type هنا، fetch هيتصرف صح مع FormData
 //           },
 //           body: form,
 //         }
 //       );
 
 //       if (!response.ok) throw new Error("Update failed");
+
+//       const result = await response.json();
+//       // بعد الحفظ، نخزن الـ URL من السيرفر عشان الصورة تبقى موجودة بعد الريفريش
+//       if (result.profilePhoto) {
+//         setProfileImage(result.profilePhoto);
+//       }
 
 //       setIsEditable(false);
 //     } catch (error) {
@@ -413,7 +426,7 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //                   />
 //                 ) : (
 //                   <img
-//                     src={profileImage as string}
+//                     src={profileImage as string} // URL من السيرفر
 //                     alt="Profile"
 //                     className="w-full h-full object-cover"
 //                   />
@@ -541,5 +554,3 @@ export const PersonalData = ({ inputStyle }: PersonalDataProps) => {
 //     </div>
 //   );
 // };
-
-
