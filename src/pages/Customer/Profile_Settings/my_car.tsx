@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 
-// --- تعريف نوع بيانات السيارة ---
+// تعريف نوع بيانات السيارة
 interface Car {
   id: string;
   name: string;
@@ -11,21 +11,9 @@ interface Car {
   image: string;
 }
 
-// --- نوع البيانات اللي بتيجي من الـ API ---
-interface CarResponse {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  plateNumber: string;
-  carPhotoUrl: string;
-}
-
 export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
   // حالة تسجيل الدخول
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const email = "shima@gmail.com";
-  const password = "12345678";
 
   // قائمة السيارات
   const [cars, setCars] = useState<Car[]>([]);
@@ -39,18 +27,18 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 
   // --- تسجيل الدخول أو إعادة استخدام token ---
   const login = async () => {
-    if (token) return;
+    if (token) return; // لو في token خلاص
     try {
       const res = await fetch("http://gearupapp.runasp.net/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailOrPhone: email, password, rememberMe: true })
+        body: JSON.stringify({ emailOrPhone: "shima@gmail.com", password: "12345678", rememberMe: true })
       });
       if (!res.ok) throw new Error("فشل تسجيل الدخول");
       const data = await res.json();
       localStorage.setItem("token", data.accessToken);
       setToken(data.accessToken);
-    } catch (_) {
+    } catch {
       alert("الرجاء التحقق من بيانات الدخول");
     }
   };
@@ -63,7 +51,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     });
     if (!res.ok) return;
     const data = await res.json();
-    const mappedCars = data.cars.map((car: CarResponse) => ({
+    const mappedCars: Car[] = data.cars.map((car: { id: string; brand: string; model: string; year: number; plateNumber: string; carPhotoUrl: string }) => ({
       id: car.id,
       name: car.brand,
       model: car.model,
@@ -168,7 +156,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
             <div className="relative">
               <div className="w-32 h-32 rounded-full border-4 border-[#E5F1FD] bg-[#FDEBD0] overflow-hidden flex items-center justify-center">
                 <img
-                  src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"}
+                  src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"} // الصورة الافتراضية
                   alt="Car"
                   className="w-full h-full object-cover"
                 />
@@ -288,7 +276,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 // import { useState, useEffect } from "react";
 // import { MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 
-// // تعريف نوع بيانات السيارة
+// // --- تعريف نوع بيانات السيارة ---
 // interface Car {
 //   id: string;
 //   name: string;
@@ -298,11 +286,21 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //   image: string;
 // }
 
+// // --- نوع البيانات اللي بتيجي من الـ API ---
+// interface CarResponse {
+//   id: string;
+//   brand: string;
+//   model: string;
+//   year: number;
+//   plateNumber: string;
+//   carPhotoUrl: string;
+// }
+
 // export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //   // حالة تسجيل الدخول
 //   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-//   const [email, setEmail] = useState("shima@gmail.com");
-//   const [password, setPassword] = useState("12345678");
+//   const email = "shima@gmail.com";
+//   const password = "12345678";
 
 //   // قائمة السيارات
 //   const [cars, setCars] = useState<Car[]>([]);
@@ -316,7 +314,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 
 //   // --- تسجيل الدخول أو إعادة استخدام token ---
 //   const login = async () => {
-//     if (token) return; // لو في token خلاص
+//     if (token) return;
 //     try {
 //       const res = await fetch("http://gearupapp.runasp.net/api/auth/login", {
 //         method: "POST",
@@ -327,7 +325,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //       const data = await res.json();
 //       localStorage.setItem("token", data.accessToken);
 //       setToken(data.accessToken);
-//     } catch (err) {
+//     } catch (_) {
 //       alert("الرجاء التحقق من بيانات الدخول");
 //     }
 //   };
@@ -340,7 +338,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     });
 //     if (!res.ok) return;
 //     const data = await res.json();
-//     const mappedCars = data.cars.map((car: any) => ({
+//     const mappedCars = data.cars.map((car: CarResponse) => ({
 //       id: car.id,
 //       name: car.brand,
 //       model: car.model,
@@ -443,23 +441,13 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 //           <div className="lg:col-span-3 flex flex-col items-center gap-4">
 //             <div className="relative">
-//               {/* <div className="w-32 h-32 rounded-full border-4 border-[#E5F1FD] bg-[#FDEBD0] overflow-hidden flex items-center justify-center">
-//                 <img
-//                   src={carPhoto ? URL.createObjectURL(carPhoto) : "/car-placeholder.png"}
-//                   alt="Car"
-//                   className="w-full h-full object-cover opacity-40"
-//                 />
-//               </div> */}
 //               <div className="w-32 h-32 rounded-full border-4 border-[#E5F1FD] bg-[#FDEBD0] overflow-hidden flex items-center justify-center">
-//   <img
-//     src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"} // الصورة الافتراضية هي images.png
-//     alt="Car"
-//     className="w-full h-full object-cover"
-//   />
-// </div>
-
-
-
+//                 <img
+//                   src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"}
+//                   alt="Car"
+//                   className="w-full h-full object-cover"
+//                 />
+//               </div>
 //               <label htmlFor="carPhoto" className="absolute -bottom-2 -right-2 bg-[#137FEC] text-white p-2 rounded-full shadow-lg cursor-pointer">
 //                 <MdCloudUpload size={20} />
 //               </label>
@@ -476,16 +464,13 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //               <input type="text" placeholder="رقم لوحة بيانات" className={inputStyle} value={newCar.plate} onChange={(e) => setNewCar({ ...newCar, plate: e.target.value })} />
 //             </div>
 //             <div className="flex justify-center">
-//               {/* <button className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold flex items-center gap-2" onClick={handleAddCar}>
-//                 <MdAdd size={24} /> اضافة سيارة
-//               </button> */}
 //               <button
-//   className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
-//   onClick={handleAddCar}
-//   disabled={!carPhoto} // لو مفيش صورة، الزر هيبقى disabled
-// >
-//   <MdAdd size={24} /> اضافة سيارة
-// </button>
+//                 className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50"
+//                 onClick={handleAddCar}
+//                 disabled={!carPhoto}
+//               >
+//                 <MdAdd size={24} /> اضافة سيارة
+//               </button>
 //             </div>
 //           </div>
 //         </div>
@@ -574,3 +559,5 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     </div>
 //   );
 // };
+
+
