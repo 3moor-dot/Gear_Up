@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 
-// تعريف نوع بيانات السيارة
 interface Car {
   id: string;
   name: string;
@@ -12,38 +11,37 @@ interface Car {
 }
 
 export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
-  // حالة تسجيل الدخول
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [token, setToken] = useState<string | null>(sessionStorage.getItem("token"));
 
-  // قائمة السيارات
   const [cars, setCars] = useState<Car[]>([]);
   const [expandedCarId, setExpandedCarId] = useState<string | null>(null);
   const [editModeId, setEditModeId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Car | null>(null);
 
-  // بيانات الفورم لإضافة عربية جديدة
   const [newCar, setNewCar] = useState({ name: "", model: "", year: "", plate: "" });
   const [carPhoto, setCarPhoto] = useState<File | null>(null);
 
-  // --- تسجيل الدخول أو إعادة استخدام token ---
   const login = async () => {
-    if (token) return; // لو في token خلاص
+    if (token) return;
     try {
       const res = await fetch("http://gearupapp.runasp.net/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailOrPhone: "shima@gmail.com", password: "12345678", rememberMe: true })
+        body: JSON.stringify({
+          emailOrPhone: "shima@gmail.com",
+          password: "12345678",
+          rememberMe: true
+        })
       });
       if (!res.ok) throw new Error("فشل تسجيل الدخول");
       const data = await res.json();
-      localStorage.setItem("token", data.accessToken);
+      sessionStorage.setItem("token", data.accessToken);
       setToken(data.accessToken);
     } catch {
       alert("الرجاء التحقق من بيانات الدخول");
     }
   };
 
-  // --- جلب السيارات من الباك ---
   const fetchCars = async () => {
     if (!token) return;
     const res = await fetch("http://gearupapp.runasp.net/api/customers/cars", {
@@ -51,7 +49,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     });
     if (!res.ok) return;
     const data = await res.json();
-    const mappedCars: Car[] = data.cars.map((car: { id: string; brand: string; model: string; year: number; plateNumber: string; carPhotoUrl: string }) => ({
+    const mappedCars: Car[] = data.cars.map((car: any) => ({
       id: car.id,
       name: car.brand,
       model: car.model,
@@ -62,7 +60,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     setCars(mappedCars);
   };
 
-  // --- useEffect للتأكد من تسجيل الدخول وجلب السيارات ---
   useEffect(() => {
     const init = async () => {
       await login();
@@ -71,9 +68,10 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     init();
   }, []);
 
-  // --- إضافة عربية جديدة ---
   const handleAddCar = async () => {
+    console.log("Token before add:", token);
     if (!token) return;
+
     const formData = new FormData();
     formData.append("Brand", newCar.name);
     formData.append("Model", newCar.model);
@@ -96,7 +94,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     }
   };
 
-  // --- تعديل عربية ---
   const handleEditClick = (car: Car) => {
     setEditModeId(car.id);
     setEditData({ ...car });
@@ -111,11 +108,14 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     formData.append("Model", editData.model);
     formData.append("Year", editData.year);
 
-    const res = await fetch(`http://gearupapp.runasp.net/api/customers/cars/${editData.id}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData
-    });
+    const res = await fetch(
+      `http://gearupapp.runasp.net/api/customers/cars/${editData.id}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      }
+    );
 
     if (res.ok) {
       await fetchCars();
@@ -125,15 +125,17 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
     }
   };
 
-  // --- حذف عربية ---
   const handleDelete = async (id: string, name: string) => {
     if (!token) return;
     if (!window.confirm(`هل أنت متأكد من حذف السيارة: ${name}؟`)) return;
 
-    const res = await fetch(`http://gearupapp.runasp.net/api/customers/cars/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await fetch(
+      `http://gearupapp.runasp.net/api/customers/cars/${id}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
 
     if (res.status === 204) {
       setCars(cars.filter(c => c.id !== id));
@@ -147,26 +149,39 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 
   return (
     <div className="bg-white dark:bg-primary_BGD border border-blue-100 dark:border-gray-700 rounded-[40px] p-8 md:p-12 shadow-xl">
-      <h2 className="text-[#137FEC] text-2xl font-black mb-8 text-right border-b pb-4 dark:border-gray-700">بيانات سياراتي</h2>
+      <h2 className="text-[#137FEC] text-2xl font-black mb-8 text-right border-b pb-4 dark:border-gray-700">
+        بيانات سياراتي
+      </h2>
 
       <div className="space-y-12">
-        {/* --- إضافة عربية جديدة --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-3 flex flex-col items-center gap-4">
             <div className="relative">
               <div className="w-32 h-32 rounded-full border-4 border-[#E5F1FD] bg-[#FDEBD0] overflow-hidden flex items-center justify-center">
                 <img
-                  src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"} // الصورة الافتراضية
+                  src={carPhoto ? URL.createObjectURL(carPhoto) : "/images.png"}
                   alt="Car"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <label htmlFor="carPhoto" className="absolute -bottom-2 -right-2 bg-[#137FEC] text-white p-2 rounded-full shadow-lg cursor-pointer">
+              <label
+                htmlFor="carPhoto"
+                className="absolute -bottom-2 -right-2 bg-[#137FEC] text-white p-2 rounded-full shadow-lg cursor-pointer"
+              >
                 <MdCloudUpload size={20} />
               </label>
             </div>
-            <input type="file" id="carPhoto" className="hidden" onChange={(e) => e.target.files && setCarPhoto(e.target.files[0])} />
-            <p className="text-blue-500 font-bold text-sm">إضافة سيارة جديدة</p>
+            <input
+              type="file"
+              id="carPhoto"
+              className="hidden"
+              onChange={(e) =>
+                e.target.files && setCarPhoto(e.target.files[0])
+              }
+            />
+            <p className="text-blue-500 font-bold text-sm">
+              إضافة سيارة جديدة
+            </p>
           </div>
 
           <div className="lg:col-span-9 space-y-6">
@@ -190,7 +205,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 
         <div className="border-t-2 border-dotted border-blue-400 opacity-50 my-8"></div>
 
-        {/* --- قائمة السيارات --- */}
         <div className="space-y-4" dir="rtl">
           {cars.map((car) => (
             <div key={car.id} className="overflow-hidden border border-blue-50 rounded-3xl transition-all">
@@ -215,53 +229,30 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
                 </div>
               </div>
 
-              {expandedCarId === car.id && (
+              {expandedCarId === car.id && editModeId === car.id && (
                 <div className="p-8 bg-blue-50/30 dark:bg-gray-800/20 animate-in slide-in-from-top-2 duration-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {editModeId === car.id ? (
-                      <>
-                        <div className="space-y-1">
-                          <label className="text-sm text-gray-500 px-2">اسم السيارة</label>
-                          <input value={editData?.name} onChange={(e) => setEditData({ ...editData!, name: e.target.value })} className={inputStyle} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-sm text-gray-500 px-2">الموديل</label>
-                          <input value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={inputStyle} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-sm text-gray-500 px-2">سنة الصنع</label>
-                          <input value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: e.target.value })} className={inputStyle} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-sm text-gray-500 px-2">رقم اللوحة</label>
-                          <input value={editData?.plate} onChange={(e) => setEditData({ ...editData!, plate: e.target.value })} className={inputStyle} />
-                        </div>
-                        <div className="md:col-span-2 flex justify-end mt-4">
-                          <button onClick={handleSave} className="bg-green-600 text-white px-8 py-2 rounded-xl flex items-center gap-2 hover:bg-green-700">
-                            <MdSave /> حفظ التعديلات
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-                          <p className="text-xs text-blue-400">اسم السيارة</p>
-                          <p className="font-bold text-gray-700 dark:text-gray-200">{car.name}</p>
-                        </div>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-                          <p className="text-xs text-blue-400">الموديل</p>
-                          <p className="font-bold text-gray-700 dark:text-gray-200">{car.model}</p>
-                        </div>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-                          <p className="text-xs text-blue-400">سنة الصنع</p>
-                          <p className="font-bold text-gray-700 dark:text-gray-200">{car.year}</p>
-                        </div>
-                        <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-                          <p className="text-xs text-blue-400">رقم اللوحة</p>
-                          <p className="font-bold text-gray-700 dark:text-gray-200">{car.plate}</p>
-                        </div>
-                      </>
-                    )}
+                    <div className="space-y-1">
+                      <label className="text-sm text-gray-500 px-2">اسم السيارة</label>
+                      <input value={editData?.name} onChange={(e) => setEditData({ ...editData!, name: e.target.value })} className={inputStyle} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm text-gray-500 px-2">الموديل</label>
+                      <input value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={inputStyle} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm text-gray-500 px-2">سنة الصنع</label>
+                      <input value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: e.target.value })} className={inputStyle} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm text-gray-500 px-2">رقم اللوحة</label>
+                      <input value={editData?.plate} onChange={(e) => setEditData({ ...editData!, plate: e.target.value })} className={inputStyle} />
+                    </div>
+                    <div className="md:col-span-2 flex justify-end mt-4">
+                      <button onClick={handleSave} className="bg-green-600 text-white px-8 py-2 rounded-xl flex items-center gap-2 hover:bg-green-700">
+                        <MdSave /> حفظ التعديلات
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -276,7 +267,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 // import { useState, useEffect } from "react";
 // import { MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 
-// // --- تعريف نوع بيانات السيارة ---
 // interface Car {
 //   id: string;
 //   name: string;
@@ -286,51 +276,36 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //   image: string;
 // }
 
-// // --- نوع البيانات اللي بتيجي من الـ API ---
-// interface CarResponse {
-//   id: string;
-//   brand: string;
-//   model: string;
-//   year: number;
-//   plateNumber: string;
-//   carPhotoUrl: string;
-// }
-
 // export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
-//   // حالة تسجيل الدخول
-//   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-//   const email = "shima@gmail.com";
-//   const password = "12345678";
+//   // حالة تسجيل الدخول (استخدام sessionStorage)
+//   const [token, setToken] = useState<string | null>(sessionStorage.getItem("token"));
 
-//   // قائمة السيارات
 //   const [cars, setCars] = useState<Car[]>([]);
 //   const [expandedCarId, setExpandedCarId] = useState<string | null>(null);
 //   const [editModeId, setEditModeId] = useState<string | null>(null);
 //   const [editData, setEditData] = useState<Car | null>(null);
 
-//   // بيانات الفورم لإضافة عربية جديدة
 //   const [newCar, setNewCar] = useState({ name: "", model: "", year: "", plate: "" });
 //   const [carPhoto, setCarPhoto] = useState<File | null>(null);
 
-//   // --- تسجيل الدخول أو إعادة استخدام token ---
+//   // تسجيل الدخول أو إعادة استخدام token
 //   const login = async () => {
-//     if (token) return;
+//     if (token) return; // لو موجود توكن خلاص
 //     try {
 //       const res = await fetch("http://gearupapp.runasp.net/api/auth/login", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ emailOrPhone: email, password, rememberMe: true })
+//         body: JSON.stringify({ emailOrPhone: "shima@gmail.com", password: "12345678", rememberMe: true })
 //       });
 //       if (!res.ok) throw new Error("فشل تسجيل الدخول");
 //       const data = await res.json();
-//       localStorage.setItem("token", data.accessToken);
+//       sessionStorage.setItem("token", data.accessToken);
 //       setToken(data.accessToken);
-//     } catch (_) {
+//     } catch {
 //       alert("الرجاء التحقق من بيانات الدخول");
 //     }
 //   };
 
-//   // --- جلب السيارات من الباك ---
 //   const fetchCars = async () => {
 //     if (!token) return;
 //     const res = await fetch("http://gearupapp.runasp.net/api/customers/cars", {
@@ -338,7 +313,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     });
 //     if (!res.ok) return;
 //     const data = await res.json();
-//     const mappedCars = data.cars.map((car: CarResponse) => ({
+//     const mappedCars: Car[] = data.cars.map((car: any) => ({
 //       id: car.id,
 //       name: car.brand,
 //       model: car.model,
@@ -349,7 +324,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     setCars(mappedCars);
 //   };
 
-//   // --- useEffect للتأكد من تسجيل الدخول وجلب السيارات ---
 //   useEffect(() => {
 //     const init = async () => {
 //       await login();
@@ -358,7 +332,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     init();
 //   }, []);
 
-//   // --- إضافة عربية جديدة ---
 //   const handleAddCar = async () => {
 //     if (!token) return;
 //     const formData = new FormData();
@@ -383,7 +356,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     }
 //   };
 
-//   // --- تعديل عربية ---
 //   const handleEditClick = (car: Car) => {
 //     setEditModeId(car.id);
 //     setEditData({ ...car });
@@ -412,7 +384,6 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     }
 //   };
 
-//   // --- حذف عربية ---
 //   const handleDelete = async (id: string, name: string) => {
 //     if (!token) return;
 //     if (!window.confirm(`هل أنت متأكد من حذف السيارة: ${name}؟`)) return;
@@ -529,26 +500,7 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //                           </button>
 //                         </div>
 //                       </>
-//                     ) : (
-//                       <>
-//                         <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-//                           <p className="text-xs text-blue-400">اسم السيارة</p>
-//                           <p className="font-bold text-gray-700 dark:text-gray-200">{car.name}</p>
-//                         </div>
-//                         <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-//                           <p className="text-xs text-blue-400">الموديل</p>
-//                           <p className="font-bold text-gray-700 dark:text-gray-200">{car.model}</p>
-//                         </div>
-//                         <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-//                           <p className="text-xs text-blue-400">سنة الصنع</p>
-//                           <p className="font-bold text-gray-700 dark:text-gray-200">{car.year}</p>
-//                         </div>
-//                         <div className="p-4 bg-white dark:bg-gray-700 rounded-2xl border border-blue-100 shadow-sm">
-//                           <p className="text-xs text-blue-400">رقم اللوحة</p>
-//                           <p className="font-bold text-gray-700 dark:text-gray-200">{car.plate}</p>
-//                         </div>
-//                       </>
-//                     )}
+//                     ) : null}
 //                   </div>
 //                 </div>
 //               )}
@@ -559,5 +511,3 @@ export const MyCars = ({ inputStyle }: { inputStyle: string }) => {
 //     </div>
 //   );
 // };
-
-
