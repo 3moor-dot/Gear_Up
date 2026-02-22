@@ -1,18 +1,15 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-
   FaClipboardList,
   FaCog,
   FaCalendarAlt,
   FaSignOutAlt,
   FaRegCommentDots,
 } from "react-icons/fa";
-import { MdDashboard, MdMenu, MdClose } from "react-icons/md"; 
+import { MdDashboard, MdMenu, MdClose } from "react-icons/md";
 import { useTheme } from "../../contexts/ThemeContext";
 
-// ١. تعريف الـ Type هنا في البداية عشان الـ Component يشوفه
 type SidebarItemProps = {
   icon: React.ReactNode;
   label: string;
@@ -25,8 +22,30 @@ const MachineSidebar: React.FC = () => {
   const { dark } = useTheme();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [userName, setUserName] = useState("...");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  // جيب اسم المستخدم من الـ API
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = sessionStorage.getItem("userToken");
+        if (!token) return;
+        const res = await fetch("http://gearupapp.runasp.net/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
+        setPhotoUrl(data.profilePhotoUrl || null);
+      } catch {
+        // لو فشل يفضل الاسم الافتراضي
+      }
+    };
+    fetchProfile();
+  }, []);
 
   return (
     <>
@@ -50,51 +69,53 @@ const MachineSidebar: React.FC = () => {
       >
         <div className="flex flex-col h-full overflow-hidden">
           <h1 className={`text-2xl font-bold mb-10 ${dark ? "text-white" : "text-black"} text-center flex-shrink-0`}>
-            GearUp 
+            GearUp
           </h1>
 
           <nav className="space-y-2 text-lg overflow-y-auto flex-1 pr-2 custom-scrollbar">
             <SidebarItem icon={<MdDashboard />} label="لوحة التحكم" dark={dark} to="/mechanics/machinedashboard" closeSidebar={() => setIsOpen(false)} />
-            <SidebarItem icon={<FaCalendarAlt/>} label="جدول المواعيد" dark={dark} to="/mechanics/schedule" closeSidebar={() => setIsOpen(false)} />
+            <SidebarItem icon={<FaCalendarAlt />} label="جدول المواعيد" dark={dark} to="/mechanics/schedule" closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/mechanics/booking" closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/mechanics/reviewing" closeSidebar={() => setIsOpen(false)} />
-           </nav>
+          </nav>
 
           <div
             className={`rounded-2xl p-4 mt-6 flex-shrink-0 transition-colors duration-500
               ${dark ? "bg-[#137FEC1A] border-t border-[#137FEC]" : "bg-[#EAF4FF] border-t border-[#C6E0FF]"}`}
           >
             <div className="flex items-center gap-3 mb-4">
-              <img src="/avatar-path.png" alt="admin" className="w-10 h-10 rounded-full object-cover" />
+              <img
+                src={photoUrl || "/avatar-path.png"}
+                alt="mechanic"
+                className="w-10 h-10 rounded-full object-cover"
+              />
               <div className="overflow-hidden">
-                <p className="font-semibold text-sm truncate">Mechanice Name</p>
-                <p className={`text-[10px] ${dark ? "text-white/50" : "text-[#5C7AA5]"}`}>Mechanice</p>
+                <p className="font-semibold text-sm truncate">{userName}</p>
+                <p className={`text-[10px] ${dark ? "text-white/50" : "text-[#5C7AA5]"}`}>ميكانيكي</p>
               </div>
             </div>
 
             <div className="space-y-2">
               <button
-                onClick={() => { navigate("/mechanics/machineprofile"); setIsOpen(false); }}
+                onClick={() => { navigate("/mechanics/mprofile"); setIsOpen(false); }}
                 className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
                   ${dark ? "bg-[#1E2A44] text-white hover:bg-[#2A3A5B]" : "bg-[#DCEEFF] text-[#1E3A5F] hover:bg-[#CFE6FF]"}`}
               >
                 <FaCog /> الإعدادات
               </button>
-             <button
-  onClick={() => { 
-    // Clear authentication data (اختياري)
-    localStorage.removeItem('token');
-    localStorage.removeItem('userType');
-    // أو أي حاجة تانية بتخزنيها
-    
-    navigate("/"); // الانتقال للصفحة الرئيسية
-    setIsOpen(false); // قفل الـ sidebar في الموبايل
-  }}
-  className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
-    ${dark ? "bg-[#0B1020] text-red-500 hover:bg-[#1A1F2D]" : "bg-[#F2F8FF] text-red-600 hover:bg-[#E4F0FF]"}`}
->
-  <FaSignOutAlt /> تسجيل خروج
-</button>
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem("userToken");
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("userType");
+                  navigate("/");
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
+                  ${dark ? "bg-[#0B1020] text-red-500 hover:bg-[#1A1F2D]" : "bg-[#F2F8FF] text-red-600 hover:bg-[#E4F0FF]"}`}
+              >
+                <FaSignOutAlt /> تسجيل خروج
+              </button>
             </div>
           </div>
         </div>
@@ -103,7 +124,6 @@ const MachineSidebar: React.FC = () => {
   );
 };
 
-// ٢. الـ Component الفرعي بيستخدم الـ Type اللي عرفناه فوق
 const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark, to, closeSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();

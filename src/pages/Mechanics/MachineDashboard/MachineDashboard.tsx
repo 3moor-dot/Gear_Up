@@ -197,10 +197,10 @@ const MachineDashboard = () => {
                     <td className="p-4">
                       <div className="flex gap-2">
                         <button className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm transition">
-                          Accept
+                          موافقة
                         </button>
                         <button className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm transition">
-                          Decline
+                          رفض
                         </button>
                       </div>
                     </td>
@@ -250,7 +250,7 @@ const MachineDashboard = () => {
                         : "bg-yellow-600/20 text-yellow-400"
                     }`}
                   >
-                    {apt.status === "confirmed" ? "Confirmed" : "In Progress"}
+                    {apt.status === "confirmed" ? "مؤكد" : "قيد التنفيذ"}
                   </span>
                 </div>
               ))}

@@ -31,8 +31,8 @@ const Login = () => {
 
         // const token = data.token || data.data?.token;
         // sessionStorage.setItem("userToken", token);
-        const token = data.accessToken;
-sessionStorage.setItem("userToken", token);
+          const token = data.accessToken;
+         sessionStorage.setItem("userToken", token);
         
         // استخراج الـ Role (تأكد من مسمى الحقل في الـ Response)
         const userRole = data.role || data.data?.role; 
@@ -43,7 +43,7 @@ sessionStorage.setItem("userToken", token);
           navigate("/admin/admindashboard");
         } else if (userRole === 2) {
           // حالة الميكانيكي
-          navigate("/mechanics/machineprofile");
+          navigate("/mechanics/mprofile");
         } else if (userRole === 1) {
           // حالة العميل
           navigate("/customer/profilesettings");
