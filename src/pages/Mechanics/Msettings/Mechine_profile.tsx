@@ -109,7 +109,9 @@ const Mechine_profile: React.FC = () => {
             لوحة القيادة / الحساب الشخصي
           </h2>
           <div className="flex items-center gap-4">
-            <NotificationBell onClick={() => console.log("Notifications clicked")} />
+            <button onClick={() => console.log("Notifications clicked")}>
+              <NotificationBell />
+            </button>
             <ThemeToggle />
           </div>
         </div>

@@ -1,5 +1,4 @@
- import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -16,7 +15,6 @@ const tabs = [
 
 const Mprofile = () => {
   const { dark } = useTheme();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("personal");
 
   return (

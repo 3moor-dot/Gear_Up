@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
