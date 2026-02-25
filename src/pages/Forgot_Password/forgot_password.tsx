@@ -1,7 +1,46 @@
+ import { useState } from "react";
 import { Link } from "react-router-dom";
 import Footer from "../../components/Footer/footer";
 
 const ForgotPassword = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    if (!email) {
+      setError("يرجى إدخال البريد الإلكتروني");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        "http://gearupapp.runasp.net/api/auth/send-password-reset-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "حدث خطأ، يرجى المحاولة مرة أخرى");
+      }
+
+      window.location.href = "/verify-account";
+    } catch (err: any) {
+      setError(err.message || "حدث خطأ، يرجى المحاولة مرة أخرى");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div
       className="
@@ -40,6 +79,8 @@ const ForgotPassword = () => {
             </label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. yourname@example.com"
               className="
                 w-full h-12 rounded-xl
@@ -50,22 +91,27 @@ const ForgotPassword = () => {
                 focus:ring-2 focus:ring-[#137FEC]
               "
             />
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
           </div>
 
           {/* BUTTON */}
           <button
-            onClick={() => window.location.href = "/verify-account"} 
+            onClick={handleSubmit}
+            disabled={loading}
             className="
               w-full h-12
               bg-[#137FEC]
               hover:bg-blue-700
+              disabled:opacity-60 disabled:cursor-not-allowed
               transition
               rounded-xl
               text-white
               font-semibold
             "
           >
-            إرسال كود التحقق
+            {loading ? "جارٍ الإرسال..." : "إرسال كود التحقق"}
           </button>
 
           {/* BACK TO LOGIN */}

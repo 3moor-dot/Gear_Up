@@ -63,6 +63,7 @@ const AdditionalTab = () => {
       // TODO: ربط بالـ API لما يكون جاهز
       await new Promise((r) => setTimeout(r, 800)); // simulate request
       setSuccess("تم حفظ البيانات الإضافية بنجاح ✅");
+      setTimeout(() => window.location.reload(), 1000); // ✅
       setIsEditing(false);
     } catch {
       setError("تعذر الاتصال بالخادم");

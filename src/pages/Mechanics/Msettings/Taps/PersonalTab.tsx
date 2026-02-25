@@ -118,6 +118,7 @@ const PersonalTab = () => {
       setIsEditing(false);
       setSelectedPhoto(null);
       setPreviewUrl(null);
+      setTimeout(() => window.location.reload(), 1000); // ✅
       fetchData();
     } catch {
       setError("تعذر الاتصال بالخادم");

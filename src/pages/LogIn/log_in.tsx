@@ -136,7 +136,7 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-200 dark:text-gray-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  {showPassword ? <FaEye size={20} /> : <FaEyeSlash size={20} />}
                 </button>
               </div>
             </div>

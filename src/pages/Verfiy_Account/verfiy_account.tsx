@@ -1,22 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Footer from "../../components/Footer/footer";
 
 const Verification = () => {
   const [timer, setTimer] = useState(60);
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
+  const [error, setError] = useState("");
+  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
-  // عداد تنازلي لإعادة الإرسال
   useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => setTimer(timer - 1), 1000);
+      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [timer]);
 
-  // تنسيق الوقت ليظهر بشكل 00:59
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 4) {
+      inputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerify = () => {
+    const token = otp.join("");
+    if (token.length < 5) {
+      setError("يرجى إدخال الرمز كاملاً");
+      return;
+    }
+    setError("");
+    // حفظ التوكين بس — الـ API call هيتعمل في صفحة reset-password مع الباسورد
+    sessionStorage.setItem("reset_token", token);
+    window.location.href = "/reset-password";
   };
 
   return (
@@ -29,7 +58,6 @@ const Verification = () => {
       "
       dir="rtl"
     >
-      {/* CONTENT */}
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="w-full max-w-xl bg-[#E8F3FF] dark:bg-[#137FEC0D] border border-[#137FEC40] p-10 rounded-[30px] shadow-sm">
           
@@ -43,11 +71,17 @@ const Verification = () => {
 
           {/* OTP INPUTS */}
           <div className="flex justify-center gap-2 my-8" dir="ltr">
-            {[...Array(5)].map((_, index) => (
+            {otp.map((digit, index) => (
               <input
                 key={index}
+                ref={(el) => {
+                  if (el) inputsRef.current[index] = el;
+                }}
                 type="text"
                 maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(e.target.value, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
                 className="
                   w-10 h-12 md:w-12 md:h-14 
                   text-center text-xl font-bold
@@ -60,9 +94,13 @@ const Verification = () => {
             ))}
           </div>
 
+          {error && (
+            <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+          )}
+
           {/* VERIFY BUTTON */}
-          <button 
-            onClick={() => window.location.href = "/reset-password"} 
+          <button
+            onClick={handleVerify}
             className="
               w-full h-12 
               bg-[#137FEC] hover:bg-blue-600 
@@ -76,10 +114,11 @@ const Verification = () => {
           {/* RESEND SECTION */}
           <div className="flex justify-between items-center mt-6 px-2">
             <p className="text-sm">
-              لم تستلم الرمز؟ 
-              <button 
+              لم تستلم الرمز؟
+              <button
                 disabled={timer > 0}
-                className={`mr-1 font-bold ${timer > 0 ? 'text-[#137FEC]' : 'text-[#137FEC] hover:underline'}`}
+                onClick={() => setTimer(60)}
+                className={`mr-1 font-bold text-[#137FEC] ${timer > 0 ? "opacity-50 cursor-not-allowed" : "hover:underline"}`}
               >
                 أعد الإرسال
               </button>
@@ -91,7 +130,6 @@ const Verification = () => {
         </div>
       </div>
 
-      {/* FOOTER */}
       <Footer />
     </div>
   );

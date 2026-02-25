@@ -6,11 +6,12 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import PersonalTab from "./Taps/PersonalTab";
 import AdditionalTab from "./Taps/AdditionalTab";
 import ServicesTab from "./Taps/ServicesTab";
-
+import SecuritySettings from "./Taps/SecurtyTap";
 const tabs = [
   { id: "personal", label: "البيانات الشخصية" },
   { id: "additional", label: "بيانات إضافية" },
   { id: "services", label: "الخدمات" },
+  {id:"security",label:"الأمان"}
 ];
 
 const Mprofile = () => {
@@ -63,6 +64,7 @@ const Mprofile = () => {
           {activeTab === "personal"  && <PersonalTab />}
           {activeTab === "additional" && <AdditionalTab />}
           {activeTab === "services"  && <ServicesTab />}
+          {activeTab === "security"  && <SecuritySettings />}
         </div>
 
       </main>

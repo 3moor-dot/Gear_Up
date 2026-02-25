@@ -40,6 +40,7 @@ const ServicesTab = () => {
       // TODO: ربط بالـ API لما يكون جاهز
       await new Promise((r) => setTimeout(r, 800));
       setSuccess("تم حفظ الخدمات بنجاح ✅");
+      setTimeout(() => window.location.reload(), 1000); // ✅
       setIsEditing(false);
     } catch {
       setError("تعذر الاتصال بالخادم");
