@@ -3,6 +3,8 @@ import { MdSave, MdCloudUpload, MdEdit, MdClose } from "react-icons/md";
 
 interface PersonalDataProps {
     inputStyle: string;
+    profileImage: string | null; 
+    handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void; 
 }
 
 export const PersonalData = ({ }: PersonalDataProps) => {

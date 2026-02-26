@@ -4,7 +4,11 @@ import {
     MdErrorOutline, MdVisibility, MdVisibilityOff 
 } from "react-icons/md";
 
-const SecuritySettings = () => {
+interface SecuritySettingsProps {
+    inputStyle: string;
+}
+
+const SecuritySettings = ({}: SecuritySettingsProps) => {
     // حالات المدخلات
     const [passwords, setPasswords] = useState({
         currentPassword: "",
