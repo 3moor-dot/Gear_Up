@@ -1,4 +1,8 @@
+
 import { useState, useEffect } from 'react'; // أضفنا useEffect
+
+
+
 import {
   MdDashboard, MdNotifications, MdHistory,
   MdBuild, MdAccessTime, MdSmartToy, MdSettings, MdLogout,
@@ -8,7 +12,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [userData, setUserData] = useState<any>(null); // حالة لتخزين بيانات اليوزر المحدثة
+  const [userData, setUserData] = useState<never>(null); // حالة لتخزين بيانات اليوزر المحدثة
   const location = useLocation();
   const navigate = useNavigate();
 

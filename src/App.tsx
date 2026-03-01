@@ -3,6 +3,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import LandingPage from "./pages/Landing/landing";
 import Register from "./pages/Registration/register";
 import LogIn from "./pages/LogIn/log_in";
@@ -43,6 +46,19 @@ import Notification from "./pages/Notification/Notification";
 const App: React.FC = () => {
   return (
     <ThemeProvider>
+
+<ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true} // عشان الأبلكيشن عربي
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
       <Router>
         <Routes>
           {/* CUSTOMER PAGES */}
