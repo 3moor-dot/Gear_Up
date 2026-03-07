@@ -1,141 +1,163 @@
 
 import { useState, useEffect } from "react";
-import { FaBell } from "react-icons/fa";
-import { MdAccessTime, MdCheckCircle, MdPauseCircle } from "react-icons/md";
+import { FaBell, FaTimes, FaCheck, FaPause } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
-import { toast } from "react-toastify";
+import axios from "axios";
 
-const NotificationBell = ({ size = 20 }) => {
+const NotificationBell = ({ size = 25 }) => {
   const { dark } = useTheme();
   const navigate = useNavigate();
+  const [isShaking, setIsShaking] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    const saved = localStorage.getItem("userNotifications");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [isOpen, setIsOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const token = sessionStorage.getItem("userToken");
+
+  const triggerShake = () => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 2500);
+  };
 
   useEffect(() => {
-    const token = sessionStorage.getItem("userToken");
-    let isMounted = true;
+    localStorage.setItem("userNotifications", JSON.stringify(notifications));
+  }, [notifications]);
+
+  // دالة التعامل مع الأكشن (إتمام أو إيقاف) من داخل التوست
+  const handleAction = async (e: React.MouseEvent, index: number, reminderId: number, action: string) => {
+    e.stopPropagation();
+    if (!reminderId) return;
+
+    try {
+      await axios.post(
+        `http://gearupapp.runasp.net/api/Reminder/${reminderId}/${action}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // 1. مسح النوتيفيكيشن بعد النجاح
+      setNotifications(prev => prev.filter((_, i) => i !== index));
+      
+      // 2. إرسال حدث لتنبيه صفحة الريمايندرز بوجود تحديث
+      window.dispatchEvent(new Event("remindersUpdated"));
+      
+    } catch (error) {
+      console.error("فشل تنفيذ العملية من التنبيه:", error);
+    }
+  };
+
+  const removeNotification = (e: React.MouseEvent, indexToRemove: number) => {
+    e.stopPropagation();
+    setNotifications(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  useEffect(() => {
+    if (!token) return;
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("http://gearupapp.runasp.net/hubs/notifications", {
-        accessTokenFactory: () => token || "",
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets 
+        accessTokenFactory: () => token
       })
       .withAutomaticReconnect()
       .build();
 
-    const startConnection = async () => {
-      try {
-        await connection.start();
-        if (isMounted) console.log("SignalR Connected! ✅🚀");
+    connection.on("ReceiveReminderNotification", (data: any) => {
+      setNotifications(prev => [{ 
+        title: data.title || "تنبيه صيانة", 
+        message: data.message || "لديك تنبيه جديد", 
+        reminderId: data.reminderId, // التأكد من وصول الـ ID من السيرفر
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) 
+      }, ...prev]);
+      triggerShake();
+    });
 
-        // --- الجزء اللي عدلناه عشان يستقبل صح ويحول الوقت ---
-        connection.on("ReceiveReminderNotification", (data) => {
-          console.log("إشعار استُلم فعلياً من السيرفر! 🔔", data);
-
-          const title = data.Title || data.title || "تنبيه صيانة";
-          const body = data.Message || data.message || "";
-          
-          // تحويل وقت جرينتش (UTC) لوقت مصر (Local)
-          const serverTime = data.Timestamp ? new Date(data.Timestamp + "Z") : new Date();
-          const localTime = serverTime.toLocaleTimeString('ar-EG', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: true 
-          });
-
-          toast.success(
-            <div>
-              <p className="font-bold">{title}</p>
-              <p className="text-xs">{body}</p>
-            </div>
-          );
-
-          if (isMounted) {
-            setNotifications(prev => [
-              { id: Date.now(), title, body, time: localTime }, 
-              ...prev
-            ]);
-          }
-        });
-      } catch (err) {
-        if (isMounted) console.error("SignalR Connection Error: ", err);
-      }
-    };
-
-    startConnection();
-
-    return () => {
-      isMounted = false;
-      if (connection.state === signalR.HubConnectionState.Connected) connection.stop();
-    };
-  }, []);
+    connection.start().catch(err => console.error(err));
+    return () => { connection.stop(); };
+  }, [token]);
 
   return (
     <div className="relative inline-block">
-      <button
+      <style>{`
+        @keyframes gentle-shake {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-8deg); }
+          50% { transform: rotate(8deg); }
+          75% { transform: rotate(-8deg); }
+        }
+        .animate-bell-shake {
+          animation: gentle-shake 0.5s ease-in-out 5;
+        }
+      `}</style>
+
+      <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 transition-all duration-200 hover:scale-110 cursor-pointer rounded-full
-          ${dark ? "text-white hover:bg-gray-800" : "text-[#137FEC] hover:bg-blue-50"}`}
+        className={`p-2 rounded-full transition-colors relative ${dark ? "text-white hover:bg-white/10" : "text-[#137FEC] hover:bg-blue-50"} ${isShaking ? "animate-bell-shake" : ""}`}
       >
         <FaBell size={size} />
         {notifications.length > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 dark:border-primary_BGD border-white animate-pulse"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
         )}
       </button>
 
       {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          <div className={`absolute left-0 mt-3 w-72 rounded-2xl shadow-2xl z-50 overflow-hidden border transition-all duration-300 transform origin-top-left
-              ${dark ? "bg-[#1A233A] border-gray-700 text-white" : "bg-white border-gray-100 text-gray-800"}`} dir="rtl">
-            
-            <div className="p-4 border-b dark:border-gray-700 font-bold text-sm flex justify-between items-center">
-              <span>تنبيهات الصيانة</span>
-              <span className="text-[10px] bg-red-100 text-red-500 px-2 py-0.5 rounded-full">{notifications.length} جديد</span>
-            </div>
-
-            <div className="max-h-60 overflow-y-auto custom-scrollbar">
-              {notifications.length > 0 ? (
-                notifications.map((n) => (
-                  <div key={n.id} className="p-4 border-b last:border-0 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <div className="flex gap-3 text-right">
-                      <div className="text-[#137FEC] mt-1"><MdAccessTime size={18} /></div>
-                      
-                      {/* --- الجزء بتاع عرض البيانات المعدل --- */}
-                      <div className="flex-1">
-                        <p className="text-xs font-bold">{n.title}</p>
-                        <p className="text-[10px] text-gray-400 mt-1 italic">الموعد: {n.time}</p>
-                        {n.body && <p className="text-[9px] text-gray-500 mt-1">{n.body}</p>}
-                        
-                        <div className="flex gap-2 mt-3">
-                          <button className="flex items-center gap-1 text-[9px] bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 transition-colors">
-                            <MdCheckCircle size={12} /> إتمام
-                          </button>
-                          <button className="flex items-center gap-1 text-[9px] bg-orange-500 text-white px-2 py-1 rounded-md hover:bg-orange-600 transition-colors">
-                            <MdPauseCircle size={12} /> تأجيل
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-10 text-center text-gray-400 text-xs">لا توجد إشعارات جديدة</div>
-              )}
-            </div>
-
-            <button
-              onClick={() => { navigate("/notification"); setIsOpen(false); }}
-              className="w-full py-3 text-center text-[11px] font-bold text-[#137FEC] bg-gray-50 dark:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-gray-800 transition-all"
-            >
-              عرض سجل التنبيهات بالكامل
+        <div className={`absolute left-0 mt-2 w-80 rounded-2xl shadow-2xl z-50 p-4 border ${dark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} dir="rtl">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold text-sm">التنبيهات ({notifications.length})</h3>
+            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-gray-500/20 rounded-full">
+              <FaTimes size={14} />
             </button>
           </div>
-        </>
+          
+          <div className="max-h-80 overflow-y-auto space-y-3">
+            {notifications.length > 0 ? (
+              notifications.map((n, i) => (
+                <div key={i} className="relative p-3 bg-gray-500/5 rounded-xl border border-gray-500/10 group">
+                  <button 
+                    onClick={(e) => removeNotification(e, i)}
+                    className="absolute top-2 left-2 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <FaTimes size={10} />
+                  </button>
+                  <h4 className="font-bold text-xs mb-1 ml-4">{n.title}</h4>
+                  <p className="text-[11px] opacity-70 mb-3">{n.message}</p>
+                  
+                  {/* أزرار العمليات داخل التوست */}
+                  <div className="flex gap-2 mb-2">
+                    <button 
+                      onClick={(e) => handleAction(e, i, n.reminderId, 'complete')}
+                      className="flex-1 flex items-center justify-center gap-1 py-1 rounded-md bg-green-500/20 text-green-600 hover:bg-green-500 hover:text-white transition-all text-[10px] font-bold"
+                    >
+                      <FaCheck size={8} /> إتمام
+                    </button>
+                    <button 
+                      onClick={(e) => handleAction(e, i, n.reminderId, 'pause')}
+                      className="flex-1 flex items-center justify-center gap-1 py-1 rounded-md bg-orange-500/20 text-orange-600 hover:bg-orange-500 hover:text-white transition-all text-[10px] font-bold"
+                    >
+                      <FaPause size={8} /> إيقاف مؤقت
+                    </button>
+                  </div>
+
+                  <span className="text-[9px] opacity-50 block">{n.time}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-xs opacity-50 py-4">لا توجد تنبيهات جديدة</p>
+            )}
+          </div>
+          
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              navigate("/customer/reminders");
+            }}
+            className="w-full mt-3 py-2 text-blue-500 hover:bg-blue-500/10 rounded-lg font-bold text-xs transition-colors"
+          >
+            عرض سجل التنبيهات الكامل
+          </button>
+        </div>
       )}
     </div>
   );
