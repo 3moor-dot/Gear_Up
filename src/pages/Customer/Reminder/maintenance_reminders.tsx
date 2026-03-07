@@ -5,7 +5,7 @@ import Header from "../../../components/Customer/customer_header";
 import CreateReminderModal from "./create_reminder_modal";
 import axios from "axios";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { FaTrash, FaCheck, FaPause, FaPlay, FaBell, FaCalendarPlus } from "react-icons/fa";
+import { FaTrash, FaCheck, FaPause, FaPlay, FaBell, FaCalendarPlus, FaCarSide } from "react-icons/fa";
 
 interface Reminder {
   carId: number;
@@ -21,7 +21,7 @@ interface Reminder {
   status: "Active" | "Paused" | "Completed" | "Cancelled";
 }
 
-// دالة مساعدة لتنسيق التاريخ لتوقيت مصر
+// egypt time
 const formatToEgyptDate = (dateString: string) => {
   if (!dateString) return "";
   return new Intl.DateTimeFormat("ar-EG", {
@@ -32,7 +32,7 @@ const formatToEgyptDate = (dateString: string) => {
   }).format(new Date(dateString));
 };
 
-// دالة مساعدة لتنسيق الوقت لتوقيت مصر
+// egypt time
 const formatToEgyptTime = (timeString: string) => {
   if (!timeString) return "";
   const [hours, minutes] = timeString.split(":");
@@ -185,24 +185,29 @@ const MaintenanceReminders = () => {
                 تذكيرات قادمة قريباً
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  
                 {upcomingReminders.map((u) => {
-                  const car = cars.find((c) => c.id === u.carId);
-                  const carName = car ? `${car.year} ${car.brand} ${car.model}` : "عربية غير معروفة";
-                  return (
-                    <div key={u.id} className={`p-4 rounded-xl border-l-4 border-l-blue-500 ${dark ? "bg-gray-800" : "bg-white"} shadow-sm border transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer`}>
-                      <h4 className="font-bold text-sm mb-1 truncate">{u.name}</h4>
-                      <div className={`text-xs font-bold mb-2 flex items-center gap-1 ${dark ? "text-sky-400" : "text-sky-700"}`}>
-                        <span>🚗</span><span className="truncate">{carName}</span>
-                      </div>
-                      <div className="flex justify-between text-xs font-medium opacity-80">
-                        <span>{formatToEgyptDate(u.startDate)}</span>
-                        {u.preferredNotificationTime && (<span className="font-bold">{formatToEgyptTime(u.preferredNotificationTime)}</span>)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+  const car = cars.find((c) => c.id === u.carId);
+  const carName = car ? `${car.year} ${car.brand} ${car.model}` : "عربية غير معروفة";
+  return (
+    <div key={u.id} className={`p-4 rounded-xl border-l-4 border-l-blue-500 ${dark ? "bg-gray-800" : "bg-white"} shadow-sm border transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer`}>
+      <h4 className="font-bold text-sm mb-1 truncate">{u.name}</h4>
+      
+    {/* car icon */}
+      <div className={`text-xs font-bold mb-2 flex items-center gap-2 ${dark ? "text-sky-400" : "text-sky-700"}`}>
+        <FaCarSide size={14} className="flex-shrink-0" /> 
+        <span className="truncate">{carName}</span>
+      </div>
+
+      <div className="flex justify-between text-xs font-medium opacity-80">
+        <span>{formatToEgyptDate(u.startDate)}</span>
+        {u.preferredNotificationTime && (<span className="font-bold">{formatToEgyptTime(u.preferredNotificationTime)}</span>)}
+      </div>
+    </div>
+    );
+       })}
+         </div>
+         </div>
           )}
 
           <div className="flex flex-wrap gap-4 items-center bg-gray-500/5 p-4 rounded-2xl">
@@ -225,7 +230,12 @@ const MaintenanceReminders = () => {
                   <h3 className="font-bold text-lg">{reminder.name}</h3>
                   <StatusBadge status={reminder.status} />
                 </div>
-                <p className="text-xs opacity-60 mb-4 line-clamp-2 h-8">{reminder.description || "لا يوجد وصف"}</p>
+                {reminder.description && reminder.description.trim() !== "" && (
+                <p className="text-xs opacity-60 mb-4 line-clamp-2 h-8">
+                    {reminder.description}
+                       </p>
+                              )}
+
                 <div className="space-y-2 mb-4 text-[11px]">
                   <div className="flex justify-between items-center"><span className="opacity-60">تاريخ البدء:</span><span className="font-medium">{formatToEgyptDate(reminder.startDate)}</span></div>
                   {reminder.preferredNotificationTime && (

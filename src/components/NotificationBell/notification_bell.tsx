@@ -26,7 +26,7 @@ const NotificationBell = ({ size = 25 }) => {
     localStorage.setItem("userNotifications", JSON.stringify(notifications));
   }, [notifications]);
 
-  // دالة التعامل مع الأكشن (إتمام أو إيقاف) من داخل التوست
+// complete/pause operations
   const handleAction = async (e: React.MouseEvent, index: number, reminderId: number, action: string) => {
     e.stopPropagation();
     if (!reminderId) return;
@@ -37,11 +37,9 @@ const NotificationBell = ({ size = 25 }) => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      // 1. مسح النوتيفيكيشن بعد النجاح
+  
       setNotifications(prev => prev.filter((_, i) => i !== index));
       
-      // 2. إرسال حدث لتنبيه صفحة الريمايندرز بوجود تحديث
       window.dispatchEvent(new Event("remindersUpdated"));
       
     } catch (error) {
@@ -68,7 +66,7 @@ const NotificationBell = ({ size = 25 }) => {
       setNotifications(prev => [{ 
         title: data.title || "تنبيه صيانة", 
         message: data.message || "لديك تنبيه جديد", 
-        reminderId: data.reminderId, // التأكد من وصول الـ ID من السيرفر
+        reminderId: data.reminderId, 
         time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) 
       }, ...prev]);
       triggerShake();
@@ -122,9 +120,13 @@ const NotificationBell = ({ size = 25 }) => {
                     <FaTimes size={10} />
                   </button>
                   <h4 className="font-bold text-xs mb-1 ml-4">{n.title}</h4>
-                  <p className="text-[11px] opacity-70 mb-3">{n.message}</p>
+                  {n.message && n.message.trim() !== "" && (
+              <p className="text-[11px] opacity-70 mb-3 leading-relaxed">
+                  {n.message}
+               </p>
+                  )}
                   
-                  {/* أزرار العمليات داخل التوست */}
+                {/* operations buttons in tost */}
                   <div className="flex gap-2 mb-2">
                     <button 
                       onClick={(e) => handleAction(e, i, n.reminderId, 'complete')}
