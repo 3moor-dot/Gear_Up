@@ -1,9 +1,10 @@
 
-import React from "react";
+import React , { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 import { ToastContainer } from "react-toastify";
+import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
 
 import LandingPage from "./pages/Landing/landing";
@@ -44,20 +45,43 @@ import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import Notification from "./pages/Notification/Notification";
 const App: React.FC = () => {
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.error("انتهت الجلسة، جاري التوجيه للوجين...");
+          sessionStorage.removeItem("userToken");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // الـ cleanup function عشان نشيل الـ interceptor لما الـ app يتقفل
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
   return (
     <ThemeProvider>
 
-<ToastContainer 
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={true} // عشان الأبلكيشن عربي
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+      <ToastContainer 
+      style={{ zIndex: 99999 }}
+  position="top-left"
+  autoClose={5000}
+  hideProgressBar={false}
+  newestOnTop={true} // تم التعديل ليكون True عشان الجديد يظهر فوق
+  closeOnClick
+  rtl={true} 
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+  limit={5} // اختيار اختياري: بيسمح بظهور 5 إشعارات فوق بعض كحد أقصى عشان الزحمة
+  theme="colored" // اختياري: بيخلي لون التوست أوضح (أزرق للـ info)
+/>
+
+
 
       <Router>
         <Routes>
