@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from "react";
 import { FaBell, FaTimes, FaCheck, FaPause } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -14,8 +15,10 @@ const NotificationBell = ({ size = 25 }) => {
     const saved = localStorage.getItem("userNotifications");
     return saved ? JSON.parse(saved) : [];
   });
+  const [cars, setCars] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const token = sessionStorage.getItem("userToken");
+  console.log("TOKEN:", token); 
 
   const triggerShake = () => {
     setIsShaking(true);
@@ -25,6 +28,22 @@ const NotificationBell = ({ size = 25 }) => {
   useEffect(() => {
     localStorage.setItem("userNotifications", JSON.stringify(notifications));
   }, [notifications]);
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const res = await axios.get(
+          "http://gearupapp.runasp.net/api/customers/cars",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+  
+        setCars(res.data.cars || []);
+      } catch (error) {
+        console.error("فشل جلب العربيات:", error);
+      }
+    };
+  
+    if (token) fetchCars();
+  }, [token]);
 
 // complete/pause operations
   const handleAction = async (e: React.MouseEvent, index: number, reminderId: number, action: string) => {
@@ -59,24 +78,43 @@ const NotificationBell = ({ size = 25 }) => {
       .withUrl("http://gearupapp.runasp.net/hubs/notifications", {
         accessTokenFactory: () => token
       })
-      .withAutomaticReconnect([0, 2000, 5000, 10000])
-      .configureLogging(signalR.LogLevel.Information)
+      .withAutomaticReconnect()
       .build();
 
+
     connection.on("ReceiveReminderNotification", (data: any) => {
+      console.log("NOTIFICATION RECEIVED:", data);
+    
+      // setNotifications(prev => [{ 
+      //   title: data.title || "تنبيه صيانة", 
+      //   message: data.message || "لديك تنبيه جديد", 
+      //   reminderId: data.reminderId,
+      //   carId: data.carId,   //adding car id
+      //   time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) 
+      // }, ...prev]);
       setNotifications(prev => [{ 
         title: data.title || "تنبيه صيانة", 
         message: data.message || "لديك تنبيه جديد", 
-        reminderId: data.reminderId, 
+        reminderId: data.reminderId,
+        carId: data.carId,
         time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) 
       }, ...prev]);
+    
       triggerShake();
     });
+ 
 
-    connection.start().catch(err => console.error(err));
+    connection.start()  .then(() => console.log("SignalR Connected ✅"))
+    .catch(err => console.error("SignalR Connection Error ❌", err));
     return () => { connection.stop(); };
   }, [token]);
 
+
+  const getCarName = (carId: string) => {
+    const car = cars.find((c) => c.id === carId);
+    if (!car) return "عربية غير معروفة";
+    return `${car.year} ${car.brand} ${car.model}`;
+  };
   return (
     <div className="relative inline-block">
       <style>{`
@@ -121,6 +159,11 @@ const NotificationBell = ({ size = 25 }) => {
                     <FaTimes size={10} />
                   </button>
                   <h4 className="font-bold text-xs mb-1 ml-4">{n.title}</h4>
+                  {n.carId && (
+  <div className="text-[10px] font-bold text-sky-500 mb-1">
+    🚗 {getCarName(n.carId)}
+  </div>
+)}
                   {n.message && n.message.trim() !== "" && (
               <p className="text-[11px] opacity-70 mb-3 leading-relaxed">
                   {n.message}
