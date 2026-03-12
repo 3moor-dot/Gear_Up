@@ -26,7 +26,7 @@ const SecuritySettings = ({}: SecuritySettingsProps) => {
     const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: "" });
 
     const token = sessionStorage.getItem("userToken");
-    const BASE_URL = "http://gearupapp.runasp.net/api/auth/change-password";
+    const BASE_URL = "https://gearupapp.runasp.net/api/auth/change-password";
 
     // ستايل الحقول الموحد (نفس صفحة السيارات)
     const activeInputStyle = "w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-blue-400 ring-2 ring-blue-100 shadow-sm focus:outline-none pr-12";

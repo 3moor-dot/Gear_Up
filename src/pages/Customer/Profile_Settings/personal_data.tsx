@@ -29,7 +29,7 @@ export const PersonalData = ({ }: PersonalDataProps) => {
     const fetchProfile = async () => {
         const token = sessionStorage.getItem("userToken");
         try {
-            const response = await fetch("http://gearupapp.runasp.net/api/users/profile", {
+            const response = await fetch("https://gearupapp.runasp.net/api/users/profile", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -60,7 +60,7 @@ export const PersonalData = ({ }: PersonalDataProps) => {
         if (selectedImage) formData.append("ProfilePhoto", selectedImage);
 
         try {
-            const response = await fetch("http://gearupapp.runasp.net/api/users/profile", {
+            const response = await fetch("https://gearupapp.runasp.net/api/users/profile", {
                 method: "PUT",
                 headers: { "Authorization": `Bearer ${token}` },
                 body: formData
@@ -121,7 +121,7 @@ export const PersonalData = ({ }: PersonalDataProps) => {
                     <div className="relative group">
                         <div className="w-36 h-36 rounded-full border-4 border-[#E5F1FD] dark:border-gray-600 bg-gray-100 overflow-hidden shadow-inner">
                             <img 
-                                src={previewUrl || userData.profilePhotoUrl || "https://ui-avatars.com/api/?name=User&background=random"} 
+                                src={previewUrl || userData.profilePhotoUrl || "httpss://ui-avatars.com/api/?name=User&background=random"} 
                                 alt="Profile" 
                                 className="w-full h-full object-cover" 
                             />

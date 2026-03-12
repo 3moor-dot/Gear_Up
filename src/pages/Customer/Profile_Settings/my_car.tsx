@@ -24,7 +24,7 @@ export const MyCars = ({ }: { inputStyle: string }) => {
     const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null);
 
     const token = sessionStorage.getItem("userToken");
-    const BASE_URL = "http://gearupapp.runasp.net/api/customers/cars";
+    const BASE_URL = "https://gearupapp.runasp.net/api/customers/cars";
 
     useEffect(() => {
         fetchCars();

@@ -18,7 +18,7 @@ const Login = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://gearupapp.runasp.net/api/auth/login", {
+      const response = await fetch("https://gearupapp.runasp.net/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

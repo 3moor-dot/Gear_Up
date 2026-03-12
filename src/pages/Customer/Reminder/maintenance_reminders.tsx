@@ -82,7 +82,7 @@ const MaintenanceReminders = () => {
     try {
       const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}` === selectedCar);
       if (!carObj) return;
-      const res = await axios.get(`http://gearupapp.runasp.net/api/Reminder/car/${carObj.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`https://gearupapp.runasp.net/api/Reminder/car/${carObj.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setReminders(Array.isArray(res.data) ? res.data : []);
     } catch (error) { console.error("فشل جلب التذكيرات:", error); }
   }, [token, selectedCar, cars]);
@@ -91,7 +91,7 @@ const MaintenanceReminders = () => {
 
   const fetchUpcoming = useCallback(async () => {
     try {
-      const res = await axios.get("http://gearupapp.runasp.net/api/Reminder/upcoming?daysAhead=7", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get("https://gearupapp.runasp.net/api/Reminder/upcoming?daysAhead=7", { headers: { Authorization: `Bearer ${token}` } });
       setUpcomingReminders(Array.isArray(res.data) ? res.data : []);
     } catch (error) { console.error("فشل جلب القادمة:", error); }
   }, [token]);
@@ -127,7 +127,7 @@ const MaintenanceReminders = () => {
 
   const handleStatusAction = async (id: number, action: string) => {
     try {
-      await axios.post(`http://gearupapp.runasp.net/api/Reminder/${id}/${action}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(`https://gearupapp.runasp.net/api/Reminder/${id}/${action}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       refreshAll();
     } catch (error: any) { alert(error.response?.data?.error || "فشل تنفيذ العملية"); }
   };
@@ -135,7 +135,7 @@ const MaintenanceReminders = () => {
   const deleteReminder = async (id: number) => {
     if (!window.confirm("هل أنت متأكد من حذف هذا التذكير نهائياً؟")) return;
     try {
-      await axios.delete(`http://gearupapp.runasp.net/api/Reminder/${id}/delete`, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`https://gearupapp.runasp.net/api/Reminder/${id}/delete`, { headers: { Authorization: `Bearer ${token}` } });
       refreshAll();
     } catch (error: any) { alert(error.response?.data?.error || "فشل الحذف"); }
   };
@@ -143,7 +143,7 @@ const MaintenanceReminders = () => {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const res = await axios.get("http://gearupapp.runasp.net/api/customers/cars", { 
+        const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { 
           headers: { Authorization: `Bearer ${token}` } 
         });
         const carsData = res.data.cars || [];
