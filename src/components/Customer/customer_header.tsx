@@ -1,8 +1,50 @@
+import { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
-import ThemeToggle from "../ThemeToggle/theme_toggle"; // تأكد من مسار مكون التبديل لديك
-import NotificationBtn from "../NotificationBell/notification_bell"; // تأكد من مسار مكون جرس التنبيهات لديك
+import ThemeToggle from "../ThemeToggle/theme_toggle"; 
+import NotificationBtn from "../NotificationBell/notification_bell";
+
+// تعريف شكل البيانات لتجنب أخطاء TypeScript
+interface UserData {
+  firstName: string;
+  lastName: string;
+  profilePhotoUrl?: string;
+}
 
 const Header = () => {
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    // 1. محاولة جلب البيانات من sessionStorage أولاً (سرعة الاستجابة)
+    const savedData = sessionStorage.getItem("userData");
+    if (savedData) {
+      setUserData(JSON.parse(savedData));
+    }
+
+    // 2. تحديث البيانات من السيرفر للتأكد من أنها الأحدث
+    const fetchHeaderProfile = async () => {
+      const token = sessionStorage.getItem("userToken");
+      if (!token) return;
+
+      try {
+        const response = await fetch("https://gearupapp.runasp.net/api/users/profile", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+          // تحديث الكاش لضمان التزامن بين السايدبار والهيدر
+          sessionStorage.setItem("userData", JSON.stringify(data));
+        }
+      } catch (error) {
+        console.error("Error fetching header profile:", error);
+      }
+    };
+
+    fetchHeaderProfile();
+  }, []);
+
   return (
     <header className="w-full dark:bg-primary_BGD py-4 px-8 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 transition-colors duration-500" dir="rtl">
       
@@ -22,21 +64,28 @@ const Header = () => {
       <div className="flex items-center gap-6">
         
         {/* زر التنبيهات */}
-       <NotificationBtn />
+        <NotificationBtn />
 
         {/* زر تبديل الوضع (Dark/Light) */}
         <div className="flex items-center">
             <ThemeToggle />
         </div>
 
-        {/* صورة البروفايل المصغرة */}
+        {/* صورة البروفايل المصغرة الديناميكية */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-2 border-[#E5F1FD] overflow-hidden shadow-sm">
-            <img 
-              src="/avatar-path.png" // استبدلها بمسار الصورة الفعلي
-              alt="User" 
-              className="w-full h-full object-cover"
-            />
+          <div className="w-12 h-12 rounded-full border-2 border-[#E5F1FD] dark:border-gray-700 overflow-hidden shadow-sm bg-gray-100 flex items-center justify-center">
+            {userData?.profilePhotoUrl ? (
+              <img 
+                src={userData.profilePhotoUrl} 
+                alt="User Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              // حالة عدم وجود صورة: إظهار أول حرف من الاسم
+              <div className="text-[#137FEC] font-bold text-lg">
+                {userData?.firstName?.[0] || "U"}
+              </div>
+            )}
           </div>
         </div>
 

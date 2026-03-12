@@ -20,7 +20,7 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ===== جلب بيانات البروفايل =====
+  // ===== جلب بيانات البروفايل من السيرفر أو التخزين المحلي =====
   const fetchSidebarProfile = async () => {
     const token = sessionStorage.getItem("userToken");
     if (!token) return;
@@ -75,22 +75,33 @@ const Sidebar = () => {
   return (
     <>
       {/* زر فتح/غلق السايدبار على الموبايل */}
-      <button onClick={toggleSidebar} className="lg:hidden fixed top-5 right-5 z-50 p-2 bg-[#137FEC] text-white rounded-lg shadow-lg">
+      <button 
+        onClick={toggleSidebar} 
+        className="lg:hidden fixed top-5 right-5 z-50 p-2 bg-[#137FEC] text-white rounded-lg shadow-lg active:scale-95 transition-transform"
+      >
         {isOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
       </button>
 
-      {/* الخلفية الشفافة عند فتح السايدبار */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar}></div>}
+      {/* الخلفية الشفافة عند فتح السايدبار على الموبايل */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
+          onClick={toggleSidebar}
+        ></div>
+      )}
 
-      <aside className={`fixed inset-y-0 right-0 z-40 w-72 dark:bg-primary_BGD bg-white h-screen flex flex-col shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 lg:static lg:block`} dir="rtl">
+      <aside 
+        className={`fixed inset-y-0 right-0 z-40 w-72 dark:bg-[#0B1120] bg-white h-screen flex flex-col shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 lg:static lg:block`} 
+        dir="rtl"
+      >
         
-        {/* شعار */}
+        {/* شعار التطبيق */}
         <div className="p-8 text-center">
-          <h1 className="text-2xl font-bold text-[#1e293b] dark:text-white">GearUp</h1>
+          <h1 className="text-2xl font-black text-[#1e293b] dark:text-white tracking-tight">GearUp</h1>
         </div>
 
-        {/* قائمة الروابط */}
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+        {/* قائمة الروابط الرئيسية */}
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             return (
@@ -98,21 +109,28 @@ const Sidebar = () => {
                 key={index}
                 to={item.path}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-4 px-6 py-3 rounded-xl transition-all ${isActive ? 'bg-[#E5F1FD] dark:bg-[#137FEC1A] text-[#137FEC] font-bold shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-[#137FEC]'}`}
+                className={`flex items-center gap-4 px-6 py-3 rounded-xl transition-all duration-300 group
+                  ${isActive 
+                    ? 'bg-[#E5F1FD] dark:bg-[#137FEC26] text-[#137FEC] font-bold shadow-sm' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#137FEC1A] hover:text-[#137FEC] dark:hover:text-blue-400'
+                  }`}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <span className={`text-2xl transition-transform duration-300 ${!isActive && 'group-hover:scale-110'}`}>
+                  {item.icon}
+                </span>
                 <span className="text-lg">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* قسم البروفايل والإعدادات */}
-        <div className="p-6 border-t border-gray-50 dark:border-gray-800">
-          <div className="rounded-[25px] border border-blue-400/30 p-4 bg-gray-50/50 dark:bg-[#137FEC0D]">
+        {/* قسم البروفايل والإعدادات (الأسفل) */}
+        <div className="p-6 border-t border-gray-50 dark:border-gray-800/50">
+          <div className="rounded-[25px] border border-blue-400/20 p-4 bg-gray-50/50 dark:bg-[#137FEC0D] backdrop-blur-md">
+            
+            {/* معلومات المستخدم المصغرة */}
             <div className="flex items-center gap-3 mb-6">
-              {/* صورة البروفايل */}
-              <div className="w-12 h-12 rounded-full border-2 border-[#137FEC] overflow-hidden bg-gray-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full border-2 border-[#137FEC] overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 shadow-sm">
                 {userData?.profilePhotoUrl ? (
                   <img
                     src={userData.profilePhotoUrl}
@@ -120,41 +138,46 @@ const Sidebar = () => {
                     alt="Profile"
                   />
                 ) : (
-                  <div className="text-[#137FEC] font-bold text-lg">
+                  <div className="text-[#137FEC] font-bold text-lg uppercase">
                     {userData?.firstName?.[0] || "U"}
                   </div>
                 )}
               </div>
 
-              {/* الاسم والدور */}
-              <div className="text-right">
-                <h4 className="font-bold text-sm dark:text-white truncate max-w-[120px]">
+              <div className="text-right overflow-hidden">
+                <h4 className="font-bold text-sm dark:text-white truncate">
                   {fullName}
                 </h4>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-[10px] text-gray-400 font-medium">
                   {userData?.role === 1 ? "حساب عميل" : "حساب مستخدم"}
                 </p>
               </div>
             </div>
 
-            {/* إعدادات وتسجيل خروج */}
-            <div className="space-y-3">
+            {/* أزرار الإعدادات والخروج */}
+            <div className="space-y-2">
               <Link
                 to={settingsPath}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-xl text-sm ${isSettingsActive ? 'bg-[#E5F1FD] text-[#137FEC] font-bold' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100'}`}
+                className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-300
+                  ${isSettingsActive 
+                    ? 'bg-[#E5F1FD] dark:bg-[#137FEC26] text-[#137FEC] font-bold' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#137FEC1A] dark:hover:text-blue-400'
+                  }`}
               >
                 <MdSettings className="text-xl" />
-                <span>الاعدادات</span>
+                <span>الإعدادات</span>
               </Link>
+              
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl text-sm"
+                className="flex items-center gap-3 w-full px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-bold transition-colors group"
               >
-                <MdLogout className="text-xl rotate-180" />
+                <MdLogout className="text-xl rotate-180 group-hover:-translate-x-1 transition-transform" />
                 <span>تسجيل خروج</span>
               </button>
             </div>
+
           </div>
         </div>
       </aside>
