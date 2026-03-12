@@ -29,7 +29,7 @@ export const PersonalData = ({ }: PersonalDataProps) => {
     const fetchProfile = async () => {
         const token = sessionStorage.getItem("userToken");
         try {
-            const response = await fetch("http://gearupapp.runasp.net/api/users/profile", {
+            const response = await fetch("https://gearupapp.runasp.net/api/users/profile", {
                 method: "GET",
                 headers: { "Authorization": `Bearer ${token}` }
             });

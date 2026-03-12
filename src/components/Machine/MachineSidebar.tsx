@@ -33,7 +33,7 @@ const MachineSidebar: React.FC = () => {
       try {
         const token = sessionStorage.getItem("userToken");
         if (!token) return;
-        const res = await fetch("http://gearupapp.runasp.net/api/users/profile", {
+        const res = await fetch("https://gearupapp.runasp.net/api/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) return;

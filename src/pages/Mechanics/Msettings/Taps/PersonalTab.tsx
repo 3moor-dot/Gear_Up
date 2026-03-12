@@ -10,7 +10,7 @@ interface PersonalData {
   profilePhotoUrl: string | null;
 }
 
-const BASE_URL = "http://gearupapp.runasp.net/api";
+const BASE_URL = "https://gearupapp.runasp.net/api";
 const getToken = () => sessionStorage.getItem("userToken");
 
 const PersonalTab = () => {

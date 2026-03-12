@@ -66,7 +66,7 @@ const NotificationBell = ({ size = 25 }) => {
     if (!token) return;
 
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://gearupapp.runasp.net/hubs/notifications", { 
+      .withUrl("https://gearupapp.runasp.net/hubs/notifications", { 
         accessTokenFactory: () => token 
       })
       .withAutomaticReconnect()

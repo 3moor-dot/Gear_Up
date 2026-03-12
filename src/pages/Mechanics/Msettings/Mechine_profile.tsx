@@ -6,7 +6,7 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 
-const BASE_URL = "http://gearupapp.runasp.net/api";
+const BASE_URL = "https://gearupapp.runasp.net/api";
 const getToken = () => sessionStorage.getItem("userToken");
 
 const Mechine_profile: React.FC = () => {
