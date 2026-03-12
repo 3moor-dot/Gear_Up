@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
@@ -141,7 +140,6 @@ const MaintenanceReminders = () => {
     } catch (error: any) { alert(error.response?.data?.error || "فشل الحذف"); }
   };
 
-
   useEffect(() => {
     const fetchCars = async () => {
       try {
@@ -156,12 +154,9 @@ const MaintenanceReminders = () => {
 
     fetchCars();
     fetchUpcoming();
-    
-
   }, [token, fetchUpcoming]); 
 
   const filteredReminders = useMemo(() => reminders.filter((r) => filter === "all" || r.status === filter), [reminders, filter]);
-
 
   return (
     <div className={`flex min-h-screen ${dark ? "bg-primary_BGD text-white" : "bg-white text-gray-800"}`} dir="rtl">
@@ -169,6 +164,8 @@ const MaintenanceReminders = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="p-4 md:p-8 space-y-8">
+
+          {/* العنوان وزر إضافة */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold">تذكيرات الصيانة</h1>
@@ -179,6 +176,7 @@ const MaintenanceReminders = () => {
             </button>
           </div>
 
+          {/* تذكيرات قادمة */}
           {upcomingReminders.length > 0 && (
             <div className={`p-5 rounded-2xl border ${dark ? "bg-blue-500/5 border-blue-500/20" : "bg-blue-50/50 border-blue-100"}`}>
               <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
@@ -186,31 +184,28 @@ const MaintenanceReminders = () => {
                 تذكيرات قادمة قريباً
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-  
                 {upcomingReminders.map((u) => {
-  const car = cars.find((c) => c.id === u.carId);
-  const carName = car ? `${car.year} ${car.brand} ${car.model}` : "عربية غير معروفة";
-  return (
-    <div key={u.id} className={`p-4 rounded-xl border-l-4 border-l-blue-500 ${dark ? "bg-gray-800" : "bg-white"} shadow-sm border transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer`}>
-      <h4 className="font-bold text-sm mb-1 truncate">{u.name}</h4>
-      
-    {/* car icon */}
-      <div className={`text-xs font-bold mb-2 flex items-center gap-2 ${dark ? "text-sky-400" : "text-sky-700"}`}>
-        <FaCarSide size={14} className="flex-shrink-0" /> 
-        <span className="truncate">{carName}</span>
-      </div>
-
-      <div className="flex justify-between text-xs font-medium opacity-80">
-        <span>{formatToEgyptDate(u.startDate)}</span>
-        {u.preferredNotificationTime && (<span className="font-bold">{formatToEgyptTime(u.preferredNotificationTime)}</span>)}
-      </div>
-    </div>
-    );
-       })}
-         </div>
-         </div>
+                  const car = cars.find((c) => c.id === u.carId);
+                  const carName = car ? `${car.year} ${car.brand} ${car.model}` : "عربية غير معروفة";
+                  return (
+                    <div key={u.id} className={`p-4 rounded-xl border-l-4 border-l-blue-500 ${dark ? "bg-gray-800" : "bg-white"} shadow-sm border transition-all duration-300 hover:shadow-md hover:-translate-y-1 cursor-pointer`}>
+                      <h4 className="font-bold text-sm mb-1 truncate">{u.name}</h4>
+                      <div className={`text-xs font-bold mb-2 flex items-center gap-2 ${dark ? "text-sky-400" : "text-sky-700"}`}>
+                        <FaCarSide size={14} className="flex-shrink-0" /> 
+                        <span className="truncate">{carName}</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-medium opacity-80">
+                        <span>{formatToEgyptDate(u.startDate)}</span>
+                        {u.preferredNotificationTime && (<span className="font-bold">{formatToEgyptTime(u.preferredNotificationTime)}</span>)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
+          {/* فلتر السيارات */}
           <div className="flex flex-wrap gap-4 items-center bg-gray-500/5 p-4 rounded-2xl">
             <select value={selectedCar} onChange={(e) => setSelectedCar(e.target.value)} className="bg-transparent border border-gray-500/20 rounded-lg px-3 py-2 outline-none">
               {cars.map((car, idx) => (<option key={idx} value={`${car.year} ${car.brand} ${car.model}`} className="text-black">{car.year} {car.brand} {car.model}</option>))}
@@ -224,44 +219,94 @@ const MaintenanceReminders = () => {
             </div>
           </div>
 
+          {/* كاردز التذكيرات */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredReminders.map((reminder) => (
-              <div key={reminder.id} className={`p-5 rounded-2xl border ${dark ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-white"} shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-lg">{reminder.name}</h3>
-                  <StatusBadge status={reminder.status} />
-                </div>
-                {reminder.description && reminder.description.trim() !== "" && (
-                <p className="text-xs opacity-60 mb-4 line-clamp-2 h-8">
-                    {reminder.description}
-                       </p>
-                              )}
+            {filteredReminders.map((reminder) => {
+              const rawType = String(reminder.frequencyType ?? "").toLowerCase();
+              const isOnce = rawType === "0" || rawType === "once";
 
-                <div className="space-y-2 mb-4 text-[11px]">
-                  <div className="flex justify-between items-center"><span className="opacity-60">تاريخ البدء:</span><span className="font-medium">{formatToEgyptDate(reminder.startDate)}</span></div>
-                  {reminder.preferredNotificationTime && (
-                    <div className="flex justify-between items-center text-blue-500 bg-blue-500/5 px-2 py-1 rounded-md">
-                      <span className="opacity-70">وقت التنبيه:</span><span className="font-bold tracking-wider">{formatToEgyptTime(reminder.preferredNotificationTime)}</span>
+              return (
+                <div key={reminder.id} className={`p-5 rounded-2xl border ${dark ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-white"} shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-lg">{reminder.name}</h3>
+                    <StatusBadge status={reminder.status} />
+                  </div>
+                  {reminder.description && reminder.description.trim() !== "" && (
+                    <p className="text-xs opacity-60 mb-4 line-clamp-2 h-8">{reminder.description}</p>
+                  )}
+                  <div className="space-y-2 mb-4 text-[11px]">
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-60">تاريخ البدء:</span>
+                      <span className="font-medium">{formatToEgyptDate(reminder.startDate)}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between items-center pt-1 border-t border-gray-500/10"><span className="opacity-60">التكرار:</span><span className="text-blue-500 font-medium">{getFrequencyLabel(reminder)}</span></div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => deleteReminder(reminder.id)} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[11px]"><FaTrash size={10} /> حذف</button>
-                  {reminder.status === 'Active' && (<button onClick={() => handleStatusAction(reminder.id, 'complete')} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all text-[11px]"><FaCheck size={10} /> إتمام</button>)}
-                  {(reminder.status === 'Active' || reminder.status === 'Paused') && (
-                    <button onClick={() => handleStatusAction(reminder.id, reminder.status === 'Active' ? 'pause' : 'activate')} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] transition-all ${reminder.status === 'Active' ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white' : 'bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white'}`}>
-                      {reminder.status === 'Active' ? <><FaPause size={10} /> إيقاف مؤقت</> : <><FaPlay size={10} /> تنشيط</>}
+                    {reminder.preferredNotificationTime && (
+                      <div className="flex justify-between items-center text-blue-500 bg-blue-500/5 px-2 py-1 rounded-md">
+                        <span className="opacity-70">وقت التنبيه:</span>
+                        <span className="font-bold tracking-wider">{formatToEgyptTime(reminder.preferredNotificationTime)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-1 border-t border-gray-500/10">
+                      <span className="opacity-60">التكرار:</span>
+                      <span className="text-blue-500 font-medium">{getFrequencyLabel(reminder)}</span>
+                    </div>
+                  </div>
+
+                  {/* أزرار العمليات */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => deleteReminder(reminder.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[11px]"
+                    >
+                      <FaTrash size={10} /> حذف
                     </button>
-                  )}
+
+                    {!isOnce && reminder.status === "Active" && (
+                      <button
+                        onClick={() => handleStatusAction(reminder.id, "complete")}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all text-[11px]"
+                      >
+                        <FaCheck size={10} /> إتمام
+                      </button>
+                    )}
+
+                    {!isOnce && (reminder.status === "Active" || reminder.status === "Paused") && (
+                      <button
+                        onClick={() => handleStatusAction(reminder.id, reminder.status === "Active" ? "pause" : "activate")}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] transition-all ${
+                          reminder.status === "Active"
+                            ? "bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white"
+                            : "bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white"
+                        }`}
+                      >
+                        {reminder.status === "Active" ? (
+                          <>
+                            <FaPause size={10} /> إيقاف مؤقت
+                          </>
+                        ) : (
+                          <>
+                            <FaPlay size={10} /> تنشيط
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       </div>
-      <CreateReminderModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} cars={cars} selectedCar={selectedCar} setSelectedCar={setSelectedCar} onSuccess={refreshAll} />
+
+      <CreateReminderModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        cars={cars}
+        selectedCar={selectedCar}
+        setSelectedCar={setSelectedCar}
+        onSuccess={refreshAll}
+      />
     </div>
   );
 };
+
 export default MaintenanceReminders;

@@ -29,9 +29,14 @@ const AdminProfile: React.FC = () => {
           </h2>
 
           <div className="flex items-center gap-4">
-            <NotificationBell onClick={() => console.log("Notifications clicked")} />
+            {/* <NotificationBell onClick={() => console.log("Notifications clicked")} />
             <ThemeToggle />
-          </div>
+          </div> */}
+          <div onClick={() => console.log("Notifications clicked")} className="cursor-pointer">
+    <NotificationBell />
+  </div>
+  <ThemeToggle />
+</div>
         </div>
 
         {/* SAVE BUTTON */}
