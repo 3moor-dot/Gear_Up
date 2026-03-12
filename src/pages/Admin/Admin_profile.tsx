@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
 import NotificationBell from "../../components/NotificationBell/notification_bell";
@@ -198,4 +197,3 @@ const Input: React.FC<InputProps> = ({ label, value, onChange, dark }) => (
     />
   </div>
 );
-
