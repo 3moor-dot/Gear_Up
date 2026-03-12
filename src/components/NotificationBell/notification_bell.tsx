@@ -50,7 +50,7 @@ const NotificationBell = ({ size = 25 }) => {
     const fetchCars = async () => {
       try {
         const res = await axios.get(
-          "http://gearupapp.runasp.net/api/customers/cars",
+          "https://gearupapp.runasp.net/api/customers/cars",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setCars(res.data.cars || []);
