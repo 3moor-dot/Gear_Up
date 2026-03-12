@@ -36,7 +36,7 @@ const ResetPassword = () => {
 
     try {
       const response = await fetch(
-        "http://gearupapp.runasp.net/api/auth/reset-password",
+        "https://gearupapp.runasp.net/api/auth/reset-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

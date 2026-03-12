@@ -43,7 +43,7 @@ const Register: React.FC = () => {
         try {
             console.log("Sending body:", JSON.stringify(body));
 
-            const res = await fetch("http://gearupapp.runasp.net/api/users/register", {
+            const res = await fetch("https://gearupapp.runasp.net/api/users/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

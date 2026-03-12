@@ -97,7 +97,7 @@ const CreateReminderModal = ({
 
     try {
       const token = sessionStorage.getItem("userToken");
-      await axios.post("http://gearupapp.runasp.net/api/Reminder", payload, {
+      await axios.post("https://gearupapp.runasp.net/api/Reminder", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
