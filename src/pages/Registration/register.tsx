@@ -33,30 +33,56 @@ const FormInput = ({
   type?: string; value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
-}) => (
-  <div className="w-full">
-    <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
-    <div className="relative">
-      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className={`w-full bg-white dark:bg-[#137FEC1A] border pr-11 py-3 rounded-xl outline-none text-sm text-gray-800 dark:text-gray-200 transition-all ${
-          error
-            ? "border-red-400 ring-2 ring-red-200 dark:ring-red-900/40"
-            : "border-gray-200 dark:border-transparent focus:ring-2 focus:ring-blue-500"
-        }`}
-      />
+}) => {
+  const [showPass, setShowPass] = useState(false);
+  const isPassword = type === "password";
+  const inputType  = isPassword ? (showPass ? "text" : "password") : type;
+
+  return (
+    <div className="w-full">
+      <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
+      <div className="relative">
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
+        <input
+          type={inputType}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          className={`w-full bg-white dark:bg-[#137FEC1A] border pr-11 py-3 rounded-xl outline-none text-sm text-gray-800 dark:text-gray-200 transition-all ${
+            isPassword ? "pl-11" : ""
+          } ${
+            error
+              ? "border-red-400 ring-2 ring-red-200 dark:ring-red-900/40"
+              : "border-gray-200 dark:border-transparent focus:ring-2 focus:ring-blue-500"
+          }`}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPass(!showPass)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors"
+          >
+            {showPass ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.38-4.152M9.878 9.878a3 3 0 104.243 4.243M3 3l18 18" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
+      {error && (
+        <p className="mt-1 text-xs text-red-500 font-semibold flex items-center gap-1">
+          <span>⚠</span> {error}
+        </p>
+      )}
     </div>
-    {error && (
-      <p className="mt-1 text-xs text-red-500 font-semibold flex items-center gap-1">
-        <span>⚠</span> {error}
-      </p>
-    )}
-  </div>
-);
+  );
+};
 
 /* ---- Register ---- */
 const Register: React.FC = () => {
