@@ -144,7 +144,12 @@ const NotificationBell = ({ size = 25 }) => {
                   <FaTimes size={10} />
                 </button>
                 <h4 className="font-bold text-xs mb-1 ml-4">{n.title}</h4>
-                {n.carId && <div className="text-[10px] font-bold text-sky-500 mb-1">🚗 {getCarName(n.carId)}</div>}
+
+                {n.carId && (
+            <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1">
+             🚗 {getCarName(n.carId)}
+                </div>
+                        )}
                 {n.message && <p className="text-[11px] opacity-70 mb-3 leading-relaxed">{n.message}</p>}
                 <span className="text-[9px] opacity-50 block">{n.time}</span>
               </div>
