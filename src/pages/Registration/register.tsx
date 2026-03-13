@@ -1,255 +1,268 @@
 import { useState } from "react";
 import {
-    FaUser,
-    FaPhone,
-    FaEnvelope,
-    FaLock,
-    FaUserTie,
-    FaTools
+  FaUser, FaPhone, FaEnvelope, FaLock, FaUserTie, FaTools
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+/* ---- validation helpers ---- */
+const validateStep1 = (fields: {
+  firstName: string; lastName: string;
+  phone: string; email: string; password: string;
+}) => {
+  const errs: Record<string, string> = {};
+  if (!fields.firstName.trim())              errs.firstName = "الاسم الأول مطلوب";
+  else if (/\d/.test(fields.firstName))      errs.firstName = "الاسم لا يجب أن يحتوي على أرقام";
+  if (!fields.lastName.trim())               errs.lastName  = "اسم العائلة مطلوب";
+  else if (/\d/.test(fields.lastName))       errs.lastName  = "الاسم لا يجب أن يحتوي على أرقام";
+  if (!fields.phone.trim())                  errs.phone     = "رقم الهاتف مطلوب";
+  else if (!/^\+?\d{7,15}$/.test(fields.phone.replace(/\s/g, "")))
+                                             errs.phone     = "رقم الهاتف غير صحيح";
+  if (!fields.email.trim())                  errs.email     = "البريد الإلكتروني مطلوب";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))
+                                             errs.email     = "البريد الإلكتروني غير صحيح";
+  if (!fields.password)                      errs.password  = "كلمة المرور مطلوبة";
+  else if (fields.password.length < 8)       errs.password  = "كلمة المرور 8 أحرف على الأقل";
+  return errs;
+};
+
+/* ---- FormInput ---- */
+const FormInput = ({
+  label, icon, placeholder, type = "text", value, onChange, error,
+}: {
+  label: string; icon: React.ReactNode; placeholder: string;
+  type?: string; value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+}) => (
+  <div className="w-full">
+    <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
+    <div className="relative">
+      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        className={`w-full bg-white dark:bg-[#137FEC1A] border pr-11 py-3 rounded-xl outline-none text-sm text-gray-800 dark:text-gray-200 transition-all ${
+          error
+            ? "border-red-400 ring-2 ring-red-200 dark:ring-red-900/40"
+            : "border-gray-200 dark:border-transparent focus:ring-2 focus:ring-blue-500"
+        }`}
+      />
+    </div>
+    {error && (
+      <p className="mt-1 text-xs text-red-500 font-semibold flex items-center gap-1">
+        <span>⚠</span> {error}
+      </p>
+    )}
+  </div>
+);
+
+/* ---- Register ---- */
 const Register: React.FC = () => {
-    const [role, setRole] = useState<"client" | "mechanic">("client");
-    const [step, setStep] = useState<1 | 2>(1);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [role, setRole]       = useState<"client" | "mechanic">("client");
+  const [step, setStep]       = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-    // Form state
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName,  setLastName]  = useState("");
+  const [phone,     setPhone]     = useState("");
+  const [email,     setEmail]     = useState("");
+  const [password,  setPassword]  = useState("");
 
-    const handleSubmit = async () => {
-        setLoading(true);
-        setError(null);
+  // field-level errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-        // 0=user, 1=mechanic
-        const roleNumber = role === "client" ? 1 : 2;
+  const handleNext = () => {
+    const errs = validateStep1({ firstName, lastName, phone, email, password });
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+    setFieldErrors({});
+    setApiError(null);
+    setStep(2);
+  };
 
-        const body = {
-            firstName,
-            lastName,
-            email,
-            password,
-            phone,
-            role: roleNumber,
-            customerLocation: { latitude: 0, longitude: 0 },
-            mechanicLocation: { latitude: 0, longitude: 0 },
-        };
+  // clear field error on change
+  const clearErr = (key: string) =>
+    setFieldErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
 
-        try {
-            console.log("Sending body:", JSON.stringify(body));
-
-            const res = await fetch("https://gearupapp.runasp.net/api/users/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(body),
-            });
-
-            const data = await res.json().catch(() => null);
-            console.log("Response status:", res.status);
-            console.log("Response body:", JSON.stringify(data));
-
-            if (!res.ok) {
-                // Try to extract the most descriptive error message
-                const msg =
-                    data?.errors
-                        ? Object.values(data.errors).flat().join(" | ")
-                        : data?.message ||
-                          data?.title ||
-                          (typeof data === "string" ? data : null) ||
-                          `فشل التسجيل (${res.status})`;
-                throw new Error(msg);
-            }
-
-            alert("تم إنشاء الحساب بنجاح!");
-            window.location.href = "/login";
-        } catch (err: any) {
-            setError(err.message || "حدث خطأ، حاول مجدداً");
-        } finally {
-            setLoading(false);
-        }
+  const handleSubmit = async () => {
+    setLoading(true);
+    setApiError(null);
+    const roleNumber = role === "client" ? 1 : 2;
+    const body = {
+      firstName, lastName, email, password, phone,
+      role: roleNumber,
+      customerLocation: { latitude: 0, longitude: 0 },
+      mechanicLocation: { latitude: 0, longitude: 0 },
     };
+    try {
+      const res  = await fetch("https://gearupapp.runasp.net/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = data?.errors
+          ? Object.values(data.errors).flat().join(" | ")
+          : data?.message || data?.title || `فشل التسجيل (${res.status})`;
+        throw new Error(msg as string);
+      }
+      alert("تم إنشاء الحساب بنجاح!");
+      window.location.href = "/login";
+    } catch (err: any) {
+      setApiError(err.message || "حدث خطأ، حاول مجدداً");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div
-            className="min-h-screen py-10 flex items-center justify-center px-4 bg-gradient-to-br from-[#EAF4FF] to-white dark:from-[#0F1323] dark:to-[#101922] transition-colors duration-500"
-            dir="rtl"
-        >
-            <div className="dark:bg-[#1B1F2D] max-w-xl w-full bg-[#EAF4FF] rounded-3xl p-10 shadow-xl">
-                {/* TITLE */}
-                <h1 className="text-3xl font-bold text-center mb-2 dark:text-white">
-                    إنشاء حسابك
-                </h1>
-                <p className="text-center text-gray-500 mb-8">
-                    {step === 1
-                        ? "بياناتك الأساسية"
-                        : "اختر نوع الحساب لإتمام العملية"}
-                </p>
+  return (
+    <div
+      className="min-h-screen py-10 flex items-center justify-center px-4 bg-gradient-to-br from-[#EAF4FF] to-white dark:from-[#0F1323] dark:to-[#101922] transition-colors duration-500"
+      dir="rtl"
+    >
+      <div className="dark:bg-[#1B1F2D] max-w-xl w-full bg-[#EAF4FF] rounded-3xl p-8 sm:p-10 shadow-xl">
 
-                <AnimatePresence mode="wait">
-                    {/* الخطوة الأولى */}
-                    {step === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="space-y-4"
-                        >
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormInput
-                                    label="الاسم الأول"
-                                    icon={<FaUser />}
-                                    placeholder="الاسم الأول"
-                                    value={firstName}
-                                    onChange={(e: any) => setFirstName(e.target.value)}
-                                />
-                                <FormInput
-                                    label="اسم العائلة"
-                                    icon={<FaUser />}
-                                    placeholder="اسم العائلة"
-                                    value={lastName}
-                                    onChange={(e: any) => setLastName(e.target.value)}
-                                />
-                            </div>
-                            <FormInput
-                                label="رقم الهاتف"
-                                icon={<FaPhone />}
-                                placeholder="20xxxxxxxx+"
-                                value={phone}
-                                onChange={(e: any) => setPhone(e.target.value)}
-                            />
-                            <FormInput
-                                label="البريد الإلكتروني"
-                                icon={<FaEnvelope />}
-                                placeholder="example@mail.com"
-                                value={email}
-                                onChange={(e: any) => setEmail(e.target.value)}
-                            />
-                            <FormInput
-                                label="كلمة المرور"
-                                icon={<FaLock />}
-                                placeholder="********"
-                                type="password"
-                                value={password}
-                                onChange={(e: any) => setPassword(e.target.value)}
-                            />
-                        </motion.div>
-                    )}
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-center mb-2 dark:text-white">إنشاء حسابك</h1>
+        <p className="text-center text-gray-500 mb-8 text-sm">
+          {step === 1 ? "بياناتك الأساسية" : "اختر نوع الحساب لإتمام العملية"}
+        </p>
 
-                    {/* الخطوة الثانية */}
-                    {step === 2 && (
-                        <motion.div
-                            key="step2"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="py-10"
-                        >
-                            <div className="flex flex-col sm:flex-row justify-center gap-6">
-                                <button
-                                    onClick={() => setRole("client")}
-                                    className={`flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all duration-300 ${
-                                        role === "client"
-                                            ? "border-black bg-black text-white shadow-2xl scale-105"
-                                            : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
-                                    }`}
-                                >
-                                    <FaUserTie size={40} />
-                                    <span className="font-bold text-lg">سجل كعميل</span>
-                                </button>
-
-                                <button
-                                    onClick={() => setRole("mechanic")}
-                                    className={`flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all duration-300 ${
-                                        role === "mechanic"
-                                            ? "border-[#137FEC] bg-[#137FEC] text-white shadow-2xl scale-105"
-                                            : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
-                                    }`}
-                                >
-                                    <FaTools size={40} />
-                                    <span className="font-bold text-lg">سجل كميكانيكي</span>
-                                </button>
-                            </div>
-                            <p className="text-center mt-8 text-sm text-gray-400">
-                                {role === "client"
-                                    ? "ستتمكن من طلب خدمات الصيانة فوراً"
-                                    : "سنطلب منك بيانات ورشتك في الخطوة القادمة داخل التطبيق"}
-                            </p>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* رسالة الخطأ */}
-                {error && (
-                    <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl text-red-600 dark:text-red-400 text-sm text-center">
-                        {error}
-                    </div>
-                )}
-
-                {/* الأزرار */}
-                <div className="flex gap-3 mt-8">
-                    {step === 2 && (
-                        <button
-                            onClick={() => setStep(1)}
-                            className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
-                        >
-                            السابق
-                        </button>
-                    )}
-                    <button
-                        onClick={() =>
-                            step === 1 ? setStep(2) : handleSubmit()
-                        }
-                        disabled={loading}
-                        className="flex-[2] bg-[#137FEC] text-white py-4 rounded-xl text-lg font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        {loading
-                            ? "جارٍ الإنشاء..."
-                            : step === 1
-                            ? "متابعة"
-                            : "إنشاء الحساب الآن"}
-                    </button>
-                </div>
-
-                <p className="text-center mt-6 dark:text-white text-sm">
-                    لديك حساب؟{" "}
-                    <span
-                        onClick={() => (window.location.href = "/login")}
-                        className="text-[#137FEC] font-bold cursor-pointer hover:underline"
-                    >
-                        تسجيل الدخول
-                    </span>
-                </p>
-            </div>
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {[1, 2].map((s) => (
+            <div key={s} className={`h-2 rounded-full transition-all duration-300 ${
+              s === step ? "w-8 bg-[#137FEC]" : "w-4 bg-gray-300 dark:bg-gray-600"
+            }`} />
+          ))}
         </div>
-    );
+
+        <AnimatePresence mode="wait">
+          {/* Step 1 */}
+          {step === 1 && (
+            <motion.div
+              key="step1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormInput
+                  label="الاسم الأول" icon={<FaUser />} placeholder="الاسم الأول"
+                  value={firstName} error={fieldErrors.firstName}
+                  onChange={(e) => { setFirstName(e.target.value); clearErr("firstName"); }}
+                />
+                <FormInput
+                  label="اسم العائلة" icon={<FaUser />} placeholder="اسم العائلة"
+                  value={lastName} error={fieldErrors.lastName}
+                  onChange={(e) => { setLastName(e.target.value); clearErr("lastName"); }}
+                />
+              </div>
+              <FormInput
+                label="رقم الهاتف" icon={<FaPhone />} placeholder="+20xxxxxxxx"
+                value={phone} error={fieldErrors.phone}
+                onChange={(e) => { setPhone(e.target.value); clearErr("phone"); }}
+              />
+              <FormInput
+                label="البريد الإلكتروني" icon={<FaEnvelope />} placeholder="example@mail.com"
+                value={email} error={fieldErrors.email}
+                onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
+              />
+              <FormInput
+                label="كلمة المرور" icon={<FaLock />} placeholder="8 أحرف على الأقل"
+                type="password" value={password} error={fieldErrors.password}
+                onChange={(e) => { setPassword(e.target.value); clearErr("password"); }}
+              />
+            </motion.div>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="py-6"
+            >
+              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                <button
+                  onClick={() => setRole("client")}
+                  className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
+                    role === "client"
+                      ? "border-black bg-black text-white shadow-2xl scale-105"
+                      : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
+                  }`}
+                >
+                  <FaUserTie size={36} />
+                  <span className="font-bold text-base sm:text-lg">سجل كعميل</span>
+                </button>
+                <button
+                  onClick={() => setRole("mechanic")}
+                  className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
+                    role === "mechanic"
+                      ? "border-[#137FEC] bg-[#137FEC] text-white shadow-2xl scale-105"
+                      : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
+                  }`}
+                >
+                  <FaTools size={36} />
+                  <span className="font-bold text-base sm:text-lg">سجل كميكانيكي</span>
+                </button>
+              </div>
+              <p className="text-center mt-6 text-xs sm:text-sm text-gray-400">
+                {role === "client"
+                  ? "ستتمكن من طلب خدمات الصيانة فوراً"
+                  : "سنطلب منك بيانات ورشتك في الخطوة القادمة داخل التطبيق"}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* API error */}
+        {apiError && (
+          <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl text-red-600 dark:text-red-400 text-sm text-center">
+            {apiError}
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex gap-3 mt-8">
+          {step === 2 && (
+            <button
+              onClick={() => setStep(1)}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
+            >
+              السابق
+            </button>
+          )}
+          <button
+            onClick={step === 1 ? handleNext : handleSubmit}
+            disabled={loading}
+            className="flex-[2] bg-[#137FEC] text-white py-4 rounded-xl text-base sm:text-lg font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? "جارٍ الإنشاء..." : step === 1 ? "متابعة" : "إنشاء الحساب الآن"}
+          </button>
+        </div>
+
+        <p className="text-center mt-6 dark:text-white text-sm">
+          لديك حساب؟{" "}
+          <span
+            onClick={() => (window.location.href = "/login")}
+            className="text-[#137FEC] font-bold cursor-pointer hover:underline"
+          >
+            تسجيل الدخول
+          </span>
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Register;
-
-/* ---------------- المكونات المساعدة ---------------- */
-
-const FormInput = ({ label, icon, placeholder, type = "text", value, onChange }: any) => (
-    <div className="w-full">
-        <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
-        <div className="relative">
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                {icon}
-            </span>
-            <input
-                type={type}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                className="w-full bg-white dark:bg-[#137FEC1A] border border-gray-200 dark:border-transparent text-gray-800 dark:text-gray-200 pr-11 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
-            />
-        </div>
-    </div>
-);
