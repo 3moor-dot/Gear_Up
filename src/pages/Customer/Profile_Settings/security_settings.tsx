@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { FaSave, FaSpinner, FaLock } from "react-icons/fa";
-import { MdVisibility, MdVisibilityOff, MdCheckCircleOutline, MdErrorOutline } from "react-icons/md";
-
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import Swal from "sweetalert2"; // استيراد SweetAlert2
 const PasswordField = ({
   label, name, value, show, onToggle, onChange, dark,
 }: {
@@ -26,16 +26,17 @@ const PasswordField = ({
         onChange={onChange}
         placeholder="••••••••"
         required
-        className={`w-full px-4 py-3 pr-12 rounded-2xl border outline-none transition-all font-semibold text-right ${
+        className={`w-full px-4 pl-12 py-3 rounded-2xl border outline-none transition-all font-semibold text-right ${
           !dark
             ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900"
             : "bg-gray-800 border-gray-600 ring-2 ring-blue-900/40 text-white"
         } focus:border-blue-500`}
       />
+      {/* تغيير التموضع من right-3 إلى left-3 */}
       <button
         type="button"
         onClick={onToggle}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors"
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
       >
         {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
       </button>
@@ -55,22 +56,38 @@ const SecuritySettings = () => {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
   const [loading, setLoading] = useState(false);
-  const [status, setStatus]   = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
 
   const token    = sessionStorage.getItem("userToken");
   const BASE_URL = "https://gearupapp.runasp.net/api/auth/change-password";
+
+  // دالة موحدة لإظهار التنبيهات بتصميم متناسق مع GearUp AI
+  const showAlert = (icon: 'success' | 'error' | 'warning', title: string, text?: string) => {
+    Swal.fire({
+      icon,
+      title,
+      text,
+      confirmButtonColor: '#137FEC',
+      background: dark ? '#1B1F2D' : '#fff',
+      color: dark ? '#fff' : '#000',
+      timer: icon === 'success' ? 2000 : undefined,
+      showConfirmButton: icon !== 'success',
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus({ type: null, message: "" });
 
-    if (passwords.newPassword !== passwords.confirmPassword)
-      return setStatus({ type: "error", message: "كلمة المرور الجديدة غير متطابقة" });
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      return showAlert('warning', 'خطأ في التأكيد', 'كلمة المرور الجديدة وغير متطابقة');
+    }
+
+    if (passwords.newPassword.length < 8) {
+      return showAlert('warning', 'كلمة مرور ضعيفة', 'يجب أن تكون كلمة المرور 8 أحرف على الأقل');
+    }
 
     setLoading(true);
     try {
@@ -82,16 +99,19 @@ const SecuritySettings = () => {
           newPassword:     passwords.newPassword,
         }),
       });
+      
       const data = await res.json();
+      
       if (res.ok) {
-        setStatus({ type: "success", message: data.message || "تم تغيير كلمة المرور بنجاح" });
+        showAlert('success', 'تم التغيير!', 'تم تحديث كلمة المرور بنجاح.');
         setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setTimeout(() => window.location.reload(), 1000);
+        // تحديث الصفحة بعد نجاح العملية بـ 2 ثانية
+        setTimeout(() => window.location.reload(), 2000);
       } else {
-        setStatus({ type: "error", message: data.message || "فشل التغيير، تأكد من كلمة المرور الحالية" });
+        showAlert('error', 'فشل التغيير', data.message || "تأكد من صحة كلمة المرور الحالية");
       }
     } catch {
-      setStatus({ type: "error", message: "حدث خطأ في الاتصال بالسيرفر" });
+      showAlert('error', 'خطأ في الاتصال', 'حدث خطأ أثناء الاتصال بالسيرفر');
     } finally {
       setLoading(false);
     }
@@ -133,23 +153,8 @@ const SecuritySettings = () => {
 
       {/* Fields */}
       <div className="p-4 sm:p-6 md:p-8">
-
-        {status.type && (
-          <div className={`mb-5 p-3 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 ${
-            status.type === "success"
-              ? "bg-green-500/10 border border-green-500/30 text-green-600"
-              : "bg-red-500/10 border border-red-500/30 text-red-500"
-          }`}>
-            {status.type === "success"
-              ? <MdCheckCircleOutline size={18} />
-              : <MdErrorOutline size={18} />}
-            {status.message}
-          </div>
-        )}
-
         <form id="password-form" onSubmit={handleChangePassword} className="space-y-4 sm:space-y-5">
 
-          {/* كلمة المرور الحالية — سطر كامل */}
           <PasswordField
             label="كلمة المرور الحالية"
             name="currentPassword"
@@ -160,7 +165,6 @@ const SecuritySettings = () => {
             dark={dark}
           />
 
-          {/* الجديدة + التأكيد — في نفس السطر على sm+ */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             <PasswordField
               label="كلمة المرور الجديدة"
@@ -182,7 +186,6 @@ const SecuritySettings = () => {
             />
           </div>
 
-          {/* ملاحظة أمنية */}
           <div className={`p-3 sm:p-4 rounded-2xl border text-xs sm:text-sm text-center font-medium ${
             !dark
               ? "bg-blue-50 border-blue-100 text-blue-600"
@@ -190,7 +193,6 @@ const SecuritySettings = () => {
           }`}>
             يفضل أن تحتوي كلمة المرور على 8 أحرف على الأقل، بما في ذلك أرقام ورموز خاصة.
           </div>
-
         </form>
       </div>
     </div>

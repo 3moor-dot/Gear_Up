@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MdSave, MdCloudUpload, MdEdit, MdClose } from "react-icons/md";
+import Swal from "sweetalert2"; // استيراد مكتبة التنبيهات
 
 interface PersonalDataProps {
   inputStyle: string;
@@ -21,6 +22,22 @@ export const PersonalData = ({ }: PersonalDataProps) => {
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const isDarkMode = () => document.documentElement.classList.contains('dark');
+
+  // دالة موحدة لإظهار التنبيهات بشكل احترافي
+  const showAlert = (icon: 'success' | 'error' | 'warning', title: string, text?: string) => {
+    Swal.fire({
+      icon,
+      title,
+      text,
+      confirmButtonColor: '#137FEC',
+      background: isDarkMode() ? '#1B1F2D' : '#fff',
+      color: isDarkMode() ? '#fff' : '#000',
+      timer: icon === 'success' ? 2000 : undefined,
+      showConfirmButton: icon !== 'success',
+    });
+  };
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -49,22 +66,27 @@ export const PersonalData = ({ }: PersonalDataProps) => {
     fd.append("LastName", userData.lastName);
     fd.append("Phone", userData.phone);
     if (selectedImage) fd.append("ProfilePhoto", selectedImage);
+
     try {
       const res = await fetch("https://gearupapp.runasp.net/api/users/profile", {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
+
       if (res.ok) {
-        alert("تم تحديث البيانات بنجاح");
+        showAlert('success', 'تم التحديث!', 'تم حفظ بياناتك الشخصية بنجاح.');
         setIsEditable(false);
         fetchProfile();
       } else {
         const err = await res.json();
-        alert(err.message || "حدث خطأ أثناء الحفظ");
+        showAlert('error', 'فشل التحديث', err.message || "حدث خطأ غير متوقع");
       }
-    } catch { alert("فشل الاتصال بالسيرفر"); }
-    finally { setLoading(false); }
+    } catch { 
+      showAlert('error', 'خطأ في الاتصال', 'تعذر الوصول إلى السيرفر، يرجى المحاولة لاحقاً.');
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const cancelEdit = () => {
@@ -82,7 +104,6 @@ export const PersonalData = ({ }: PersonalDataProps) => {
 
   return (
     <div className="bg-white dark:bg-primary_BGD border border-blue-100 dark:border-gray-700 rounded-[32px] sm:rounded-[40px] p-5 sm:p-8 md:p-10 shadow-xl">
-
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-3 mb-6 border-b pb-5 dark:border-gray-700">
         <h2 className="text-[#137FEC] text-lg sm:text-2xl font-black">البيانات الشخصية</h2>
@@ -96,24 +117,19 @@ export const PersonalData = ({ }: PersonalDataProps) => {
         )}
       </div>
 
-      {/* صورة + حقول */}
       <div className="flex flex-col items-center gap-6 sm:grid sm:grid-cols-12 sm:gap-8 sm:items-start">
-
-        {/* الصورة — مركزية على موبايل */}
+        {/* ملف الصورة */}
         <div className="sm:col-span-3 flex flex-col items-center gap-3">
           <div className="relative">
             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-[#E5F1FD] dark:border-gray-600 bg-gray-100 overflow-hidden shadow-inner">
               <img
-                src={previewUrl || userData.profilePhotoUrl || "https://ui-avatars.com/api/?name=User&background=random"}
+                src={previewUrl || userData.profilePhotoUrl || `https://ui-avatars.com/api/?name=${userData.firstName}+${userData.lastName}&background=137FEC&color=fff`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
             </div>
             {isEditable && (
-              <label
-                htmlFor="userPhoto"
-                className="absolute bottom-1 right-1 bg-[#137FEC] hover:bg-blue-600 text-white p-2 sm:p-2.5 rounded-full shadow-xl cursor-pointer transition-transform hover:scale-110"
-              >
+              <label htmlFor="userPhoto" className="absolute bottom-1 right-1 bg-[#137FEC] hover:bg-blue-600 text-white p-2 sm:p-2.5 rounded-full shadow-xl cursor-pointer transition-transform hover:scale-110">
                 <MdCloudUpload size={18} />
               </label>
             )}
@@ -122,41 +138,32 @@ export const PersonalData = ({ }: PersonalDataProps) => {
           <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">الصورة الشخصية</p>
         </div>
 
-        {/* الحقول */}
+        {/* حقول الإدخال */}
         <div className="sm:col-span-9 w-full space-y-4" dir="rtl">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-extrabold text-[#137FEC] pr-1">الاسم الأول</label>
-              <input type="text" value={userData.firstName}
-                onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
-                className={inputClasses} disabled={!isEditable} />
+              <input type="text" value={userData.firstName} onChange={(e) => setUserData({ ...userData, firstName: e.target.value })} className={inputClasses} disabled={!isEditable} />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-extrabold text-[#137FEC] pr-1">اسم العائلة</label>
-              <input type="text" value={userData.lastName}
-                onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
-                className={inputClasses} disabled={!isEditable} />
+              <input type="text" value={userData.lastName} onChange={(e) => setUserData({ ...userData, lastName: e.target.value })} className={inputClasses} disabled={!isEditable} />
             </div>
           </div>
-<div className="sm:col-span-9 w-full space-y-4" dir="rtl"></div>
+
           <div className="space-y-1.5">
             <label className="text-sm font-extrabold text-[#137FEC] pr-1">رقم الهاتف</label>
-            <input type="text" value={userData.phone}
-              onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-              className={inputClasses} disabled={!isEditable} />
+            <input type="text" value={userData.phone} onChange={(e) => setUserData({ ...userData, phone: e.target.value })} className={inputClasses} disabled={!isEditable} />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-extrabold text-gray-400 pr-1">البريد الإلكتروني (للعرض فقط)</label>
-            <input type="email" value={userData.email}
-              className="w-full text-right font-semibold py-3 px-4 rounded-2xl bg-gray-100 dark:bg-gray-800/30 text-gray-400 dark:text-gray-500 border border-transparent cursor-not-allowed"
-              disabled />
+            <input type="email" value={userData.email} className="w-full text-right font-semibold py-3 px-4 rounded-2xl bg-gray-100 dark:bg-gray-800/30 text-gray-400 dark:text-gray-500 border border-transparent cursor-not-allowed" disabled />
           </div>
-          
         </div>
       </div>
 
-      {/* أزرار الحفظ / الإلغاء */}
+      {/* أزرار الإجراءات */}
       {isEditable && (
         <div className="flex flex-col sm:flex-row-reverse justify-center gap-3 mt-8 pt-6 border-t dark:border-gray-700">
           <button
@@ -168,7 +175,7 @@ export const PersonalData = ({ }: PersonalDataProps) => {
           </button>
           <button
             onClick={cancelEdit}
-            className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-600 px-8 py-3 rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-8 py-3 rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             <MdClose size={18} /> إلغاء
           </button>
