@@ -1,21 +1,46 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../components/Footer/footer";
-import { FaPhone, FaEye, FaEyeSlash } from "react-icons/fa6"; // استيراد الأيقونات الجديدة
+import { FaPhone, FaEye, FaEyeSlash } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
+import Swal from "sweetalert2"; // 1. استيراد المكتبة
 
 const Login = () => {
   const navigate = useNavigate();
-  
+
+  // منع الوصول لصفحة Login إذا كان المستخدم مسجل بالفعل
+  useEffect(() => {
+    const token = sessionStorage.getItem("userToken");
+    const savedData = sessionStorage.getItem("userData");
+    if (token && savedData) {
+      const userData = JSON.parse(savedData);
+      if (userData.role === 3) navigate("/admin/admindashboard", { replace: true });
+      else if (userData.role === 2) navigate("/mechanics/mprofile", { replace: true });
+      else if (userData.role === 1) navigate("/customer/profilesettings", { replace: true });
+    }
+  }, [navigate]);
+
   const [formData, setFormData] = useState({
     emailOrPhone: "",
     password: "",
     rememberMe: true,
   });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // حالة جديدة للتحكم في ظهور كلمة المرور
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
+    // تحقق سريع قبل الإرسال
+    if (!formData.emailOrPhone || !formData.password) {
+      Swal.fire({
+        icon: "warning",
+        title: "بيانات ناقصة",
+        text: "يرجى إدخال البريد الإلكتروني وكلمة المرور",
+        confirmButtonText: "موافق",
+        confirmButtonColor: "#137FEC",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch("https://gearupapp.runasp.net/api/auth/login", {
@@ -27,12 +52,10 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // ... نفس منطق حفظ البيانات ...
         const token = data.accessToken;
         sessionStorage.setItem("userToken", token);
-
-        const extractVal = (field: any) =>
-          typeof field === 'object' && field !== null ? field.value ?? '' : field ?? '';
-
+        const extractVal = (field: any) => typeof field === 'object' && field !== null ? field.value ?? '' : field ?? '';
         const userData = {
           firstName: extractVal(data.firstName ?? data.data?.firstName),
           lastName: extractVal(data.lastName ?? data.data?.lastName),
@@ -43,46 +66,62 @@ const Login = () => {
         };
         sessionStorage.setItem("userData", JSON.stringify(userData));
 
-        const userRole = userData.role;
+        // إظهار رسالة نجاح خفيفة قبل التوجيه
+        Swal.fire({
+          icon: "success",
+          title: "تم تسجيل الدخول بنجاح",
+          showConfirmButton: false,
+          timer: 1500,
+          background: document.documentElement.classList.contains('dark') ? '#0B1120' : '#fff',
+          color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+        });
 
-        if (userRole === 3) {
-          navigate("/admin/admindashboard");
-        } else if (userRole === 2) {
-          navigate("/mechanics/mprofile");
-        } else if (userRole === 1) {
-          navigate("/customer/profilesettings");
-        }
+        setTimeout(() => {
+          if (userData.role === 3) navigate("/admin/admindashboard", { replace: true });
+          else if (userData.role === 2) navigate("/mechanics/mprofile", { replace: true });
+          else if (userData.role === 1) navigate("/customer/profilesettings", { replace: true });
+        }, 1500);
+
       } else {
-        alert(data.message || "بيانات الدخول غير صحيحة");
+        // رسالة الخطأ الاحترافية
+        Swal.fire({
+          icon: "error",
+          title: "فشل الدخول",
+          text: data.message || "تأكد من صحة البريد الإلكتروني أو كلمة المرور",
+          confirmButtonText: "حاول مرة أخرى",
+          confirmButtonColor: "#137FEC",
+          background: document.documentElement.classList.contains('dark') ? '#0B1120' : '#fff',
+          color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+          customClass: {
+            popup: 'rounded-2xl border border-[#137FEC26]'
+          }
+        });
       }
     } catch (err) {
-      alert("فشل الاتصال بالسيرفر");
+      Swal.fire({
+        icon: "error",
+        title: "خطأ في الاتصال",
+        text: "تعذر الاتصال بالسيرفر، يرجى التحقق من الإنترنت",
+        confirmButtonColor: "#137FEC",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="
-        min-h-screen flex flex-col
-        bg-white dark:bg-primary_BGD
-        text-gray-900 dark:text-white
-        transition-colors duration-500
-      "
-      dir="rtl"
-    >
-      <div className="flex-1 flex items-center justify-center px-6">
+    // ... باقي الـ JSX الخاص بك بدون تغيير ...
+    <div className="min-h-screen flex flex-col bg-white dark:bg-primary_BGD text-gray-900 dark:text-white transition-colors duration-500" dir="rtl">
+       {/* الكود الأصلي للـ Form هنا */}
+       {/* ... */}
+       <div className="flex-1 flex items-center justify-center px-6">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-
           {/* RIGHT – IMAGE */}
           <div className="hidden lg:flex flex-col items-center text-center space-y-6">
             <img src="/car.png" alt="car ai" className="w-full max-w-md rounded-xl" />
             <div>
               <h3 className="font-bold text-lg">العناية الذكية بالسيارة، بشكل مبسط</h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-                مساعدك المدعم بالذكاء الاصطناعي لصيانة السيارة وتحسين أدائها.
-              </p>
+              <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">مساعدك المدعم بالذكاء الاصطناعي لصيانة السيارة وتحسين أدائها.</p>
             </div>
           </div>
 
@@ -117,20 +156,15 @@ const Login = () => {
               </div>
               <div className="relative">
                 <input
-                  // تغيير النوع بناءً على حالة showPassword
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  // أضفنا pl-12 لترك مساحة للأيقونة جهة اليسار
                   className="w-full h-12 rounded-xl bg-[#8EC1F5] dark:bg-[#137FEC1A] text-white placeholder-gray-200 dark:placeholder-gray-400 pr-12 pl-12 outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ادخل كلمة المرور"
                 />
-                {/* أيقونة القفل اليمنى */}
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-200 dark:text-gray-400">
                   <FaLock />
                 </span>
-                
-                {/* زر العين جهة اليسار */}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -141,7 +175,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* BUTTON */}
             <button
               onClick={handleLogin}
               disabled={loading}
