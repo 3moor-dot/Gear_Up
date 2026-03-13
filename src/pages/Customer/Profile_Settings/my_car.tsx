@@ -14,14 +14,17 @@ interface Car {
   carPhotoUrl: string;
 }
 
-// قائمة الماركات الشائعة
+// إضافة الواجهة لإصلاح خطأ TypeScript في ملف ProfileSettings
+interface MyCarsProps {
+  inputStyle?: string;
+}
+
 const CAR_BRANDS = [
   "تويوتا", "هيونداي", "كيا", "نيسان", "ميتسوبيشي", "مرسيدس", "بي إم دبليو",
   "أودي", "فولكس فاجن", "فورد", "شيفروليه", "رينو", "فيات", "سكودا", "هوندا",
   "مازدا", "شيري", "إم جي", "بي واي دي", "سوزوكي", "ستروين", "بيجو", "جيب"
 ].sort((a, b) => a.localeCompare(b, 'ar'));
 
-// توليد السنوات من 1999 إلى السنة الحالية
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1999 + 1 }, (_, i) => currentYear - i);
 
@@ -36,29 +39,18 @@ const InfoCard = ({ label, value }: { label: string; value: string | number }) =
   </div>
 );
 
-const PhotoUploader = ({
-  id, previewSrc, onChange,
-}: {
-  id: string;
-  previewSrc?: string | null;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) => (
+const PhotoUploader = ({ id, previewSrc, onChange }: { id: string; previewSrc?: string | null; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }) => (
   <div className="flex justify-center flex-shrink-0">
     <div className="relative">
       <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl sm:rounded-3xl border-4 border-blue-50 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center">
-        {previewSrc ? (
-          <img src={previewSrc} className="w-full h-full object-cover" alt="preview" />
-        ) : (
+        {previewSrc ? <img src={previewSrc} className="w-full h-full object-cover" alt="preview" /> : (
           <div className="text-center p-2">
             <MdCloudUpload size={28} className="text-blue-200 mx-auto mb-1" />
             <p className="text-[10px] text-gray-400 font-bold">ارفع صورة</p>
           </div>
         )}
       </div>
-      <label
-        htmlFor={id}
-        className="absolute -bottom-2 -right-2 bg-[#137FEC] hover:bg-blue-600 text-white p-2 rounded-full shadow-lg cursor-pointer transition-transform hover:scale-110"
-      >
+      <label htmlFor={id} className="absolute -bottom-2 -right-2 bg-[#137FEC] hover:bg-blue-600 text-white p-2 rounded-full shadow-lg cursor-pointer transition-transform hover:scale-110">
         <MdCloudUpload size={15} />
       </label>
     </div>
@@ -66,7 +58,8 @@ const PhotoUploader = ({
   </div>
 );
 
-export const MyCars = () => {
+// تصحيح استقبال البروبس هنا
+export const MyCars = ({}: MyCarsProps) => {
   const [cars, setCars] = useState<Car[]>([]);
   const [expandedCarId, setExpandedCarId] = useState<string | null>(null);
   const [editModeId, setEditModeId] = useState<string | null>(null);
@@ -103,11 +96,7 @@ export const MyCars = () => {
     });
   };
 
-  const validatePlate = (plate: string) => {
-    // تقبل حروف عربية وأرقام ومسافات فقط
-    const regex = /^[\u0600-\u06FF0-9\s]+$/;
-    return regex.test(plate);
-  };
+  const validatePlate = (plate: string) => /^[\u0600-\u06FF0-9\s]+$/.test(plate);
 
   const handleAddCar = async () => {
     if (!newCar.brand || !newCar.model || !newCarPhoto || !newCar.plateNumber) {
@@ -122,7 +111,7 @@ export const MyCars = () => {
       return Swal.fire({
         icon: 'error',
         title: 'تنسيق اللوحة غير صحيح',
-        text: 'يجب أن تحتوي اللوحة على حروف عربية وأرقام فقط (مثال: أ ب ج 123)',
+        text: 'يجب أن تحتوي اللوحة على حروف عربية وأرقام فقط',
         confirmButtonColor: '#137FEC',
         background: isDarkMode() ? '#1B1F2D' : '#fff',
         color: isDarkMode() ? '#fff' : '#000',
@@ -142,18 +131,11 @@ export const MyCars = () => {
       });
       if (res.ok) {
         setNewCar({ brand: "", model: "", year: currentYear.toString(), plateNumber: "" });
-        setNewCarPhoto(null);
-        setShowAddForm(false);
-        fetchCars();
+        setNewCarPhoto(null); setShowAddForm(false); fetchCars();
         showToast('success', 'تمت إضافة السيارة بنجاح');
-      } else {
-        showToast('error', 'فشل إضافة السيارة');
-      }
-    } catch {
-      showToast('error', 'فشل الاتصال بالسيرفر');
-    } finally {
-      setLoading(false);
-    }
+      } else { showToast('error', 'فشل إضافة السيارة'); }
+    } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
+    finally { setLoading(false); }
   };
 
   const handleUpdateCar = async () => {
@@ -172,8 +154,7 @@ export const MyCars = () => {
       });
       if (res.ok) {
         setEditModeId(null); setEditCarPhoto(null); setEditPreviewUrl(null);
-        fetchCars();
-        showToast('success', 'تم تحديث البيانات');
+        fetchCars(); showToast('success', 'تم تحديث البيانات');
       } else showToast('error', 'فشل التحديث');
     } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
     finally { setLoading(false); }
@@ -195,21 +176,15 @@ export const MyCars = () => {
 
     if (result.isConfirmed) {
       try {
-        const res = await fetch(`${BASE_URL}/${id}`, {
-          method: "DELETE", headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          setCars(cars.filter(c => c.id !== id));
-          showToast('success', 'تم الحذف بنجاح');
-        }
+        const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) { setCars(cars.filter(c => c.id !== id)); showToast('success', 'تم الحذف بنجاح'); }
       } catch { showToast('error', 'فشل الحذف'); }
     }
   };
 
   return (
     <div className="bg-white dark:bg-primary_BGD border border-gray-100 dark:border-gray-700 rounded-[32px] sm:rounded-[40px] p-4 sm:p-8 md:p-10 shadow-xl" dir="rtl">
-
-      {/* Header */}
+      {/* Header و Form الإضافة والسيارات كما هي في الكود الأصلي */}
       <div className="flex items-center justify-between mb-5 border-b pb-4 dark:border-gray-700">
         <h2 className="text-[#137FEC] text-lg sm:text-2xl font-black flex items-center gap-2">
           <div className="bg-blue-50 dark:bg-blue-900/30 p-1.5 sm:p-2 rounded-xl">
@@ -219,85 +194,51 @@ export const MyCars = () => {
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 ${showAddForm ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300" : "bg-[#137FEC] hover:bg-blue-600 text-white shadow-md"
-            }`}
+          className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 ${showAddForm ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300" : "bg-[#137FEC] hover:bg-blue-600 text-white shadow-md"}`}
         >
           {showAddForm ? <><MdClose size={15} /> إلغاء</> : <><MdAdd size={15} /> <span>إضافة سيارة</span></>}
         </button>
       </div>
 
-      {/* فورم الإضافة */}
       {showAddForm && (
         <div className="mb-5 border border-dashed border-blue-200 dark:border-blue-900/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-blue-50/30 dark:bg-blue-900/10">
           <div className="flex flex-col gap-5">
-            <PhotoUploader
-              id="newCarPhoto"
-              previewSrc={newCarPhoto ? URL.createObjectURL(newCarPhoto) : null}
-              onChange={(e) => setNewCarPhoto(e.target.files?.[0] || null)}
-            />
-
+            <PhotoUploader id="newCarPhoto" previewSrc={newCarPhoto ? URL.createObjectURL(newCarPhoto) : null} onChange={(e) => setNewCarPhoto(e.target.files?.[0] || null)} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة (Brand)</label>
-                <select
-                  className={FIELD_CLASS}
-                  value={newCar.brand}
-                  onChange={(e) => setNewCar({ ...newCar, brand: e.target.value })}
-                >
+                <select className={FIELD_CLASS} value={newCar.brand} onChange={(e) => setNewCar({ ...newCar, brand: e.target.value })}>
                   <option value="">اختر الماركة</option>
                   {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل (Model)</label>
-                <input
-                  type="text" placeholder="مثلاً: كورولا"
-                  className={FIELD_CLASS}
-                  value={newCar.model}
-                  onChange={(e) => setNewCar({ ...newCar, model: e.target.value })}
-                />
+                <input type="text" placeholder="مثلاً: كورولا" className={FIELD_CLASS} value={newCar.model} onChange={(e) => setNewCar({ ...newCar, model: e.target.value })} />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
-                <select
-                  className={FIELD_CLASS}
-                  value={newCar.year}
-                  onChange={(e) => setNewCar({ ...newCar, year: e.target.value })}
-                >
+                <select className={FIELD_CLASS} value={newCar.year} onChange={(e) => setNewCar({ ...newCar, year: e.target.value })}>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">رقم اللوحة</label>
-                <input
-                  type="text"
-                  placeholder="مثال: أ ب ج 123"
-                  className={FIELD_CLASS}
-                  value={newCar.plateNumber}
-                  onChange={(e) => {
-                    // إزالة أي رموز خاصة غير الحروف العربية والأرقام والمسافات فوراً أثناء الكتابة
-                    const val = e.target.value.replace(/[^\u0600-\u06FF0-9\s]/g, "");
-                    setNewCar({ ...newCar, plateNumber: val });
-                  }}
+                <input 
+                  type="text" 
+                  placeholder="مثال: أ ب ج 123" 
+                  className={FIELD_CLASS} 
+                  value={newCar.plateNumber} 
+                  onChange={(e) => setNewCar({ ...newCar, plateNumber: e.target.value.replace(/[^\u0600-\u06FF0-9\s]/g, "") })} 
                 />
-                <p className="text-[10px] text-gray-400 mr-1">حروف عربية وأرقام فقط</p>
               </div>
             </div>
-
-            <button
-              onClick={handleAddCar}
-              disabled={loading}
-              className="w-full bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 text-sm"
-            >
+            <button onClick={handleAddCar} disabled={loading} className="w-full bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm">
               <MdAdd size={18} /> {loading ? "جاري الإضافة..." : "تأكيد الإضافة"}
             </button>
           </div>
         </div>
       )}
-
       {/* قائمة السيارات */}
       {cars.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-center px-4">
