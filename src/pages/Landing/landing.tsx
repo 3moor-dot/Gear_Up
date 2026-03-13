@@ -26,7 +26,7 @@ const Landing: React.FC = () => {
                     />
 
                     <div className="flex items-center gap-4">
-                        <button className="bg-[#137FEC] px-6 py-2 rounded-xl text-white">
+                        <button onClick={() => window.location.href = '/register'} className="bg-[#137FEC] px-6 py-2 rounded-xl text-white">
                             اشترك
                         </button>
                         <button
@@ -58,7 +58,8 @@ const Landing: React.FC = () => {
                         </p>
 
                         <div className="flex gap-4">
-                            <button className="bg-[#137FEC] text-white h-10 w-60 rounded-xl">
+                            <button onClick={() => window.location.href = '/register'} 
+                            className="bg-[#137FEC] text-white h-10 w-60 rounded-xl">
                                 ابدأ الآن
                             </button>
                             <button className="bg-gray-900 dark:bg-white text-[#F6F7F8] dark:text-[#0F1323] h-10 w-40 rounded-xl">
