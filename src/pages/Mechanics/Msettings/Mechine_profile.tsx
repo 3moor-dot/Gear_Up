@@ -5,6 +5,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
+import Swal from "sweetalert2"; // استيراد مكتبة التنبيهات
 
 const BASE_URL = "https://gearupapp.runasp.net/api";
 const getToken = () => sessionStorage.getItem("userToken");
@@ -21,30 +22,38 @@ const Mechine_profile: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+
+  // دالة موحدة لإظهار التنبيهات بتصميم GearUp AI
+  const showAlert = (icon: 'success' | 'error' | 'warning', title: string, text?: string) => {
+    Swal.fire({
+      icon,
+      title,
+      text,
+      confirmButtonColor: '#137FEC',
+      background: dark ? '#1B1F2D' : '#fff',
+      color: dark ? '#fff' : '#000',
+      timer: icon === 'success' ? 2000 : undefined,
+      showConfirmButton: icon !== 'success',
+    });
+  };
 
   // ======= FETCH =======
   const fetchProfile = async () => {
     setIsLoading(true);
-    setError("");
     try {
       const res = await fetch(`${BASE_URL}/users/profile`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
 
-      console.log("GET profile status:", res.status);
       if (!res.ok) throw new Error("Failed");
 
       const data = await res.json();
-      console.log("Profile data:", data);
-
       setFirstName(data.firstName || "");
       setLastName(data.lastName || "");
       setEmail(data.email || "");
       if (data.profilePhotoUrl) setAvatar(data.profilePhotoUrl);
     } catch {
-      setError("حدث خطأ أثناء تحميل البيانات");
+      showAlert('error', 'خطأ في التحميل', 'حدث خطأ أثناء تحميل بيانات ملفك الشخصي');
     } finally {
       setIsLoading(false);
     }
@@ -57,18 +66,14 @@ const Mechine_profile: React.FC = () => {
   // ======= SAVE =======
   const handleSave = async () => {
     setIsSaving(true);
-    setError("");
-    setSuccess("");
     try {
       const formData = new FormData();
       formData.append("FirstName", firstName);
       formData.append("LastName", lastName);
-      formData.append("Phone", ""); // مش موجود في الفورم دي
+      formData.append("Phone", ""); 
       if (selectedPhoto) {
         formData.append("ProfilePhoto", selectedPhoto);
       }
-
-      console.log("Saving:", { firstName, lastName, photo: selectedPhoto?.name });
 
       const res = await fetch(`${BASE_URL}/users/profile`, {
         method: "PUT",
@@ -77,18 +82,17 @@ const Mechine_profile: React.FC = () => {
       });
 
       const json = await res.json().catch(() => null);
-      console.log("PUT response:", json);
 
       if (!res.ok) {
-        setError(json?.message || "حدث خطأ أثناء الحفظ");
+        showAlert('error', 'فشل الحفظ', json?.message || "حدث خطأ أثناء محاولة حفظ البيانات");
         return;
       }
 
-      setSuccess("تم حفظ التغييرات بنجاح ✅");
+      showAlert('success', 'تم الحفظ!', 'تم تحديث بياناتك بنجاح ✅');
       setSelectedPhoto(null);
       fetchProfile();
     } catch {
-      setError("تعذر الاتصال بالخادم");
+      showAlert('error', 'خطأ في الاتصال', 'تعذر الاتصال بالخادم، يرجى التحقق من الإنترنت');
     } finally {
       setIsSaving(false);
     }
@@ -116,19 +120,7 @@ const Mechine_profile: React.FC = () => {
           </div>
         </div>
 
-        {/* MESSAGES */}
-        {success && (
-          <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-500 text-sm text-center">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm text-center">
-            {error}
-          </div>
-        )}
-
-        {/* SAVE BUTTON */}
+        {/* SAVE BUTTONS */}
         <div className="flex flex-col sm:flex-row justify-end gap-3 mb-6">
           <button
             onClick={() => navigate("/mechanics/mprofile")}
@@ -164,7 +156,6 @@ const Mechine_profile: React.FC = () => {
             <FaSpinner className="animate-spin text-3xl text-blue-600" />
           </div>
         ) : (
-          /* CONTENT */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-2">
 
             {/* PROFILE CARD */}
@@ -177,11 +168,11 @@ const Mechine_profile: React.FC = () => {
                 <img
                   src={avatar}
                   alt="profile"
-                  className="w-full h-full rounded-full object-cover"
+                  className="w-full h-full rounded-full object-cover border-2 border-blue-400"
                 />
                 <label
                   htmlFor="avatarUpload"
-                  className="absolute bottom-0 right-0 bg-[#137FEC] w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-white transition hover:bg-[#1A6FD4]"
+                  className="absolute bottom-0 right-0 bg-[#137FEC] w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-white transition hover:bg-[#1A6FD4] shadow-lg"
                 >
                   ✎
                 </label>
@@ -206,14 +197,14 @@ const Mechine_profile: React.FC = () => {
               </h4>
 
               {selectedPhoto && (
-                <p className="text-xs text-blue-500 mt-1">📷 {selectedPhoto.name}</p>
+                <p className="text-xs text-blue-500 mt-1 font-bold">📷 {selectedPhoto.name}</p>
               )}
 
               <p className={`text-sm mb-2 mt-1 ${dark ? "text-white/50" : "text-gray-600"}`}>
                 {email}
               </p>
 
-              <span className="inline-block text-xs md:text-sm px-4 py-1 rounded-full mb-6 bg-[#0BDA6533] text-[#0BDA65]">
+              <span className="inline-block text-xs md:text-sm px-4 py-1 rounded-full mb-6 bg-[#0BDA6533] text-[#0BDA65] font-bold">
                 مفعل
               </span>
 
@@ -234,29 +225,24 @@ const Mechine_profile: React.FC = () => {
                 dark ? "bg-[#137FEC1A]" : "bg-[#EAF4FF]"
               }`}
             >
-              <h3
-                className={`font-bold mb-6 text-lg md:text-xl ${
-                  dark ? "text-white" : "text-[#0F132380]"
-                }`}
-              >
+              <h3 className={`font-bold mb-6 text-lg md:text-xl ${dark ? "text-white" : "text-[#137FEC]"}`}>
                 البيانات الشخصية
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 <Input label="الاسم الأول" value={firstName} onChange={setFirstName} dark={dark} />
-                <Input label="الاسم الآخر" value={lastName} onChange={setLastName} dark={dark} />
+                <Input label="اسم العائلة" value={lastName} onChange={setLastName} dark={dark} />
               </div>
 
-              {/* الإيميل للعرض فقط */}
               <div className="mt-4 md:mt-6">
-                <label className={`block mb-2 text-sm md:text-base font-medium ${dark ? "text-white" : "text-[#0F132380]"}`}>
+                <label className={`block mb-2 text-sm md:text-base font-extrabold ${dark ? "text-white" : "text-[#137FEC]"}`}>
                   البريد الإلكتروني
                 </label>
                 <input
                   value={email}
                   readOnly
                   className={`w-full rounded-xl px-4 py-2 outline-none cursor-not-allowed bg-[#137FEC1A] border border-[#137FEC33] ${
-                    dark ? "text-white/30" : "text-[#0F132350]"
+                    dark ? "text-white/30" : "text-gray-400"
                   }`}
                 />
               </div>
@@ -272,23 +258,16 @@ const Mechine_profile: React.FC = () => {
 export default Mechine_profile;
 
 /* ------------ INPUT COMPONENT ------------ */
-type InputProps = {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
-  dark: boolean;
-};
-
-const Input: React.FC<InputProps> = ({ label, value, onChange, dark }) => (
+const Input: React.FC<{ label: string; value: string; onChange: (val: string) => void; dark: boolean }> = ({ label, value, onChange, dark }) => (
   <div>
-    <label className={`block mb-2 text-sm md:text-base font-medium ${dark ? "text-white" : "text-[#0F132380]"}`}>
+    <label className={`block mb-2 text-sm md:text-base font-extrabold ${dark ? "text-white" : "text-[#137FEC]"}`}>
       {label}
     </label>
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full rounded-xl px-4 py-2 outline-none transition-all duration-200 bg-[#137FEC1A] border border-[#137FEC33] ${
-        dark ? "text-white/50 font-normal" : "text-[#0F132380] font-bold"
+      className={`w-full rounded-xl px-4 py-2 outline-none transition-all duration-200 bg-[#137FEC1A] border border-[#137FEC33] text-right ${
+        dark ? "text-white font-normal" : "text-gray-800 font-bold"
       } focus:border-[#137FEC] focus:ring-2 focus:ring-[#137FEC33]`}
     />
   </div>

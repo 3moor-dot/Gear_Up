@@ -15,11 +15,11 @@ const PasswordField = ({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   dark: boolean;
 }) => {
-  const inputClass = `w-full px-4 py-3 pr-12 rounded-lg border outline-none transition-all ${
-    !dark
+  // التعديل هنا: أضفنا pl-12 (فراغ لليسار) وحذفنا pr-12
+  const inputClass = `w-full px-4 py-3 pl-12 rounded-lg border outline-none transition-all text-right ${!dark
       ? "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
       : "bg-[#131c2f] border-gray-700 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-  }`;
+    }`;
 
   return (
     <div>
@@ -36,10 +36,11 @@ const PasswordField = ({
           required
           className={inputClass}
         />
+        {/* التعديل هنا: قمنا بتغيير right-3 إلى left-3 ليكون في الجهة المطلوبة */}
         <button
           type="button"
           onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
         >
           {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
         </button>
@@ -65,7 +66,7 @@ const SecuritySettings = () => {
   const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
 
   const token = sessionStorage.getItem("userToken");
-  const BASE_URL = "http://gearupapp.runasp.net/api/auth/change-password";
+  const BASE_URL = "https://gearupapp.runasp.net/api/auth/change-password";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
@@ -95,10 +96,10 @@ const SecuritySettings = () => {
 
       const data = await response.json();
       if (response.ok) {
-  setStatus({ type: "success", message: data.message || "تم تغيير كلمة المرور بنجاح" });
-  setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  setTimeout(() => window.location.reload(), 1000);  
-} else {
+        setStatus({ type: "success", message: data.message || "تم تغيير كلمة المرور بنجاح" });
+        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
         setStatus({ type: "error", message: data.message || "فشل التغيير، تأكد من كلمة المرور الحالية" });
       }
     } catch {
@@ -148,11 +149,10 @@ const SecuritySettings = () => {
         <h4 className="text-lg font-bold mb-6">بيانات كلمة المرور</h4>
 
         {status.type && (
-          <div className={`mb-4 p-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 ${
-            status.type === "success"
+          <div className={`mb-4 p-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 ${status.type === "success"
               ? "bg-green-500/10 border border-green-500/30 text-green-500"
               : "bg-red-500/10 border border-red-500/30 text-red-500"
-          }`}>
+            }`}>
             {status.type === "success" ? <MdCheckCircleOutline size={18} /> : <MdErrorOutline size={18} />}
             {status.message}
           </div>
