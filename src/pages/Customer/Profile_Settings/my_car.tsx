@@ -3,6 +3,7 @@ import {
   MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave,
   MdKeyboardArrowDown, MdKeyboardArrowUp, MdClose, MdDirectionsCar
 } from "react-icons/md";
+import Swal from "sweetalert2";
 
 interface Car {
   id: string;
@@ -13,7 +14,20 @@ interface Car {
   carPhotoUrl: string;
 }
 
-const FIELD_CLASS = "w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-blue-400 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm focus:outline-none";
+// قائمة الماركات الشائعة
+const CAR_BRANDS = [
+  "تويوتا", "هيونداي", "كيا", "نيسان", "ميتسوبيشي", "مرسيدس", "بي إم دبليو",
+  "أودي", "فولكس فاجن", "فورد", "شيفروليه", "رينو", "فيات", "سكودا", "هوندا",
+  "مازدا", "شيري", "إم جي", "بي واي دي", "سوزوكي", "ستروين", "بيجو", "جيب"
+].sort((a, b) => a.localeCompare(b, 'ar'));
+
+// توليد السنوات من 1999 إلى السنة الحالية
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: currentYear - 1999 + 1 }, (_, i) => currentYear - i);
+
+const FIELD_CLASS = "w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-blue-400 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm focus:outline-none appearance-none";
+
+const isDarkMode = () => document.documentElement.classList.contains('dark');
 
 const InfoCard = ({ label, value }: { label: string; value: string | number }) => (
   <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-700">
@@ -52,14 +66,14 @@ const PhotoUploader = ({
   </div>
 );
 
-export const MyCars = ({ }: { inputStyle: string }) => {
+export const MyCars = () => {
   const [cars, setCars] = useState<Car[]>([]);
   const [expandedCarId, setExpandedCarId] = useState<string | null>(null);
   const [editModeId, setEditModeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const [newCar, setNewCar] = useState({ brand: "", model: "", year: "", plateNumber: "" });
+  const [newCar, setNewCar] = useState({ brand: "", model: "", year: currentYear.toString(), plateNumber: "" });
   const [newCarPhoto, setNewCarPhoto] = useState<File | null>(null);
 
   const [editData, setEditData] = useState<Car | null>(null);
@@ -78,8 +92,42 @@ export const MyCars = ({ }: { inputStyle: string }) => {
     } catch (e) { console.error(e); }
   };
 
+  const showToast = (icon: any, title: string) => {
+    Swal.fire({
+      icon, title,
+      toast: true, position: 'top-end',
+      showConfirmButton: false, timer: 3000,
+      timerProgressBar: true,
+      background: isDarkMode() ? '#1B1F2D' : '#fff',
+      color: isDarkMode() ? '#fff' : '#000',
+    });
+  };
+
+  const validatePlate = (plate: string) => {
+    // تقبل حروف عربية وأرقام ومسافات فقط
+    const regex = /^[\u0600-\u06FF0-9\s]+$/;
+    return regex.test(plate);
+  };
+
   const handleAddCar = async () => {
-    if (!newCar.brand || !newCar.model || !newCarPhoto) return alert("يرجى ملء البيانات وإضافة صورة السيارة");
+    if (!newCar.brand || !newCar.model || !newCarPhoto || !newCar.plateNumber) {
+      return Swal.fire({
+        icon: 'warning', title: 'بيانات ناقصة', text: 'يرجى ملء كافة البيانات وصورة السيارة',
+        confirmButtonColor: '#137FEC',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+    }
+    if (!validatePlate(newCar.plateNumber)) {
+      return Swal.fire({
+        icon: 'error',
+        title: 'تنسيق اللوحة غير صحيح',
+        text: 'يجب أن تحتوي اللوحة على حروف عربية وأرقام فقط (مثال: أ ب ج 123)',
+        confirmButtonColor: '#137FEC',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+    }
     setLoading(true);
     const fd = new FormData();
     fd.append("Brand", newCar.brand);
@@ -87,18 +135,25 @@ export const MyCars = ({ }: { inputStyle: string }) => {
     fd.append("Year", newCar.year);
     fd.append("PlateNumber", newCar.plateNumber);
     fd.append("CarPhoto", newCarPhoto);
+
     try {
       const res = await fetch(`${BASE_URL}/register`, {
         method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
       });
       if (res.ok) {
-        setNewCar({ brand: "", model: "", year: "", plateNumber: "" });
+        setNewCar({ brand: "", model: "", year: currentYear.toString(), plateNumber: "" });
         setNewCarPhoto(null);
         setShowAddForm(false);
         fetchCars();
-      } else alert("فشل إضافة السيارة");
-    } catch { alert("فشل الاتصال بالسيرفر"); }
-    finally { setLoading(false); }
+        showToast('success', 'تمت إضافة السيارة بنجاح');
+      } else {
+        showToast('error', 'فشل إضافة السيارة');
+      }
+    } catch {
+      showToast('error', 'فشل الاتصال بالسيرفر');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUpdateCar = async () => {
@@ -110,6 +165,7 @@ export const MyCars = ({ }: { inputStyle: string }) => {
     fd.append("Year", editData.year.toString());
     fd.append("PlateNumber", editData.plateNumber);
     if (editCarPhoto) fd.append("CarPhoto", editCarPhoto);
+
     try {
       const res = await fetch(`${BASE_URL}/${editData.id}`, {
         method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: fd
@@ -117,33 +173,38 @@ export const MyCars = ({ }: { inputStyle: string }) => {
       if (res.ok) {
         setEditModeId(null); setEditCarPhoto(null); setEditPreviewUrl(null);
         fetchCars();
-      } else alert("فشل التحديث");
-    } catch { alert("فشل الاتصال بالسيرفر"); }
+        showToast('success', 'تم تحديث البيانات');
+      } else showToast('error', 'فشل التحديث');
+    } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
     finally { setLoading(false); }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذه السيارة؟")) return;
-    try {
-      const res = await fetch(`${BASE_URL}/${id}`, {
-        method: "DELETE", headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) setCars(cars.filter(c => c.id !== id));
-    } catch { alert("فشل الحذف"); }
-  };
+    const result = await Swal.fire({
+      title: 'هل أنت متأكد؟',
+      text: "لن تتمكن من استعادة بيانات هذه السيارة!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#137FEC',
+      confirmButtonText: 'نعم، احذفها',
+      cancelButtonText: 'إلغاء',
+      background: isDarkMode() ? '#1B1F2D' : '#fff',
+      color: isDarkMode() ? '#fff' : '#000',
+    });
 
-  const cancelEdit = () => {
-    setEditModeId(null);
-    setEditCarPhoto(null);
-    setEditPreviewUrl(null);
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${BASE_URL}/${id}`, {
+          method: "DELETE", headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setCars(cars.filter(c => c.id !== id));
+          showToast('success', 'تم الحذف بنجاح');
+        }
+      } catch { showToast('error', 'فشل الحذف'); }
+    }
   };
-
-  const fields = [
-    { label: "الماركة (Brand)",  key: "brand",        placeholder: "مثلاً: تويوتا"  },
-    { label: "الموديل (Model)",  key: "model",        placeholder: "مثلاً: كورولا"  },
-    { label: "سنة الصنع",        key: "year",         placeholder: "2024", numeric: true },
-    { label: "رقم اللوحة",       key: "plateNumber",  placeholder: "أ ب ج 1 2 3"   },
-  ];
 
   return (
     <div className="bg-white dark:bg-primary_BGD border border-gray-100 dark:border-gray-700 rounded-[32px] sm:rounded-[40px] p-4 sm:p-8 md:p-10 shadow-xl" dir="rtl">
@@ -158,27 +219,16 @@ export const MyCars = ({ }: { inputStyle: string }) => {
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 ${
-            showAddForm
-              ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-              : "bg-[#137FEC] hover:bg-blue-600 text-white shadow-md"
-          }`}
+          className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 ${showAddForm ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300" : "bg-[#137FEC] hover:bg-blue-600 text-white shadow-md"
+            }`}
         >
-          {showAddForm
-            ? <><MdClose size={15} /> إلغاء</>
-            : <><MdAdd size={15} /> <span>إضافة سيارة</span></>
-          }
+          {showAddForm ? <><MdClose size={15} /> إلغاء</> : <><MdAdd size={15} /> <span>إضافة سيارة</span></>}
         </button>
       </div>
 
       {/* فورم الإضافة */}
       {showAddForm && (
         <div className="mb-5 border border-dashed border-blue-200 dark:border-blue-900/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-blue-50/30 dark:bg-blue-900/10">
-          <h3 className="text-sm font-extrabold text-[#137FEC] mb-4 flex items-center gap-2">
-            <MdAdd size={16} /> تفاصيل السيارة الجديدة
-          </h3>
-
-          {/* صورة فوق دايمًا على موبايل */}
           <div className="flex flex-col gap-5">
             <PhotoUploader
               id="newCarPhoto"
@@ -187,22 +237,54 @@ export const MyCars = ({ }: { inputStyle: string }) => {
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {fields.map(({ label, key, placeholder, numeric }) => (
-                <div key={key} className="space-y-1.5">
-                  <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">{label}</label>
-                  <input
-                    type="text"
-                    inputMode={numeric ? "numeric" : "text"}
-                    placeholder={placeholder}
-                    className={FIELD_CLASS}
-                    value={(newCar as any)[key]}
-                    onChange={(e) => setNewCar({
-                      ...newCar,
-                      [key]: numeric ? e.target.value.replace(/\D/g, "") : e.target.value
-                    })}
-                  />
-                </div>
-              ))}
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة (Brand)</label>
+                <select
+                  className={FIELD_CLASS}
+                  value={newCar.brand}
+                  onChange={(e) => setNewCar({ ...newCar, brand: e.target.value })}
+                >
+                  <option value="">اختر الماركة</option>
+                  {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل (Model)</label>
+                <input
+                  type="text" placeholder="مثلاً: كورولا"
+                  className={FIELD_CLASS}
+                  value={newCar.model}
+                  onChange={(e) => setNewCar({ ...newCar, model: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
+                <select
+                  className={FIELD_CLASS}
+                  value={newCar.year}
+                  onChange={(e) => setNewCar({ ...newCar, year: e.target.value })}
+                >
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">رقم اللوحة</label>
+                <input
+                  type="text"
+                  placeholder="مثال: أ ب ج 123"
+                  className={FIELD_CLASS}
+                  value={newCar.plateNumber}
+                  onChange={(e) => {
+                    // إزالة أي رموز خاصة غير الحروف العربية والأرقام والمسافات فوراً أثناء الكتابة
+                    const val = e.target.value.replace(/[^\u0600-\u06FF0-9\s]/g, "");
+                    setNewCar({ ...newCar, plateNumber: val });
+                  }}
+                />
+                <p className="text-[10px] text-gray-400 mr-1">حروف عربية وأرقام فقط</p>
+              </div>
             </div>
 
             <button
@@ -230,97 +312,66 @@ export const MyCars = ({ }: { inputStyle: string }) => {
             const isEditMode = editModeId === car.id;
 
             return (
-              <div
-                key={car.id}
-                className="overflow-hidden border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm hover:shadow-md transition-shadow"
-              >
-                {/* Row header */}
+              <div key={car.id} className="overflow-hidden border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm">
                 <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
-                  <div
-                    className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-0"
-                    onClick={() => !isEditMode && setExpandedCarId(isExpanded ? null : car.id)}
-                  >
-                    <div className="w-12 h-9 sm:w-16 sm:h-11 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-100 flex-shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-0" onClick={() => !isEditMode && setExpandedCarId(isExpanded ? null : car.id)}>
+                    <div className="w-12 h-9 sm:w-16 sm:h-11 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0">
                       <img src={car.carPhotoUrl} alt={car.brand} className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-extrabold text-gray-800 dark:text-white truncate text-sm sm:text-base">
-                        {car.brand} {car.model}
-                      </p>
+                      <p className="font-extrabold text-gray-800 dark:text-white truncate text-sm sm:text-base">{car.brand} {car.model}</p>
                       <p className="text-[11px] sm:text-xs text-gray-400 truncate">{car.year} · {car.plateNumber}</p>
                     </div>
-                    {!isEditMode && (
-                      <span className="text-gray-400 flex-shrink-0">
-                        {isExpanded
-                          ? <MdKeyboardArrowUp size={20} className="text-[#137FEC]" />
-                          : <MdKeyboardArrowDown size={20} />}
-                      </span>
-                    )}
+                    {!isEditMode && <span className="text-gray-400 flex-shrink-0">{isExpanded ? <MdKeyboardArrowUp size={20} className="text-[#137FEC]" /> : <MdKeyboardArrowDown size={20} />}</span>}
                   </div>
 
                   <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                     {!editModeId && (
-                      <button
-                        onClick={() => { setEditModeId(car.id); setEditData(car); setExpandedCarId(car.id); }}
-                        className="flex items-center gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95"
-                      >
-                        <MdEdit size={14} />
-                        <span className="hidden xs:inline sm:inline">تعديل</span>
+                      <button onClick={() => { setEditModeId(car.id); setEditData(car); setExpandedCarId(car.id); }} className="flex items-center gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95">
+                        <MdEdit size={14} /> <span className="hidden xs:inline">تعديل</span>
                       </button>
                     )}
-                    <button
-                      onClick={() => handleDelete(car.id)}
-                      className="p-1.5 sm:p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95"
-                    >
+                    <button onClick={() => handleDelete(car.id)} className="p-1.5 sm:p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
                       <MdDelete size={16} />
                     </button>
                   </div>
                 </div>
 
-                {/* Expanded */}
                 {isExpanded && (
                   <div className="border-t border-gray-100 dark:border-gray-700/50 p-4 sm:p-6">
                     {isEditMode ? (
                       <div className="flex flex-col gap-5">
-                        <PhotoUploader
-                          id={`editPhoto-${car.id}`}
-                          previewSrc={editPreviewUrl || editData?.carPhotoUrl}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) { setEditCarPhoto(f); setEditPreviewUrl(URL.createObjectURL(f)); }
-                          }}
-                        />
+                        <PhotoUploader id={`editPhoto-${car.id}`} previewSrc={editPreviewUrl || editData?.carPhotoUrl} onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) { setEditCarPhoto(f); setEditPreviewUrl(URL.createObjectURL(f)); }
+                        }} />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                          {fields.map(({ label, key, numeric }) => (
-                            <div key={key} className="space-y-1.5">
-                              <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">{label}</label>
-                              <input
-                                type="text"
-                                inputMode={numeric ? "numeric" : "text"}
-                                value={(editData as any)?.[key] ?? ""}
-                                onChange={(e) => setEditData({
-                                  ...editData!,
-                                  [key]: numeric ? parseInt(e.target.value.replace(/\D/g, "")) || 0 : e.target.value
-                                })}
-                                className={FIELD_CLASS}
-                              />
-                            </div>
-                          ))}
+                          <div className="space-y-1.5">
+                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة</label>
+                            <select className={FIELD_CLASS} value={editData?.brand} onChange={(e) => setEditData({ ...editData!, brand: e.target.value })}>
+                              {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
+                            <input type="text" value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={FIELD_CLASS} />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
+                            <select className={FIELD_CLASS} value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: parseInt(e.target.value) })}>
+                              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">رقم اللوحة</label>
+                            <input type="text" value={editData?.plateNumber} onChange={(e) => setEditData({ ...editData!, plateNumber: e.target.value })} className={FIELD_CLASS} />
+                          </div>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          <button
-                            onClick={handleUpdateCar}
-                            disabled={loading}
-                            className="flex-1 bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 text-sm"
-                          >
+                          <button onClick={handleUpdateCar} disabled={loading} className="flex-1 bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm">
                             <MdSave size={16} /> {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
                           </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
-                          >
-                            <MdClose size={16} /> إلغاء
-                          </button>
+                          <button onClick={() => { setEditModeId(null); setEditPreviewUrl(null); }} className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold text-sm">إلغاء</button>
                         </div>
                       </div>
                     ) : (
