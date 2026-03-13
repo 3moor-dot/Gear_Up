@@ -3,6 +3,7 @@ import {
   FaUser, FaPhone, FaEnvelope, FaLock, FaUserTie, FaTools
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import Swal from "sweetalert2"; // 1. استيراد المكتبة
 
 /* ---- validation helpers ---- */
 const validateStep1 = (fields: {
@@ -25,7 +26,7 @@ const validateStep1 = (fields: {
   return errs;
 };
 
-/* ---- FormInput ---- */
+/* ---- FormInput Component ---- */
 const FormInput = ({
   label, icon, placeholder, type = "text", value, onChange, error,
 }: {
@@ -39,7 +40,7 @@ const FormInput = ({
   const inputType  = isPassword ? (showPass ? "text" : "password") : type;
 
   return (
-    <div className="w-full">
+    <div className="w-full text-right">
       <label className="block mb-1.5 font-bold dark:text-white text-xs">{label}</label>
       <div className="relative">
         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
@@ -63,10 +64,10 @@ const FormInput = ({
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors"
           >
             {showPass ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+             </svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.38-4.152M9.878 9.878a3 3 0 104.243 4.243M3 3l18 18" />
@@ -84,12 +85,12 @@ const FormInput = ({
   );
 };
 
-/* ---- Register ---- */
+/* ---- Register Component ---- */
 const Register: React.FC = () => {
   const [role, setRole]       = useState<"client" | "mechanic">("client");
   const [step, setStep]       = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [, setApiError] = useState<string | null>(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName,  setLastName]  = useState("");
@@ -97,13 +98,24 @@ const Register: React.FC = () => {
   const [email,     setEmail]     = useState("");
   const [password,  setPassword]  = useState("");
 
-  // field-level errors
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const isDarkMode = () => document.documentElement.classList.contains('dark');
 
   const handleNext = () => {
     const errs = validateStep1({ firstName, lastName, phone, email, password });
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
+      // تنبيه بوب اب عند وجود أخطاء في الحقول
+      Swal.fire({
+        icon: "warning",
+        title: "بيانات غير مكتملة",
+        text: "يرجى التحقق من الحقول الموضحة باللون الأحمر",
+        confirmButtonText: "موافق",
+        confirmButtonColor: "#137FEC",
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
       return;
     }
     setFieldErrors({});
@@ -111,7 +123,6 @@ const Register: React.FC = () => {
     setStep(2);
   };
 
-  // clear field error on change
   const clearErr = (key: string) =>
     setFieldErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
 
@@ -132,16 +143,41 @@ const Register: React.FC = () => {
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => null);
+      
       if (!res.ok) {
         const msg = data?.errors
           ? Object.values(data.errors).flat().join(" | ")
           : data?.message || data?.title || `فشل التسجيل (${res.status})`;
         throw new Error(msg as string);
       }
-      alert("تم إنشاء الحساب بنجاح!");
-      window.location.href = "/login";
+
+      // رسالة نجاح احترافية
+      Swal.fire({
+        icon: "success",
+        title: "تم إنشاء الحساب!",
+        text: "أهلاً بك في عائلة GearUp، سيتم تحويلك لصفحة الدخول الآن.",
+        timer: 3000,
+        showConfirmButton: false,
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 3000);
+
     } catch (err: any) {
       setApiError(err.message || "حدث خطأ، حاول مجدداً");
+      // تنبيه بوب اب للخطأ القادم من السيرفر
+      Swal.fire({
+        icon: "error",
+        title: "خطأ في التسجيل",
+        text: err.message,
+        confirmButtonText: "حاول مرة أخرى",
+        confirmButtonColor: "#137FEC",
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
     } finally {
       setLoading(false);
     }
@@ -152,15 +188,13 @@ const Register: React.FC = () => {
       className="min-h-screen py-10 flex items-center justify-center px-4 bg-gradient-to-br from-[#EAF4FF] to-white dark:from-[#0F1323] dark:to-[#101922] transition-colors duration-500"
       dir="rtl"
     >
-      <div className="dark:bg-[#1B1F2D] max-w-xl w-full bg-[#EAF4FF] rounded-3xl p-8 sm:p-10 shadow-xl">
+      <div className="dark:bg-[#1B1F2D] max-w-xl w-full bg-[#EAF4FF] rounded-3xl p-8 sm:p-10 shadow-xl border border-white/20">
 
-        {/* Title */}
         <h1 className="text-3xl font-bold text-center mb-2 dark:text-white">إنشاء حسابك</h1>
         <p className="text-center text-gray-500 mb-8 text-sm">
           {step === 1 ? "بياناتك الأساسية" : "اختر نوع الحساب لإتمام العملية"}
         </p>
 
-        {/* Step indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {[1, 2].map((s) => (
             <div key={s} className={`h-2 rounded-full transition-all duration-300 ${
@@ -170,7 +204,6 @@ const Register: React.FC = () => {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* Step 1 */}
           {step === 1 && (
             <motion.div
               key="step1"
@@ -209,7 +242,6 @@ const Register: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Step 2 */}
           {step === 2 && (
             <motion.div
               key="step2"
@@ -223,7 +255,7 @@ const Register: React.FC = () => {
                   onClick={() => setRole("client")}
                   className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
                     role === "client"
-                      ? "border-black bg-black text-white shadow-2xl scale-105"
+                      ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black shadow-2xl scale-105"
                       : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
                   }`}
                 >
@@ -242,23 +274,10 @@ const Register: React.FC = () => {
                   <span className="font-bold text-base sm:text-lg">سجل كميكانيكي</span>
                 </button>
               </div>
-              <p className="text-center mt-6 text-xs sm:text-sm text-gray-400">
-                {role === "client"
-                  ? "ستتمكن من طلب خدمات الصيانة فوراً"
-                  : "سنطلب منك بيانات ورشتك في الخطوة القادمة داخل التطبيق"}
-              </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* API error */}
-        {apiError && (
-          <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl text-red-600 dark:text-red-400 text-sm text-center">
-            {apiError}
-          </div>
-        )}
-
-        {/* Buttons */}
         <div className="flex gap-3 mt-8">
           {step === 2 && (
             <button
