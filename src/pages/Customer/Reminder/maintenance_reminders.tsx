@@ -22,7 +22,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
         <p className="text-gray-500 dark:text-gray-400 mb-6">{message}</p>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">إلغاء</button>
-          <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition">نعم، احذفه</button>
+          <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition">نعم</button>
         </div>
       </div>
     </div>
@@ -155,7 +155,7 @@ const MaintenanceReminders = () => {
   return (
     <div className={`flex min-h-screen ${dark ? "bg-[#0B1120] text-white" : "bg-[#F8FAFC] text-slate-800"}`} dir="rtl">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide">
         <Header />
         <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
           <div className="mb-10 flex items-center justify-between flex-wrap gap-4">
@@ -163,18 +163,27 @@ const MaintenanceReminders = () => {
               <h1 className="text-4xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h1>
               <p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic">إدارة تذكيرات سيارتك ومتابعة مواعيدها</p>
             </div>
-            <button onClick={() => setIsModalOpen(true)} className="ml-6 bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
-              <FaPlus size={13} /> إنشاء تذكير جديد
-            </button>
+          
+            <button 
+  onClick={() => setIsModalOpen(true)} 
+  className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+  style={{ transform: 'translateX(-40px)' }}
+>
+  <FaPlus size={13} /> إنشاء تذكير جديد
+</button>
+
+
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-3 space-y-6 order-2">
-              <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
+              <div className="lg:col-span-3 space-y-6 order-2" style={{ transform: 'translate(-70px, 105px)' }}>
+  <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
+   
+
                 <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
                   <FaHistory className="text-blue-500" /> تاريخ مكتمل <FaCheck className="text-green-600 ml-2" />
                 </h3>
-                <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
+                <div className="space-y-6 max-h-[400px] overflow-y-hidden pr-2">
                   {completedList.length > 0 ? completedList.map((r) => (
                     <div key={r.id} className="flex justify-between items-center group relative">
                       <div>
@@ -187,6 +196,7 @@ const MaintenanceReminders = () => {
                 </div>
               </div>
             </div>
+            
 
             <div className="lg:col-span-9 space-y-6 order-1">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
@@ -229,15 +239,7 @@ const MaintenanceReminders = () => {
                           <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaCalendarAlt className="text-blue-500" /> {formatToEgyptDate(r.startDate)}</div>
                         </div>
                       </div>
-                      {/* <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
-                        {!isOnce && r.status === "Active" && (
-                          <button onClick={() => handleStatusAction(r.id, "complete")} className="bg-emerald-500 text-white px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-emerald-600 transition"><FaCheck size={11} /> إتمام</button>
-                        )}
-                        <button onClick={() => handleStatusAction(r.id, r.status === "Active" ? "pause" : "activate")} className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition">
-                          {r.status === "Active" ? <><FaPause size={10} /> إيقاف</> : <><FaPlay size={10} /> تنشيط</>}
-                        </button>
-                        <button onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"><FaTrash size={10} /> حذف</button>
-                      </div> */}
+                    
                       <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
   {!isOnce && r.status === "Active" && (
     <button 
@@ -258,15 +260,15 @@ const MaintenanceReminders = () => {
     </button>
   )}
   
-  <button 
-    onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} 
-    className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"
-  >
-    <FaTrash size={10} /> حذف
-  </button>
-</div>
-                    </div>
-                  );
+          <button 
+            onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} 
+            className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"
+                    >
+                      <FaTrash size={10} /> حذف
+                    </button>
+                  </div>
+                     </div>
+                    );
                 }) : <p className="text-center py-20 text-slate-400 font-bold">لا يوجد تذكيرات حالية.</p>}
               </div>
             </div>
