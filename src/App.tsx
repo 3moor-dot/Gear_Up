@@ -4,8 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 import { ToastContainer } from "react-toastify";
-import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "react-hot-toast";
+import axios from "axios";
 
 import LandingPage from "./pages/Landing/landing";
 import Register from "./pages/Registration/register";
@@ -65,6 +66,13 @@ const App: React.FC = () => {
   }, []);
   return (
     <ThemeProvider>
+
+<Toaster 
+        position="top-center"
+        toastOptions={{
+          style: { borderRadius: '16px', background: '#333', color: '#fff' },
+        }}
+      />
 
       <ToastContainer 
       style={{ zIndex: 99999 }}
