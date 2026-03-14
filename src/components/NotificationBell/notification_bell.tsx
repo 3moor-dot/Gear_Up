@@ -12,36 +12,33 @@ const NotificationBell = ({ size = 25 }) => {
   const [isShaking, setIsShaking] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [cars, setCars] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  
+
   const token = sessionStorage.getItem("userToken");
 
-  // دالة لإنشاء مفتاح خاص لكل مستخدم بناءً على التوكن بتاعه
   const getStorageKey = () => {
     if (!token) return "guest_notifications";
-    // بناخد آخر 10 حروف من التوكن كتعريف فريد للمستخدم
     return `notifications_${token.slice(-10)}`;
   };
+
+  // تعديل: استخدام الـ Lazy Initialization لقراءة البيانات من الـ localStorage فوراً
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    const token = sessionStorage.getItem("userToken");
+    const key = token ? `notifications_${token.slice(-10)}` : "guest_notifications";
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const triggerShake = () => {
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 2500);
   };
 
-  // 1. تحميل التنبيهات الخاصة بالمستخدم الحالي فقط عند فتح الصفحة أو تغيير الحساب
+  // 1. حفظ التنبيهات في الـ localStorage كل ما تتغير
   useEffect(() => {
-    const saved = localStorage.getItem(getStorageKey());
-    setNotifications(saved ? JSON.parse(saved) : []);
-  }, [token]);
-
-  // 2. حفظ التنبيهات في المفتاح الخاص بالمستخدم كل ما تتحدث
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem(getStorageKey(), JSON.stringify(notifications));
-    }
+    localStorage.setItem(getStorageKey(), JSON.stringify(notifications));
   }, [notifications, token]);
 
-  // 3. جلب عربيات المستخدم الحالي
+  // 2. جلب عربيات المستخدم الحالي
   useEffect(() => {
     if (!token) {
       setCars([]);
@@ -61,7 +58,7 @@ const NotificationBell = ({ size = 25 }) => {
     fetchCars();
   }, [token]);
 
-  // 4. إعداد الاتصال بـ SignalR
+  // 3. إعداد الاتصال بـ SignalR
   useEffect(() => {
     if (!token) return;
 
@@ -129,7 +126,9 @@ const NotificationBell = ({ size = 25 }) => {
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 mt-2 w-80 rounded-2xl shadow-2xl z-50 p-4 border ${dark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-200"}`} dir="rtl">
+        <div className={`absolute left-0 mt-2 w-80 rounded-2xl shadow-2xl z-50 p-4 border ${
+          dark ? "bg-blue-950/95 border-blue-900 text-white" : "bg-white border-gray-200"
+        }`} dir="rtl">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-bold text-sm">التنبيهات ({notifications.length})</h3>
             <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-gray-500/20 rounded-full">
@@ -144,12 +143,11 @@ const NotificationBell = ({ size = 25 }) => {
                   <FaTimes size={10} />
                 </button>
                 <h4 className="font-bold text-xs mb-1 ml-4">{n.title}</h4>
-
                 {n.carId && (
-            <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1">
-             🚗 {getCarName(n.carId)}
-                </div>
-                        )}
+                  <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1">
+                    🚗 {getCarName(n.carId)}
+                  </div>
+                )}
                 {n.message && <p className="text-[11px] opacity-70 mb-3 leading-relaxed">{n.message}</p>}
                 <span className="text-[9px] opacity-50 block">{n.time}</span>
               </div>
