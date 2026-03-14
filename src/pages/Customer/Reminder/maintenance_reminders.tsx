@@ -164,13 +164,15 @@ const MaintenanceReminders = () => {
               <p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic">إدارة تذكيرات سيارتك ومتابعة مواعيدها</p>
             </div>
           
-            <button 
-  onClick={() => setIsModalOpen(true)} 
-  className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
-  style={{ transform: 'translateX(-40px)' }}
->
-  <FaPlus size={13} /> إنشاء تذكير جديد
-</button>
+ 
+<div className="flex justify-start w-full">
+  <button 
+    onClick={() => setIsModalOpen(true)} 
+    className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+  >
+    <FaPlus size={13} /> إنشاء تذكير جديد
+  </button>
+</div>
 
 
           </div>
@@ -224,12 +226,24 @@ const MaintenanceReminders = () => {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg shadow-inner bg-blue-50 text-blue-500 dark:bg-blue-500/10"><FaWrench /></div>
                           <div className="space-y-1">
-                            <div className="flex items-center gap-3">
+                            {/* <div className="flex items-center gap-3">
                               <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
                               <span className={`text-[10px] px-3 py-1 rounded-full font-bold ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
                                 {r.status === "Active" ? "نشط" : "متوقف"}
                               </span>
-                            </div>
+                            </div> */}
+
+<div className="space-y-1">
+  {/* Badge فوق الاسم */}
+  <span className={`inline-block mb-2 px-3 py-1 rounded-full font-bold text-xs text-left ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
+  {r.status === "Active" ? "نشط" : "متوقف"}
+</span>
+  
+
+  {/* اسم التذكير */}
+  <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
+  {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
+</div>
                             {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
                           </div>
                         </div>
