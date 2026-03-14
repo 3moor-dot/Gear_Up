@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from 'react'; 
+
 import {
   MdDashboard, MdNotifications, MdHistory,
   MdBuild, MdAccessTime, MdSmartToy, MdSettings, MdLogout,
@@ -16,11 +18,19 @@ interface UserData {
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+
   const [userData, setUserData] = useState<UserData | null>(null); 
   const location = useLocation();
   const navigate = useNavigate();
 
   // ===== جلب بيانات البروفايل من السيرفر أو التخزين المحلي =====
+
+  const [userData, setUserData] = useState<never>(null); 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+
+
   const fetchSidebarProfile = async () => {
     const token = sessionStorage.getItem("userToken");
     if (!token) return;
@@ -34,8 +44,15 @@ const Sidebar = () => {
       if (response.ok) {
         const data: UserData = await response.json();
         setUserData(data);
+
         sessionStorage.setItem("userData", JSON.stringify(data));
       } else {
+
+      
+        sessionStorage.setItem("userData", JSON.stringify(data));
+      } else {
+ 
+
         const savedData = sessionStorage.getItem("userData");
         if (savedData) setUserData(JSON.parse(savedData));
       }
