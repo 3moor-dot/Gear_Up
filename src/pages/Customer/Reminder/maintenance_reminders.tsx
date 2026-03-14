@@ -126,7 +126,7 @@ const MaintenanceReminders = () => {
       await axios.delete(`https://gearupapp.runasp.net/api/Reminder/${deleteTargetId}/delete`, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("تم الحذف بنجاح");
       refreshAll();
-    } catch (error: any) { toast.error("فشل الحذف"); }
+    } catch { toast.error("فشل الحذف");  }
     setShowConfirm(false);
     setDeleteTargetId(null);
   };
