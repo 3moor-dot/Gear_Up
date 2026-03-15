@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { MdClose } from "react-icons/md";
 import axios from "axios";
@@ -82,14 +81,16 @@ const CreateReminderModal = ({
     const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}` === selectedCar);
 
     const startDateObj = new Date(formData.startDate);
-    const fixedDate = new Date(startDateObj.getTime() + (12 * 60 * 60 * 1000)).toISOString();
+    const fixedDate = new Date(startDateObj.getTime() + 12 * 60 * 60 * 1000).toISOString();
 
     const payload = {
       carId: carObj?.id,
       name: formData.name,
       description: formData.description || "",
       startDate: fixedDate,
-      endDate: formData.endDate ? new Date(new Date(formData.endDate).getTime() + (12 * 60 * 60 * 1000)).toISOString() : null,
+      endDate: formData.endDate
+        ? new Date(new Date(formData.endDate).getTime() + 12 * 60 * 60 * 1000).toISOString()
+        : null,
       preferredNotificationTime: formData.preferredNotificationTime,
       frequencyType: frequencyType === "4" ? 5 : Number(frequencyType),
       intervalValue: frequencyType === "4" ? Number(formData.intervalValue) : 0,
@@ -104,83 +105,155 @@ const CreateReminderModal = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error("فشل الحفظ: " + (error.response?.data?.error || "تأكد من البيانات المطلوبة"));
+      toast.error(
+        "فشل الحفظ: " + (error.response?.data?.error || "تأكد من البيانات المطلوبة")
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const inputStyle = "w-full dark:bg-[#1A233A] bg-white dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl p-3 text-right outline-none focus:border-[#137FEC] focus:ring-1 focus:ring-[#137FEC] transition-all";
+  const inputStyle =
+    "w-full dark:bg-[#1A233A] bg-white dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl p-3 text-right outline-none focus:border-[#137FEC] focus:ring-1 focus:ring-[#137FEC] transition-all";
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir="rtl" onClick={onClose}>
-      <div className="bg-[#F8FAFC] dark:bg-primary_BGD w-full max-w-2xl rounded-[30px] shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      dir="rtl"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#F8FAFC] dark:bg-primary_BGD w-full max-w-2xl rounded-[30px] shadow-2xl overflow-hidden transition-all duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-[#137FEC0D]">
           <h2 className="text-xl font-bold dark:text-white">إنشاء تذكير جديد</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500"><MdClose size={28} /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-red-500">
+            <MdClose size={28} />
+          </button>
         </div>
 
-        <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <form ref={formRef} onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">المركبة المستهدفة *</label>
-            <select className={inputStyle} value={selectedCar} onChange={(e) => setSelectedCar(e.target.value)}>
-              {cars.map((car, i) => <option key={i} value={`${car.year} ${car.brand} ${car.model}`}>{`${car.year} ${car.brand} ${car.model}`}</option>)}
+            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              المركبة المستهدفة *
+            </label>
+            <select
+              className={inputStyle}
+              value={selectedCar}
+              onChange={(e) => setSelectedCar(e.target.value)}
+            >
+              {cars.map((car, i) => (
+                <option key={i} value={`${car.year} ${car.brand} ${car.model}`}>
+                  {`${car.year} ${car.brand} ${car.model}`}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">عنوان التذكير *</label>
-            <input required type="text" className={inputStyle} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              عنوان التذكير *
+            </label>
+            <input
+              required
+              type="text"
+                placeholder="مثال: تغيير الزيت"
+              className={inputStyle}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">تاريخ البدء *</label>
-              <input required type="date" className={inputStyle} value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                تاريخ البدء *
+              </label>
+              <input
+                required
+                type="date"
+                className={inputStyle}
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">تاريخ الانتهاء</label>
-              <input type="date" className={inputStyle} value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                تاريخ الانتهاء
+              </label>
+              <input
+                type="date"
+                className={inputStyle}
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">وقت الإشعار</label>
-            <input type="time" className={inputStyle} value={formData.preferredNotificationTime} onChange={(e) => setFormData({ ...formData, preferredNotificationTime: e.target.value })} />
-          </div>
+          {/* وقت الإشعار و نظام التكرار جنب بعض */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                وقت الإشعار
+              </label>
+              <input
+                type="time"
+                className={inputStyle}
+                value={formData.preferredNotificationTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, preferredNotificationTime: e.target.value })
+                }
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300">نظام التكرار</label>
-            <select className={inputStyle} value={frequencyType} onChange={(e) => setFrequencyType(e.target.value)}>
-              <option value="0">مرة واحدة فقط</option>
-              <option value="1">كل يوم</option>
-              <option value="2">كل أسبوع</option>
-              <option value="3">كل شهر</option>
-              <option value="4">تكرار مخصص</option>
-            </select>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                نظام التكرار
+              </label>
+              <select
+                className={inputStyle}
+                value={frequencyType}
+                onChange={(e) => setFrequencyType(e.target.value)}
+              >
+                <option value="0">مرة واحدة فقط</option>
+                <option value="1">كل يوم</option>
+                <option value="2">كل أسبوع</option>
+                <option value="3">كل شهر</option>
+                <option value="4">تكرار مخصص</option>
+              </select>
+            </div>
           </div>
 
           {/* الحقول المضافة عند اختيار تكرار مخصص */}
           {frequencyType === "4" && (
-            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-gray-800/50 rounded-2xl border border-blue-100 dark:border-gray-700 animate-in fade-in zoom-in duration-300">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-gray-800/50 rounded-2xl border border-blue-100 dark:border-gray-700 transition-all duration-300">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">كل (الرقم)</label>
-                <input 
-                  type="number" 
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                  كل (الرقم)
+                </label>
+                <input
+                  type="number"
                   min="1"
-                  className={inputStyle} 
-                  value={formData.intervalValue} 
-                  onChange={(e) => setFormData({ ...formData, intervalValue: Number(e.target.value) })} 
+                  className={inputStyle}
+                  value={formData.intervalValue}
+                  onChange={(e) =>
+                    setFormData({ ...formData, intervalValue: Number(e.target.value) })
+                  }
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">الوحدة</label>
-                <select 
-                  className={inputStyle} 
-                  value={formData.intervalUnit} 
-                  onChange={(e) => setFormData({ ...formData, intervalUnit: e.target.value })}
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                  الوحدة
+                </label>
+                <select
+                  className={inputStyle}
+                  value={formData.intervalUnit}
+                  onChange={(e) =>
+                    setFormData({ ...formData, intervalUnit: e.target.value })
+                  }
                 >
                   <option value="0">أيام</option>
                   <option value="1">أسابيع</option>
@@ -193,8 +266,18 @@ const CreateReminderModal = ({
         </form>
 
         <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex justify-center gap-3">
-          <button onClick={onClose} className="px-8 py-3 rounded-xl font-bold text-gray-500">إلغاء</button>
-          <button type="button" disabled={loading} onClick={() => formRef.current?.requestSubmit()} className="bg-[#137FEC] text-white px-10 py-3 rounded-xl font-bold">
+          <button
+            onClick={onClose}
+            className="px-8 py-3 rounded-xl font-bold text-gray-500"
+          >
+            إلغاء
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => formRef.current?.requestSubmit()}
+            className="bg-[#137FEC] text-white px-10 py-3 rounded-xl font-bold"
+          >
             {loading ? "جاري الحفظ..." : "إضافة التذكير"}
           </button>
         </div>
