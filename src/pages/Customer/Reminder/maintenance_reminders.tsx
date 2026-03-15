@@ -59,7 +59,7 @@ const MaintenanceReminders = () => {
   const [cars, setCars] = useState<any[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [, setUpcomingReminders] = useState<Reminder[]>([]);
-  
+
   // حالات الـ Confirm Modal
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -76,7 +76,7 @@ const MaintenanceReminders = () => {
     } catch (error) { console.error("فشل جلب التذكيرات:", error); }
   }, [token, selectedCar, cars]);
 
-  
+
   const fetchUpcoming = useCallback(async () => {
     try {
       const res = await axios.get("https://gearupapp.runasp.net/api/Reminder/upcoming?daysAhead=7", { headers: { Authorization: `Bearer ${token}` } });
@@ -104,16 +104,16 @@ const MaintenanceReminders = () => {
   const handleStatusAction = async (id: number, action: string) => {
     try {
       await axios.post(
-        `https://gearupapp.runasp.net/api/Reminder/${id}/${action}`, 
-        {}, 
+        `https://gearupapp.runasp.net/api/Reminder/${id}/${action}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       // إضافة رسالة نجاح تظهر للمستخدم أن العملية تمت
       toast.success("تم تحديث حالة التذكير بنجاح");
-      
+
       refreshAll();
-    } catch (error: any) { 
+    } catch (error: any) {
       // استخدام رسالة الخطأ من السيرفر إذا وُجدت، وإلا عرض رسالة عامة
       const errorMessage = error.response?.data?.error || "فشل تنفيذ العملية، حاول مرة أخرى";
       toast.error(errorMessage);
@@ -126,7 +126,7 @@ const MaintenanceReminders = () => {
       await axios.delete(`https://gearupapp.runasp.net/api/Reminder/${deleteTargetId}/delete`, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("تم الحذف بنجاح");
       refreshAll();
-    } catch { toast.error("فشل الحذف");  }
+    } catch { toast.error("فشل الحذف"); }
     setShowConfirm(false);
     setDeleteTargetId(null);
   };
@@ -158,30 +158,26 @@ const MaintenanceReminders = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide">
         <Header />
         <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
-          <div className="mb-10 flex items-center justify-between flex-wrap gap-4">
+          {/* العنوان والزر في صف واحد */}
+          <div className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h1 className="text-4xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h1>
-              <p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic">إدارة تذكيرات سيارتك ومتابعة مواعيدها</p>
+              <p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic">
+                إدارة تذكيرات سيارتك ومتابعة مواعيدها
+              </p>
             </div>
-          
- 
-<div className="flex justify-start w-full">
-  <button 
-    onClick={() => setIsModalOpen(true)} 
-    className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
-  >
-    <FaPlus size={13} /> إنشاء تذكير جديد
-  </button>
-</div>
 
-
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-xl hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2 active:scale-95"
+            >
+              <FaPlus size={14} /> إنشاء تذكير جديد
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-3 space-y-6 order-2" style={{ transform: 'translate(-70px, 105px)' }}>
-  <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
-   
-
+            <div className="lg:col-span-3 space-y-6 order-2" style={{ transform: 'translate(-70px, 105px)' }}>
+              <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
                 <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
                   <FaHistory className="text-blue-500" /> تاريخ مكتمل <FaCheck className="text-green-600 ml-2" />
                 </h3>
@@ -198,7 +194,6 @@ const MaintenanceReminders = () => {
                 </div>
               </div>
             </div>
-            
 
             <div className="lg:col-span-9 space-y-6 order-1">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
@@ -233,17 +228,17 @@ const MaintenanceReminders = () => {
                               </span>
                             </div> */}
 
-<div className="space-y-1">
-  {/* Badge فوق الاسم */}
-  <span className={`inline-block mb-2 px-3 py-1 rounded-full font-bold text-xs text-left ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
-  {r.status === "Active" ? "نشط" : "متوقف"}
-</span>
-  
+                            <div className="space-y-1">
+                              {/* Badge فوق الاسم */}
+                              <span className={`inline-block mb-2 px-3 py-1 rounded-full font-bold text-xs text-left ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
+                                {r.status === "Active" ? "نشط" : "متوقف"}
+                              </span>
 
-  {/* اسم التذكير */}
-  <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
-  {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
-</div>
+
+                              {/* اسم التذكير */}
+                              <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
+                              {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
+                            </div>
                             {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
                           </div>
                         </div>
@@ -253,44 +248,44 @@ const MaintenanceReminders = () => {
                           <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaCalendarAlt className="text-blue-500" /> {formatToEgyptDate(r.startDate)}</div>
                         </div>
                       </div>
-                    
+
                       <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
-  {!isOnce && r.status === "Active" && (
-    <button 
-      onClick={() => handleStatusAction(r.id, "complete")} 
-      className="bg-emerald-500 text-white px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-emerald-600 transition"
-    >
-      <FaCheck size={11} /> إتمام
-    </button>
-  )}
-  
-  {/* هنا التعديل: لن يظهر زر الإيقاف/التنشيط إذا كان التذكير "مرة واحدة" */}
-  {!isOnce && (
-    <button 
-      onClick={() => handleStatusAction(r.id, r.status === "Active" ? "pause" : "activate")} 
-      className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition"
-    >
-      {r.status === "Active" ? <><FaPause size={10} /> إيقاف</> : <><FaPlay size={10} /> تنشيط</>}
-    </button>
-  )}
-  
-          <button 
-            onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} 
-            className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"
-                    >
-                      <FaTrash size={10} /> حذف
-                    </button>
-                  </div>
-                     </div>
-                    );
+                        {!isOnce && r.status === "Active" && (
+                          <button
+                            onClick={() => handleStatusAction(r.id, "complete")}
+                            className="bg-emerald-500 text-white px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-emerald-600 transition"
+                          >
+                            <FaCheck size={11} /> إتمام
+                          </button>
+                        )}
+
+                        {/* هنا التعديل: لن يظهر زر الإيقاف/التنشيط إذا كان التذكير "مرة واحدة" */}
+                        {!isOnce && (
+                          <button
+                            onClick={() => handleStatusAction(r.id, r.status === "Active" ? "pause" : "activate")}
+                            className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition"
+                          >
+                            {r.status === "Active" ? <><FaPause size={10} /> إيقاف</> : <><FaPlay size={10} /> تنشيط</>}
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }}
+                          className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"
+                        >
+                          <FaTrash size={10} /> حذف
+                        </button>
+                      </div>
+                    </div>
+                  );
                 }) : <p className="text-center py-20 text-slate-400 font-bold">لا يوجد تذكيرات حالية.</p>}
               </div>
             </div>
           </div>
         </main>
       </div>
-      
-      <ConfirmModal 
+
+      <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleDeleteConfirmed}
