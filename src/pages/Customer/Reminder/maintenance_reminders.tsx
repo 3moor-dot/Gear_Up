@@ -159,7 +159,7 @@ const MaintenanceReminders = () => {
         <Header />
         <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
           {/* العنوان والزر في صف واحد */}
-          <div className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          {/* <div className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h1 className="text-4xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h1>
               <p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic">
@@ -173,7 +173,26 @@ const MaintenanceReminders = () => {
             >
               <FaPlus size={14} /> إنشاء تذكير جديد
             </button>
-          </div>
+          </div> */}
+<div className="mb-10 flex items-center justify-between">
+  
+  <h1 className="text-4xl font-black tracking-tight">
+    تذكيرات الصيانة
+  </h1>
+
+  <button
+    onClick={() => setIsModalOpen(true)}
+    className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-xl hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2 active:scale-95"
+  >
+    <FaPlus size={14} /> دددددإنشاء تذكير جديد
+  </button>
+
+</div>
+
+<p className="text-slate-500 dark:text-slate-400 font-medium text-lg italic mb-10">
+  إدارة تذكيرات سيارتك ومتابعة مواعيدها
+</p>
+
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-3 space-y-6 order-2" style={{ transform: 'translate(-70px, 105px)' }}>
