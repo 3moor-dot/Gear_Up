@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
@@ -5,35 +6,58 @@ import CreateReminderModal from "./create_reminder_modal";
 import axios from "axios";
 import { useTheme } from "../../../contexts/ThemeContext";
 import toast from 'react-hot-toast';
-import { BsCalendarPlus } from "react-icons/bs";
 
+import { BsCalendarPlus } from "react-icons/bs";
 import {
   FaTrash, FaCheck, FaPause, FaPlay, FaWrench, FaClock, FaSync, FaHistory, FaCalendarAlt,
 } from "react-icons/fa";
 
-// --- مكون التأكيد المودرن ---
+
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="bg-white  w-full max-w-sm rounded-[30px] shadow-2xl p-6 text-center border border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
-        <div className="text-orange-500 mb-4 text-5xl">!</div>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{title}</h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">{message}</p>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-md p-4 bg-black/40" onClick={onClose}>
+
+      <div 
+        className="bg-white dark:bg-[#1e293b] w-full max-w-[320px] rounded-[25px] shadow-2xl p-6 text-center border border-gray-100 dark:border-slate-700" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-orange-500 mb-3 text-4xl font-bold">!</div>
+        <h2 className="text-lg font-black text-slate-800 dark:text-white mb-2">{title}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">{message}</p>
+        
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">إلغاء</button>
-          <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition">نعم</button>
+          <button 
+            onClick={onClose} 
+            className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm"
+          >
+            إلغاء
+          </button>
+          <button 
+            onClick={onConfirm} 
+            className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-500/30 transition-all text-sm"
+          >
+            نعم
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-// --- واجهة البيانات ---
 interface Reminder {
-  carId: number; id: number; name: string; description?: string; startDate: string; endDate?: string;
-  preferredNotificationTime?: string; frequencyType: string | number; intervalValue?: number;
-  intervalUnit?: string | number; status: "Active" | "Paused" | "Completed" | "Cancelled";
+  carId: number; 
+  id: number; 
+  name: string; 
+  title?: string; 
+  description?: string; 
+  startDate: string; 
+  endDate?: string;
+  preferredNotificationTime?: string; 
+  frequencyType: string | number; 
+  intervalValue?: number;
+  intervalUnit?: string | number; 
+  status: "Active" | "Paused" | "Completed" | "Cancelled";
 }
 
 const formatToEgyptDate = (dateString: string) => {
@@ -58,9 +82,8 @@ const MaintenanceReminders = () => {
   const [filter, setFilter] = useState<string>("all");
   const [cars, setCars] = useState<any[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [, setUpcomingReminders] = useState<Reminder[]>([]);
+  const [completedReminders, setCompletedReminders] = useState<Reminder[]>([]);
   
-  // حالات الـ Confirm Modal
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
@@ -68,90 +91,63 @@ const MaintenanceReminders = () => {
 
   const fetchReminders = useCallback(async () => {
     if (!selectedCar || cars.length === 0) return;
-    const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}` === selectedCar);
+    const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
     if (!carObj) return;
     try {
       const res = await axios.get(`https://gearupapp.runasp.net/api/Reminder/car/${carObj.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setReminders(Array.isArray(res.data) ? res.data : []);
-    } catch (error) { console.error("فشل جلب التذكيرات:", error); }
+    } catch { 
+      console.error("فشل جلب التذكيرات"); 
+    }
   }, [token, selectedCar, cars]);
 
-  
-  const fetchUpcoming = useCallback(async () => {
+  const fetchCompleted = useCallback(async () => {
     try {
-      const res = await axios.get("https://gearupapp.runasp.net/api/Reminder/upcoming?daysAhead=7", { headers: { Authorization: `Bearer ${token}` } });
-      setUpcomingReminders(Array.isArray(res.data) ? res.data : []);
-    } catch (error) { console.error("فشل جلب القادمة:", error); }
+      const res = await axios.get("https://gearupapp.runasp.net/api/Reminder/completed", { headers: { Authorization: `Bearer ${token}` } });
+      setCompletedReminders(Array.isArray(res.data) ? res.data : []);
+    } catch { 
+      console.error("فشل جلب المكتملة"); 
+    }
   }, [token]);
 
-  const refreshAll = useCallback(() => { fetchReminders(); fetchUpcoming(); }, [fetchReminders, fetchUpcoming]);
+  const refreshAll = useCallback(() => { 
+    fetchReminders(); 
+    fetchCompleted(); 
+  }, [fetchReminders, fetchCompleted]);
 
-  // useEffect(() => {
-  //   const fetchCars = async () => {
-  //     try {
-  //       const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
-  //       const carsData = res.data.cars || [];
-  //       setCars(carsData);
-  //       if (carsData.length > 0) setSelectedCar(`${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`);
-  //     } catch (error) { console.error(error); }
-  //   };
-  //   fetchCars(); fetchUpcoming();
-  // }, [token, fetchUpcoming]);
-
-  // useEffect(() => { fetchReminders(); }, [selectedCar, fetchReminders]);
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const res = await axios.get(
-          "https://gearupapp.runasp.net/api/customers/cars",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-  
-        const carsData = res.data.cars || [];
+        const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
+        const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
         setCars(carsData);
-  
         if (carsData.length > 0) {
           const savedCar = localStorage.getItem("selectedCar");
-  
-          if (savedCar) {
+          if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
             setSelectedCar(savedCar);
           } else {
-            const defaultCar = `${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`;
-            setSelectedCar(defaultCar);
+            setSelectedCar(`${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`);
           }
         }
-  
-      } catch (error) {
-        console.error(error);
+      } catch { 
+        console.error("فشل جلب السيارات"); 
       }
     };
-  
     fetchCars();
-    fetchUpcoming();
-  }, [token, fetchUpcoming]);
+    fetchCompleted();
+  }, [token, fetchCompleted]);
   
-  // 👇 هذا هو الذي يعيد جلب الريمايندرز
   useEffect(() => {
     fetchReminders();
   }, [selectedCar, fetchReminders]);
 
-
   const handleStatusAction = async (id: number, action: string) => {
     try {
-      await axios.post(
-        `https://gearupapp.runasp.net/api/Reminder/${id}/${action}`, 
-        {}, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-
-      toast.success("تم تحديث حالة التذكير بنجاح");
-      
+      await axios.post(`https://gearupapp.runasp.net/api/Reminder/${id}/${action}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success(action === "complete" ? "تم تسجيل الإتمام بنجاح" : "تم تحديث الحالة");
       refreshAll();
-    } catch (error: any) { 
-   
-      const errorMessage = error.response?.data?.error || "فشل تنفيذ العملية، حاول مرة أخرى";
-      toast.error(errorMessage);
+    } catch { 
+      toast.error("حدث خطأ ما"); 
     }
   };
 
@@ -161,9 +157,15 @@ const MaintenanceReminders = () => {
       await axios.delete(`https://gearupapp.runasp.net/api/Reminder/${deleteTargetId}/delete`, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("تم الحذف بنجاح");
       refreshAll();
-    } catch { toast.error("فشل الحذف");  }
+    } catch { 
+      toast.error("فشل الحذف"); 
+    }
     setShowConfirm(false);
     setDeleteTargetId(null);
+  };
+
+  const hideCompletedReminder = (indexToRemove: number) => {
+    setCompletedReminders(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const getFrequencyLabel = (r: any) => {
@@ -185,7 +187,12 @@ const MaintenanceReminders = () => {
   };
 
   const filteredActive = useMemo(() => reminders.filter((r) => r.status !== "Completed" && (filter === "all" || r.status === filter)), [reminders, filter]);
-  const completedList = useMemo(() => reminders.filter((r) => r.status === "Completed"), [reminders]);
+
+  const filteredCompleted = useMemo(() => {
+    const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
+    if (!carObj) return [];
+    return completedReminders.filter((r) => r.carId === carObj.id);
+  }, [completedReminders, selectedCar, cars]);
 
   return (
     <div className={`flex min-h-screen ${dark ? "dark:bg-primary_BGD text-white" : "bg-[#F8FAFC] text-slate-800"}`} dir="rtl">
@@ -196,61 +203,51 @@ const MaintenanceReminders = () => {
           <div className="mb-10 flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-2xl md:text-3xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h3>
-          
-             <p
-            className="font-medium text-base italic"
-            style={{ color: dark ? 'rgba(255,255,255,0.5)' : 'rgba(15,19,35,0.5)' }}  >
-            إدارة تذكيرات سيارتك ومتابعة مواعيدها
-          </p>
-
+              <p className="font-medium text-base italic" style={{ color: dark ? 'rgba(255,255,255,0.5)' : 'rgba(15,19,35,0.5)' }}>إدارة تذكيرات سيارتك ومتابعة مواعيدها</p>
             </div>
-        
-          <button 
-  onClick={() => setIsModalOpen(true)} 
-  className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
->
-  <BsCalendarPlus size={16} /> إنشاء تذكير جديد
-</button>
-
-
+            <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">
+              <BsCalendarPlus size={16} /> إنشاء تذكير جديد
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-3 space-y-6 order-2" style={{ transform: 'translate(0px, 83px)' }}>
-      <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
+            <div className="lg:col-span-3 space-y-6 order-2 lg:mt-[83px]">
+              <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
                 <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
-                  <FaHistory className="text-blue-500" /> تاريخ مكتمل <FaCheck className="text-green-600 ml-2" />
+                   <FaHistory className="text-blue-500" /> تاريخ مكتمل <FaCheck className="text-green-600 ml-2" />
                 </h3>
-         
-                <div
-  className={`space-y-4 pr-2 ${
-    completedList.length > 6
-      ? "max-h-[350px] overflow-y-auto" // ثابت + scroll لو أكثر من 5
-      : "" // أقل من 5، طول طبيعي
-  }`}
-    >   
-  {completedList.length > 0 ? completedList.map((r) => (
-  <div
-    key={r.id}
-    className="w-full flex justify-between items-center group h-14 px-4 py-3 rounded-2xl transition-all hover:shadow-xl hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer"
-  >
-    <div>
-      <p className="font-bold text-sm text-slate-700 dark:text-slate-200">{r.name}</p>
-      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">{formatToEgyptDate(r.startDate)}</p>
-    </div>
-    <button
-      onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }}
-      className="ml-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition"
-    >
-      ✕
-    </button>
-  </div>
-)) : (
-  <p className="text-xs text-slate-400 italic text-center py-4">لا يوجد سجلات مكتملة.</p>
-)}
+              
+                <div className={`space-y-4 pr-2 ${filteredCompleted.length > 6 ? "max-h-[350px] overflow-y-auto scrollbar-hide" : ""}`}>   
+                  {filteredCompleted.length > 0 ? filteredCompleted.map((r, idx) => (
+                    <div 
+                      key={idx} 
+                      className="w-full flex flex-row items-center h-16 px-5 py-3 rounded-[1.5rem] transition-all duration-300 group
+                                 bg-white dark:bg-[#112244] 
+                                 hover:bg-blue-50 dark:hover:bg-[#224488]
+                                 border border-slate-100 dark:border-transparent mb-3 shadow-sm"
+                      dir="rtl" 
+                    >
+                      <div className="flex flex-col text-right ml-auto overflow-hidden pointer-events-none">
+                        <p className="font-bold text-[14px] text-slate-700 dark:text-white transition-colors">
+                          {r.name || r.title || "تذكير مكتمل"}
+                        </p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold mt-0.5">
+                          {formatToEgyptDate(r.startDate)}
+                        </p>
+                      </div>
 
-
-      </div>
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); hideCompletedReminder(idx); }} 
+                        className="text-slate-400 dark:text-slate-400 hover:text-red-500 transition-colors p-2 flex items-center justify-center cursor-pointer min-w-[32px] h-[32px] rounded-full"
+                      >
+                        <span className="text-xl font-light leading-none">✕</span>
+                      </button>
+                    </div>
+                  )) : (
+                    <p className="text-xs text-slate-400 italic text-center py-4">لا يوجد سجلات لهذه السيارة.</p>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -258,120 +255,65 @@ const MaintenanceReminders = () => {
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
                 <h6 className="text-2xl font-black text-slate-800 dark:text-white">المهام القادمة ({filteredActive.length})</h6>
                 <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner">
-
                   <div className="flex bg-white dark:bg-slate-700 p-0.5 rounded-xl">
-      {["all", "Active", "Paused"].map((f) => (
-    <button
-      key={f}
-      onClick={() => setFilter(f)} 
-      className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${filter === f ? "bg-blue-600 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}
-    >
-      {f === "all" ? "الكل" : f === "Active" ? "نشط" : "متوقف"}
-    </button>
-  ))}
-</div>
-
-
-<select
-  value={selectedCar}
-  onChange={(e) => {
-    setSelectedCar(e.target.value);
-    localStorage.setItem("selectedCar", e.target.value);
-  }}
-  className={`bg-transparent font-bold text-xs md:text-xs outline-none cursor-pointer px-2 py-1 ${dark ? "text-white" : "text-slate-800"}`}
->
-
-  {cars.map((car, idx) => (
-    <option key={idx} value={`${car.year} ${car.brand} ${car.model}`}>
-      {car.year} {car.brand} {car.model}
-    </option>
-        ))}
-      </select>
+                    {["all", "Active", "Paused"].map((f) => (
+                      <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${filter === f ? "bg-blue-600 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}>
+                        {f === "all" ? "الكل" : f === "Active" ? "نشط" : "متوقف"}
+                      </button>
+                    ))}
+                  </div>
+                  <select value={selectedCar} onChange={(e) => { setSelectedCar(e.target.value); localStorage.setItem("selectedCar", e.target.value); }} className={`bg-transparent font-bold text-xs md:text-xs outline-none cursor-pointer px-2 py-1 ${dark ? "text-white" : "text-slate-800"}`}>
+                    {cars.map((car, idx) => (
+                      <option key={idx} value={`${car.year} ${car.brand} ${car.model}`}>{car.year} {car.brand} {car.model}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-                <div className="space-y-6">
-                  {filteredActive.length > 0 ? filteredActive.map((r) => {
-                    const isOnce = String(r.frequencyType).toLowerCase() === "0" || String(r.frequencyType).toLowerCase() === "once";
-                    return (
-                      // <div key={r.id} className="p-4 md:p-2 rounded-[2.5rem] shadow-sm border transition-all dark:bg-[#137FEC33] border-slate-200 dark:border-slate-600">
-                      <div className="p-4 sm:p-6 md:p-4 rounded-2xl sm:rounded-[2.5rem] shadow-lg border transition-all dark:bg-[#137FEC33] dark:border-slate-600 border-slate-200 hover:shadow-xl hover:scale-105 transform-gpu duration-300">
-                        {/* <div className="flex flex-col md:flex-row justify-between gap-6"> */}
-                        <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 items-start sm:items-center">
-                          <div className="flex items-center gap-3">
-                            {/* <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg shadow-inner bg-blue-50 text-blue-500 dark:bg-blue-500/10"><FaWrench /></div> */}
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-lg shadow-inner bg-blue-50 text-blue-500 dark:bg-blue-500/10">
-                              <FaWrench />
-                            </div>
-                            <div className="space-y-1">
-                        
-
-              <div className="space-y-1">
-                {/* Badge فوق الاسم */}
-                <span className={`inline-block mb-2 px-3 py-1 rounded-full font-bold text-xs text-left ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
-                {r.status === "Active" ? "نشط" : "متوقف"}
-              </span>
-                
-
-  {/* اسم التذكير */}
-  <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
-  {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
-    </div>
-                            {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
-                          </div>
+              <div className="space-y-6">
+                {filteredActive.length > 0 ? filteredActive.map((r) => (
+                  <div key={r.id} className="p-4 sm:p-6 md:p-4 rounded-2xl sm:rounded-[2.5rem] shadow-lg border transition-all dark:bg-[#137FEC33] dark:border-slate-600 border-slate-200 hover:shadow-xl hover:scale-105 transform-gpu duration-300">
+                    <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 items-start sm:items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-lg shadow-inner bg-blue-50 text-blue-500 dark:bg-blue-500/10">
+                          <FaWrench />
                         </div>
-                        <div className="grid grid-cols-2 md:flex md:flex-col gap-3 text-xs font-bold border-r-2 border-slate-200 dark:border-slate-600 pr-0 md:pr-6 min-w-[150px]">
-                          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaClock className="text-blue-500" /> {r.preferredNotificationTime ? formatToEgyptTime(r.preferredNotificationTime) : "غير محدد"}</div>
-                          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaSync className="text-blue-500" /> {getFrequencyLabel(r)}</div>
-                          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaCalendarAlt className="text-blue-500" /> {formatToEgyptDate(r.startDate)}</div>
+                        <div className="space-y-1">
+                          <span className={`inline-block mb-2 px-3 py-1 rounded-full font-bold text-xs ${r.status === "Active" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300"}`}>
+                            {r.status === "Active" ? "نشط" : "متوقف"}
+                          </span>
+                          <h1 className="text-2xl font-black text-slate-700 dark:text-slate-200">{r.name}</h1>
+                          {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
                         </div>
                       </div>
-                    
-                      <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
-
-            {!isOnce && r.status === "Active" && (
-            <button 
-              onClick={() => handleStatusAction(r.id, "complete")} 
-              className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 transition"
-            >
-              <FaCheck size={11} /> إتمام
-            </button>
-          )}
-  
-
-      {!isOnce && (
-        <button 
-          onClick={() => handleStatusAction(r.id, r.status === "Active" ? "pause" : "activate")} 
-          className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition"
-        >
-          {r.status === "Active" ? <><FaPause size={10} /> إيقاف</> : <><FaPlay size={10} /> تنشيط</>}
-        </button>
-      )}
-  
-          <button 
-            onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} 
-            className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-500/20 transition"
-                    >
-                      <FaTrash size={10} /> حذف
-                    </button>
+                      <div className="grid grid-cols-2 md:flex md:flex-col gap-3 text-xs font-bold border-r-2 border-slate-200 dark:border-slate-600 pr-0 md:pr-6 min-w-[150px]">
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaClock className="text-blue-500" /> {r.preferredNotificationTime ? formatToEgyptTime(r.preferredNotificationTime) : "غير محدد"}</div>
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaSync className="text-blue-500" /> {getFrequencyLabel(r)}</div>
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><FaCalendarAlt className="text-blue-500" /> {formatToEgyptDate(r.startDate)}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
+                      {r.status === "Active" && (
+                        <button onClick={() => handleStatusAction(r.id, "complete")} className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-emerald-200 transition">
+                          <FaCheck size={11} /> إتمام
+                        </button>
+                      )}
+                      <button onClick={() => handleStatusAction(r.id, r.status === "Active" ? "pause" : "activate")} className="bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-amber-200 transition">
+                        {r.status === "Active" ? <><FaPause size={10} /> إيقاف</> : <><FaPlay size={10} /> تنشيط</>}
+                      </button>
+                      <button onClick={() => { setDeleteTargetId(r.id); setShowConfirm(true); }} className="bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 px-5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-2 hover:bg-red-200 transition">
+                        <FaTrash size={10} /> حذف
+                      </button>
+                    </div>
                   </div>
-                     </div>
-                    );
-                }) : <p className="text-center py-20 text-slate-400 font-bold">لا يوجد تذكيرات حالية.</p>}
+                )) : <p className="text-center py-20 text-slate-400 font-bold">لا يوجد تذكيرات حالية.</p>}
               </div>
             </div>
           </div>
         </main>
       </div>
       
-      <ConfirmModal 
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleDeleteConfirmed}
-        title="هل أنت متأكد؟"
-        message="لن تتمكن من استعادة بيانات هذا التذكير!"
-      />
-
+      <ConfirmModal isOpen={showConfirm} onClose={() => setShowConfirm(false)} onConfirm={handleDeleteConfirmed} title="هل أنت متأكد؟" message="لن تتمكن من استعادة بيانات هذا التذكير!" />
       <CreateReminderModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} cars={cars} selectedCar={selectedCar} setSelectedCar={setSelectedCar} onSuccess={refreshAll} />
     </div>
   );
