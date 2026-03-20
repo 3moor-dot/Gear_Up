@@ -45,6 +45,7 @@ import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import Notification from "./pages/Notification/Notification";
+import Chatbot from "./pages/Customer/Chatbot/chatbot";
 const App: React.FC = () => {
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -103,6 +104,7 @@ const App: React.FC = () => {
           <Route path="/add-booking" element={<AddBookingModel isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/reschedule-booking" element={<RescheduleModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/cancel-booking" element={<CancelBookingModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
+          <Route path="/customer/chatbot" element={<Chatbot />} />
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />

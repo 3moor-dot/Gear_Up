@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'; 
 import {
   MdDashboard, MdNotifications, MdHistory,
@@ -7,7 +6,6 @@ import {
 } from 'react-icons/md';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-// ===== تعريف شكل بيانات المستخدم =====
 interface UserData {
   firstName: string;
   lastName: string;
@@ -21,26 +19,21 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ===== جلب بيانات البروفايل من السيرفر أو التخزين المحلي =====
   const fetchSidebarProfile = async () => {
     const token = sessionStorage.getItem("userToken");
     if (!token) return;
-
     try {
       const response = await fetch("https://gearupapp.runasp.net/api/users/profile", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` }
       });
-
       if (response.ok) {
         const data: UserData = await response.json();
         setUserData(data);
         sessionStorage.setItem("userData", JSON.stringify(data));
       } else {
         const savedData = sessionStorage.getItem("userData");
-        if (savedData) {
-          setUserData(JSON.parse(savedData));
-        }
+        if (savedData) setUserData(JSON.parse(savedData));
       }
     } catch (error) {
       console.error("Error fetching sidebar profile:", error);
@@ -57,16 +50,15 @@ const Sidebar = () => {
 
   const menuItems = [
     { name: 'لوحة التحكم', icon: <MdDashboard />, path: '/customer/dashboard' },
-    { name: 'تذكير', icon: <MdNotifications />, path: '/customer/reminders' },
-    { name: 'تاريخ الخدمة', icon: <MdHistory />, path: '/customer/servicehistory' },
-    { name: 'حجز صيانة', icon: <MdBuild />, path: '/customer/maintenancebookings' },
-    { name: 'طلب صيانة', icon: <MdAccessTime />, path: '/customer/maintenancerequest' },
-    { name: 'المساعد الذكي', icon: <MdSmartToy />, path: '/ai-assistant' },
+    { name: 'تذكير',        icon: <MdNotifications />, path: '/customer/reminders' },
+    { name: 'تاريخ الخدمة', icon: <MdHistory />,       path: '/customer/servicehistory' },
+    { name: 'حجز صيانة',   icon: <MdBuild />,          path: '/customer/maintenancebookings' },
+    { name: 'طلب صيانة',   icon: <MdAccessTime />,     path: '/customer/maintenancerequest' },
+    { name: 'المساعد الذكي', icon: <MdSmartToy />,     path: '/customer/chatbot' },
   ];
 
   const settingsPath = '/customer/profilesettings';
   const isSettingsActive = location.pathname === settingsPath;
-
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
@@ -77,7 +69,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* زر فتح/غلق السايدبار على الموبايل */}
+      {/* زر الموبايل */}
       <button 
         onClick={toggleSidebar} 
         className="lg:hidden fixed top-5 right-5 z-50 p-2 bg-[#137FEC] text-white rounded-lg shadow-lg active:scale-95 transition-transform"
@@ -85,26 +77,36 @@ const Sidebar = () => {
         {isOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
       </button>
 
-      {/* الخلفية الشفافة عند فتح السايدبار على الموبايل */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" 
           onClick={toggleSidebar}
-        ></div>
+        />
       )}
 
+      {/* ✅ aside بـ h-screen وflex-col لضمان إن الـ footer ينزل للأسفل دايماً */}
       <aside 
-        className={`fixed inset-y-0 right-0 z-40 w-72 dark:bg-[#0B1120] bg-white h-screen flex flex-col shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 lg:static lg:block`} 
+        className={`
+          fixed inset-y-0 right-0 z-40 w-72
+          dark:bg-[#0B1120] bg-white
+          h-screen flex flex-col
+          shadow-2xl lg:shadow-none
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
+          lg:translate-x-0 lg:static lg:h-screen
+        `}
         dir="rtl"
       >
         
-        {/* شعار التطبيق */}
-        <div className="p-8 text-center">
-          <h1 className="text-2xl font-black text-[#1e293b] dark:text-white tracking-tight">GearUp</h1>
+        {/* الشعار — flex-shrink-0 عشان ميتضغطش */}
+        <div className="flex-shrink-0 p-8 text-center">
+          <h1 className="text-2xl font-black text-[#1e293b] dark:text-white tracking-tight">
+            GearUp
+          </h1>
         </div>
 
-        {/* قائمة الروابط الرئيسية */}
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        {/* ✅ nav بـ flex-1 وoverflow-y-auto عشان يأخد باقي المساحة ويسكرول لو احتاج */}
+        <nav className="flex-1 overflow-y-auto px-4 space-y-1 min-h-0">
           {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             return (
@@ -127,12 +129,12 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* قسم البروفايل والإعدادات (الأسفل) */}
-        <div className="p-6 border-t border-gray-50 dark:border-gray-800/50">
+        {/* ✅ Profile card — flex-shrink-0 يضمن إنه يفضل في الأسفل ومش بيتضغط */}
+        <div className="flex-shrink-0 p-6 border-t border-gray-100 dark:border-gray-800/50">
           <div className="rounded-[25px] border border-blue-400/20 p-4 bg-gray-50/50 dark:bg-[#137FEC0D] backdrop-blur-md">
             
-            {/* معلومات المستخدم المصغرة */}
-            <div className="flex items-center gap-3 mb-6">
+            {/* معلومات المستخدم */}
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full border-2 border-[#137FEC] overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 shadow-sm">
                 {userData?.profilePhotoUrl ? (
                   <img
@@ -148,9 +150,7 @@ const Sidebar = () => {
               </div>
 
               <div className="text-right overflow-hidden">
-                <h4 className="font-bold text-sm dark:text-white truncate">
-                  {fullName}
-                </h4>
+                <h4 className="font-bold text-sm dark:text-white truncate">{fullName}</h4>
                 <p className="text-[10px] text-gray-400 font-medium">
                   {userData?.role === 1 ? "حساب عميل" : "حساب مستخدم"}
                 </p>
@@ -158,7 +158,7 @@ const Sidebar = () => {
             </div>
 
             {/* أزرار الإعدادات والخروج */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Link
                 to={settingsPath}
                 onClick={() => setIsOpen(false)}
@@ -183,6 +183,7 @@ const Sidebar = () => {
 
           </div>
         </div>
+
       </aside>
     </>
   );
