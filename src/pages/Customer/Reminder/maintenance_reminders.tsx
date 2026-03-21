@@ -141,6 +141,22 @@ const MaintenanceReminders = () => {
     fetchReminders();
   }, [selectedCar, fetchReminders]);
 
+  // --- التعديل الجديد هنا: لمزامنة صفحة التذكيرات مع جرس التنبيهات ---
+  useEffect(() => {
+    const handleRefresh = () => {
+      refreshAll(); // تحديث القوائم فوراً عند إتمام تذكير من الجرس
+    };
+
+    window.addEventListener("reminderCompleted", handleRefresh);
+    window.addEventListener("reminderSnoozed", handleRefresh);
+    
+    return () => {
+      window.removeEventListener("reminderCompleted", handleRefresh);
+      window.removeEventListener("reminderSnoozed", handleRefresh);
+    };
+  }, [refreshAll]);
+  // -------------------------------------------------------------
+
   const handleStatusAction = async (id: number, action: string) => {
     try {
       await axios.post(`https://gearupapp.runasp.net/api/Reminder/${id}/${action}`, {}, { headers: { Authorization: `Bearer ${token}` } });
