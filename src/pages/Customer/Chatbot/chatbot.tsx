@@ -6,6 +6,7 @@ import {
   MdAutoAwesome,
   MdOutlineAttachFile,
   MdClose,
+  MdCreate,
 } from "react-icons/md";
 import Header from "../../../components/Customer/customer_header";
 import Sidebar from "../../../components/Customer/customer_sidebar";
@@ -42,27 +43,24 @@ const MessageBubble = ({ msg }: { msg: Message }) => {
       dir="rtl"
     >
       <div
-        className={`max-w-[85%] md:max-w-[70%] flex gap-3 ${
-          isUser ? "flex-row-reverse" : "flex-row"
-        }`}
+        className={`max-w-[85%] md:max-w-[70%] flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"
+          }`}
       >
         <div
-          className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm mt-1 ${
-            isUser
-              ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white"
-              : "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
-          }`}
+          className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm mt-1 ${isUser
+            ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white"
+            : "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
+            }`}
         >
           {isUser ? <span className="text-sm font-bold">أ</span> : <MdSmartToy size={18} />}
         </div>
 
         <div className={`flex flex-col ${isUser ? "items-start" : "items-end"}`}>
           <div
-            className={`px-4 py-3 rounded-2xl text-sm md:text-[15px] leading-7 shadow-sm border ${
-              isUser
-                ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white border-transparent rounded-tr-md"
-                : "bg-white dark:bg-[#111827] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-tl-md"
-            }`}
+            className={`px-4 py-3 rounded-2xl text-sm md:text-[15px] leading-7 shadow-sm border ${isUser
+              ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white border-transparent rounded-tr-md"
+              : "bg-white dark:bg-[#111827] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-tl-md"
+              }`}
           >
             {msg.imagePreview && (
               <img
@@ -110,6 +108,23 @@ const ChatbotPage = () => {
       time: "الآن",
     },
   ]);
+  const startNewChat = () => {
+    // إعادة الرسائل للحالة الأولية
+    setMessages([
+      {
+        id: 1,
+        role: "bot",
+        text: "مرحبًا 👋 أنا مساعد GearUp الذكي. أقدر أساعدك في الصيانة، الأعطال، المواعيد، وطلبات الخدمة. كيف أساعدك اليوم؟",
+        time: getTime(),
+      },
+    ]);
+
+    // مسح النصوص والصور المدخلة
+    setInputText("");
+    removeImage();
+    setIsTyping(false);
+    setShowSuggestions(true);
+  };
 
   const [inputText, setInputText] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -368,9 +383,21 @@ const ChatbotPage = () => {
                   </p>
                 </div>
 
-                <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-sm">
-                  <MdAutoAwesome size={18} />
-                  <span className="text-sm font-semibold">GearUp AI</span>
+                <div className="hidden md:flex items-center gap-3">
+                  {/* زر محادثة جديدة */}
+                  <button
+                    onClick={startNewChat}
+                    className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm transition-all active:scale-95 text-white"
+                    title="محادثة جديدة"
+                  >
+                    <MdCreate size={18} />
+                    <span className="text-sm font-semibold">محادثة جديدة</span>
+                  </button>
+
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-sm">
+                    <MdAutoAwesome size={18} />
+                    <span className="text-sm font-semibold">GearUp AI</span>
+                  </div>
                 </div>
               </div>
             </div>
