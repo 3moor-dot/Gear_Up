@@ -64,7 +64,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     sessionStorage.removeItem("userToken");
     sessionStorage.removeItem("userData");
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (
