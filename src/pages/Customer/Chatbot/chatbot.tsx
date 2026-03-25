@@ -226,7 +226,7 @@ const formatChatResponse = (parsed: ParsedReply | null, rawReply: unknown): Form
           notification_time: parsed.notification_time || "",
         }
       : null;
-
+ 
   return {
     text: finalText || "تم استلام رسالتك بنجاح.",
     followUpQuestions,
@@ -509,6 +509,8 @@ const ChatbotPage = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedCarIdRef = useRef<number | null>(null);
+  const carsRef = useRef<CarItem[]>([]);
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -609,6 +611,14 @@ const ChatbotPage = () => {
     sendMessage(question);
   };
 
+  useEffect(() => {
+    selectedCarIdRef.current = selectedCarId;
+  }, [selectedCarId]);
+
+  useEffect(() => {
+    carsRef.current = cars;
+  }, [cars]);
+
   const selectedCarLabel = (() => {
     const car = cars.find((c) => c.id === selectedCarId);
     return car ? `${car.year} ${car.brand} ${car.model}` : "";
@@ -619,7 +629,7 @@ const ChatbotPage = () => {
     if (car) setSelectedCarId(car.id);
   };
 
-  const sendMessage = async (text?: string) => {
+    const sendMessage = async (text?: string) => {
     const msgText = (text ?? inputText).trim();
     if (!msgText && !selectedImage) return;
 
@@ -660,11 +670,13 @@ const ChatbotPage = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
 
     try {
+      const currentCarId = selectedCarIdRef.current;
+      const currentCars = carsRef.current;
+      const selectedCar = currentCars.find((c) => c.id === currentCarId);
+
       const formData = new FormData();
       formData.append("Message", msgText || "");
       if (curImg) formData.append("Image", curImg);
-
-      const selectedCar = cars.find((c) => c.id === selectedCarId);
       if (selectedCar) formData.append("CarId", String(selectedCar.id));
 
       const response = await axios.post(API_URL, formData, {
@@ -674,23 +686,39 @@ const ChatbotPage = () => {
         },
       });
 
-      const { reply, success, error } = response.data;
+      console.log("🔴 Server Response:", response.data);
 
-      if (!success) {
+      // ===== التعديل هنا للتعامل مع شكل الرد =====
+      const rawData = response.data;
+      let replyData: any = null;
+      let success = true;
+
+      // الحالة 1: الرد مغلف (فيه success و reply)
+      if (rawData.hasOwnProperty('success') && rawData.hasOwnProperty('reply')) {
+        success = rawData.success;
+        replyData = rawData.reply;
+      } 
+      // الحالة 2: الرد مباشر (فيه ai_answer أو offers_reminder)
+      else if (rawData.hasOwnProperty('ai_answer') || rawData.hasOwnProperty('offers_reminder')) {
+        replyData = rawData;
+      }
+
+      // لو فيه خطأ
+      if (!success || rawData.error) {
         setMessages((p) => [
           ...p,
           {
             id: Date.now() + 1,
             role: "bot",
-            text: error || "حدث خطأ.",
+            text: rawData.error || "حدث خطأ في الاستجابة.",
             time: getTime(),
           },
         ]);
         return;
       }
 
-      const parsedReply = parseReplyData(reply);
-      const formatted = formatChatResponse(parsedReply, reply);
+      const parsedReply = parseReplyData(replyData);
+      const formatted = formatChatResponse(parsedReply, replyData);
 
       setMessages((p) => [
         ...p,
@@ -705,6 +733,8 @@ const ChatbotPage = () => {
         },
       ]);
     } catch (err: any) {
+      console.error("❌ API Error Details:", err.response || err);
+
       const s = err.response?.status;
       const msg =
         s === 400
@@ -732,7 +762,6 @@ const ChatbotPage = () => {
       setIsTyping(false);
     }
   };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
