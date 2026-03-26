@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import Header from "../../../components/Customer/customer_header";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import CreateReminderModal from "../Reminder/create_reminder_modal";
+import TechnicianCard from "../../../components/TechnicianCard/techniciac_card";
 
 // ===== الأنواع =====
 interface ReminderData {
@@ -33,6 +34,15 @@ interface ReminderPrefillData {
   endDate?: string;
   preferredNotificationTime?: string;
 }
+interface Technician {
+  id: number;
+  name: string;
+  specialty?: string;
+  image?: string;
+  phone?: string;
+  lat?: number;
+  lng?: number;
+}
 
 interface Message {
   id: number;
@@ -43,6 +53,7 @@ interface Message {
   offersReminder?: boolean;
   reminder?: ReminderData | null;
   followUpQuestions?: string[];
+  technicians?: Technician[];
 }
 
 interface ParsedReply {
@@ -218,15 +229,15 @@ const formatChatResponse = (parsed: ParsedReply | null, rawReply: unknown): Form
   const reminder =
     parsed?.offers_reminder
       ? {
-          title: parsed.suggested_reminder_title || "",
-          description: parsed.suggested_reminder_desc || "",
-          frequency: parsed.suggested_frequency || "",
-          start_date: parsed.suggested_date || "",
-          end_date: parsed.suggested_end_date || "",
-          notification_time: parsed.notification_time || "",
-        }
+        title: parsed.suggested_reminder_title || "",
+        description: parsed.suggested_reminder_desc || "",
+        frequency: parsed.suggested_frequency || "",
+        start_date: parsed.suggested_date || "",
+        end_date: parsed.suggested_end_date || "",
+        notification_time: parsed.notification_time || "",
+      }
       : null;
- 
+
   return {
     text: finalText || "تم استلام رسالتك بنجاح.",
     followUpQuestions,
@@ -309,11 +320,10 @@ const CarSelector = ({
                     onSelect(car);
                     setOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-right min-w-0 ${
-                    isSelected
-                      ? "bg-[#137FEC]/10 text-[#137FEC] border border-[#137FEC]/20"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-right min-w-0 ${isSelected
+                    ? "bg-[#137FEC]/10 text-[#137FEC] border border-[#137FEC]/20"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    }`}
                 >
                   <div className="w-10 h-8 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
                     {car.carPhotoUrl ? (
@@ -368,22 +378,20 @@ const MessageBubble = ({
         className={`max-w-[85%] md:max-w-[70%] min-w-0 flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
       >
         <div
-          className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm mt-1 ${
-            isUser
-              ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white"
-              : "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
-          }`}
+          className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm mt-1 ${isUser
+            ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white"
+            : "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
+            }`}
         >
           {isUser ? <span className="text-sm font-bold">أ</span> : <MdSmartToy size={18} />}
         </div>
 
         <div className={`flex flex-col min-w-0 ${isUser ? "items-start" : "items-end"}`}>
           <div
-            className={`px-4 py-3 rounded-2xl text-sm md:text-[15px] leading-7 shadow-sm border min-w-0 max-w-full ${
-              isUser
-                ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white border-transparent rounded-tr-md"
-                : "bg-white dark:bg-[#111827] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-tl-md"
-            }`}
+            className={`px-4 py-3 rounded-2xl text-sm md:text-[15px] leading-7 shadow-sm border min-w-0 max-w-full ${isUser
+              ? "bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white border-transparent rounded-tr-md"
+              : "bg-white dark:bg-[#111827] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-tl-md"
+              }`}
           >
             {msg.imagePreview && (
               <img
@@ -396,6 +404,15 @@ const MessageBubble = ({
             <p className="break-words whitespace-pre-wrap [word-break:break-word]">
               {msg.text}
             </p>
+
+            {/* 👇 الفنيين */}
+            {!isUser && msg.technicians && msg.technicians.length > 0 && (
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {msg.technicians.map((tech, index) => (
+                  <TechnicianCard key={index} tech={tech} />
+                ))}
+              </div>
+            )}
 
             {!isUser && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -486,7 +503,7 @@ const ChatbotPage = () => {
     try {
       const saved = localStorage.getItem(CHAT_STORAGE_KEY);
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch { }
     return [initialBotMessage];
   });
 
@@ -498,7 +515,7 @@ const ChatbotPage = () => {
     try {
       const saved = localStorage.getItem(CHAT_STORAGE_KEY);
       if (saved) return JSON.parse(saved).length <= 1;
-    } catch {}
+    } catch { }
     return true;
   });
 
@@ -524,7 +541,7 @@ const ChatbotPage = () => {
             return;
           }
         }
-      } catch {}
+      } catch { }
 
       const token = sessionStorage.getItem("userToken");
       if (!token) return;
@@ -555,7 +572,7 @@ const ChatbotPage = () => {
   useEffect(() => {
     try {
       localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
-    } catch {}
+    } catch { }
   }, [messages]);
 
   useEffect(() => {
@@ -629,7 +646,7 @@ const ChatbotPage = () => {
     if (car) setSelectedCarId(car.id);
   };
 
-    const sendMessage = async (text?: string) => {
+  const sendMessage = async (text?: string) => {
     const msgText = (text ?? inputText).trim();
     if (!msgText && !selectedImage) return;
 
@@ -697,7 +714,7 @@ const ChatbotPage = () => {
       if (rawData.hasOwnProperty('success') && rawData.hasOwnProperty('reply')) {
         success = rawData.success;
         replyData = rawData.reply;
-      } 
+      }
       // الحالة 2: الرد مباشر (فيه ai_answer أو offers_reminder)
       else if (rawData.hasOwnProperty('ai_answer') || rawData.hasOwnProperty('offers_reminder')) {
         replyData = rawData;
@@ -718,6 +735,16 @@ const ChatbotPage = () => {
       }
 
       const parsedReply = parseReplyData(replyData);
+      const technicians =
+        (parsedReply as any)?.recommended_mechanics?.map((m: any, index: number) => ({
+          id: index,
+          name: m.Name,
+          specialty: "ميكانيكي سيارات",
+          image: "", // ممكن تضيف صورة بعدين
+          phone: m.Phone,
+          lat: m.Latitude,
+          lng: m.Longitude,
+        })) || [];
       const formatted = formatChatResponse(parsedReply, replyData);
 
       setMessages((p) => [
@@ -730,6 +757,7 @@ const ChatbotPage = () => {
           offersReminder: formatted.offersReminder,
           reminder: formatted.reminder,
           followUpQuestions: formatted.followUpQuestions,
+          technicians: technicians,
         },
       ]);
     } catch (err: any) {
@@ -740,14 +768,14 @@ const ChatbotPage = () => {
         s === 400
           ? err.response?.data?.error || "البيانات المرسلة غير صحيحة."
           : s === 401
-          ? "يجب تسجيل الدخول أولًا أو التوكين انتهت صلاحيته."
-          : s === 403
-          ? "ليس لديك صلاحية لاستخدام هذه الخدمة."
-          : s === 404
-          ? "رابط الخدمة غير موجود."
-          : s === 500
-          ? err.response?.data?.error || "حصل خطأ في السيرفر."
-          : "حصل خطأ أثناء الاتصال بالمساعد الذكي.";
+            ? "يجب تسجيل الدخول أولًا أو التوكين انتهت صلاحيته."
+            : s === 403
+              ? "ليس لديك صلاحية لاستخدام هذه الخدمة."
+              : s === 404
+                ? "رابط الخدمة غير موجود."
+                : s === 500
+                  ? err.response?.data?.error || "حصل خطأ في السيرفر."
+                  : "حصل خطأ أثناء الاتصال بالمساعد الذكي.";
 
       setMessages((p) => [
         ...p,
