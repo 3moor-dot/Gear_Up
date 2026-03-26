@@ -14,8 +14,7 @@ import toast from "react-hot-toast";
 import Header from "../../../components/Customer/customer_header";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import CreateReminderModal from "../Reminder/create_reminder_modal";
-import TechnicianCard from "../../../components/TechnicianCard/techniciac_card";
-
+import { useNavigate } from "react-router-dom";
 // ===== الأنواع =====
 interface ReminderData {
   title: string;
@@ -368,6 +367,7 @@ const MessageBubble = ({
   onFollowUpClick: (question: string) => void;
 }) => {
   const isUser = msg.role === "user";
+  const navigate = useNavigate();
 
   return (
     <div
@@ -404,14 +404,15 @@ const MessageBubble = ({
             <p className="break-words whitespace-pre-wrap [word-break:break-word]">
               {msg.text}
             </p>
-
-            {/* 👇 الفنيين */}
             {!isUser && msg.technicians && msg.technicians.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {msg.technicians.map((tech, index) => (
-                  <TechnicianCard key={index} tech={tech} />
-                ))}
-              </div>
+              <button
+                onClick={() => navigate("/customer/maintenancerequest")}
+                className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white 
+    font-bold py-3 rounded-xl transition-all shadow-md 
+    hover:shadow-lg active:scale-95"
+              >
+                🚨 SOS اطلب فني فورًا
+              </button>
             )}
 
             {!isUser && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
