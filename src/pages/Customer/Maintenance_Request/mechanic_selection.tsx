@@ -1,6 +1,10 @@
 import { MdStar } from "react-icons/md";
 
-const MechanicSelection = () => {
+type Props = {
+    technicians: any[];
+};
+
+const MechanicSelection = ({ }: Props) => {
     const mechanics = [
         { id: 1, name: "كراج مايك الأوروبي", rate: 4.9, reviews: 142, price: "180 EGP - 220 EGP", image: "/img1.png", tags: ["الفرامل", "تعليق", "سيارات أوروبية"] },
         { id: 2, name: "كراج مايك الأوروبي", rate: 4.9, reviews: 142, price: "180 EGP - 220 EGP", image: "/img2.png", tags: ["الفرامل", "تعليق", "سيارات أوروبية"] },

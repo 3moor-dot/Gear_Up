@@ -53,6 +53,7 @@ interface Message {
   reminder?: ReminderData | null;
   followUpQuestions?: string[];
   technicians?: Technician[];
+  requires_mechanic?: boolean; // ← أضفها هنا
 }
 
 interface ParsedReply {
@@ -90,7 +91,7 @@ interface FormattedChatResponse {
 // ===== الثوابت =====
 const API_URL = "https://gearupapp.runasp.net/api/Chatbot/message";
 const CHAT_STORAGE_KEY = "gearup_chat_messages";
-
+const hasTechnicians = (techs?: Technician[]) => (techs?.length ?? 0) > 0;
 const SUGGESTED_QUESTIONS = [
   "كيف أحجز موعد صيانة؟",
   "ما هي قطع الغيار المتاحة؟",
@@ -361,10 +362,12 @@ const MessageBubble = ({
   msg,
   onCreateReminder,
   onFollowUpClick,
+  selectedCarId,
 }: {
   msg: Message;
   onCreateReminder: (reminder: ReminderData) => void;
   onFollowUpClick: (question: string) => void;
+  selectedCarId: number | null; // 👈 جديد
 }) => {
   const isUser = msg.role === "user";
   const navigate = useNavigate();
@@ -404,16 +407,24 @@ const MessageBubble = ({
             <p className="break-words whitespace-pre-wrap [word-break:break-word]">
               {msg.text}
             </p>
-            {!isUser && msg.technicians && msg.technicians.length > 0 && (
-              <button
-                onClick={() => navigate("/customer/maintenancerequest")}
-                className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white 
-    font-bold py-3 rounded-xl transition-all shadow-md 
-    hover:shadow-lg active:scale-95"
-              >
-                🚨 SOS اطلب فني فورًا
-              </button>
-            )}
+            {!isUser &&
+              msg.requires_mechanic === true &&
+              hasTechnicians(msg.technicians) && (
+                <button
+                  onClick={() =>
+                    navigate("/customer/maintenancerequest", {
+                      state: {
+                        isSOS: true,
+                        technicians: msg.technicians,
+                        carId: selectedCarId,
+                      },
+                    })
+                  }
+                  className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+                >
+                  🚨 SOS اطلب فني فورًا
+                </button>
+              )}
 
             {!isUser && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -736,16 +747,19 @@ const ChatbotPage = () => {
       }
 
       const parsedReply = parseReplyData(replyData);
-      const technicians =
-        (parsedReply as any)?.recommended_mechanics?.map((m: any, index: number) => ({
+      const isMechanicRequired = parsedReply?.requires_mechanic === true;
+
+      const technicians = isMechanicRequired
+        ? ((parsedReply as any)?.recommended_mechanics || []).map((m: any, index: number) => ({
           id: index,
           name: m.Name,
           specialty: "ميكانيكي سيارات",
-          image: "", // ممكن تضيف صورة بعدين
+          image: "",
           phone: m.Phone,
           lat: m.Latitude,
           lng: m.Longitude,
-        })) || [];
+        }))
+        : [];
       const formatted = formatChatResponse(parsedReply, replyData);
 
       setMessages((p) => [
@@ -759,6 +773,7 @@ const ChatbotPage = () => {
           reminder: formatted.reminder,
           followUpQuestions: formatted.followUpQuestions,
           technicians: technicians,
+          requires_mechanic: String(parsedReply?.requires_mechanic) === "true"// <-- هنا
         },
       ]);
     } catch (err: any) {
@@ -865,6 +880,7 @@ const ChatbotPage = () => {
                       msg={msg}
                       onCreateReminder={handleCreateReminder}
                       onFollowUpClick={handleFollowUpClick}
+                      selectedCarId={selectedCarId} // 👈 هنا
                     />
                   ))}
                   {isTyping && <TypingIndicator />}
