@@ -64,6 +64,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     sessionStorage.removeItem("userToken");
     sessionStorage.removeItem("userData");
+    sessionStorage.removeItem("gearup_chat_messages");
     navigate("/login", { replace: true });
   };
 
