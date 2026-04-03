@@ -1,20 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { MdImage, MdLocationOn, MdMyLocation } from "react-icons/md";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import StepProgress from "./step_progress";
 import MechanicSelection from "./mechanic_selection";
-import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
 const MaintenanceRequest = () => {
-    const locationState = useLocation();
-    const isSOS = locationState.state?.isSOS;
-    const carIdFromChat = locationState.state?.carId;
-    const [technicians, setTechnicians] = useState<any[]>([]);
-    const techniciansFromChat = locationState.state?.technicians || [];
-    const [serviceType, setServiceType] = useState(1);
     const [currentStep, setCurrentStep] = useState(1);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -23,24 +17,27 @@ const MaintenanceRequest = () => {
 
     // --- بيانات الطلب ---
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+    const [issueDescription, setIssueDescription] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
 
-    const [requestType, setRequestType] = useState(isSOS ? 1 : 1); // 1 للطوارئ
-    const [issueDescription, setIssueDescription] = useState(isSOS ? "طلب استغاثة طارئ (SOS) 🚨" : "");
-    const [serviceMode, setServiceMode] = useState(isSOS ? 1 : 2);
-
+    const [requestType, setRequestType] = useState(1); // Emergency=1, Scheduled=2
+    const [serviceMode, setServiceMode] = useState(2); // MechanicComes=1, CustomerGoes=2
+    const [serviceType, setServiceType] = useState(1);
 
     const [scheduledDate, setScheduledDate] = useState("");
     const [scheduledTime, setScheduledTime] = useState("");
 
-
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+    useEffect(() => {
+        console.log("LOCATION:", location);
+    }, [location]);
+
     const [gettingLocation, setGettingLocation] = useState(false);
 
     const inputStyle = "w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border-2 border-blue-500/20 rounded-2xl p-4 text-right outline-none dark:text-white focus:border-blue-500 transition-all";
     const sectionTitleStyle = "text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
-
 
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: "AIzaSyB6Cs-wIkTOJVWrGF6tQg26nvxXwnySROM",
@@ -62,29 +59,12 @@ const MaintenanceRequest = () => {
                 const data = await response.json();
                 if (data && data.cars) {
                     setCars(data.cars);
-                    if (data.cars.length > 0) {
-                        if (carIdFromChat) {
-                            setSelectedCarId(carIdFromChat); // 👈 من الشات
-                        } else {
-                            setSelectedCarId(data.cars[0].id); // fallback
-                        }
-                    }
+                    if (data.cars.length > 0) setSelectedCarId(data.cars[0].id);
                 }
             } catch (error) { console.error(error); } finally { setCarsLoading(false); }
         };
         fetchCars();
     }, []);
-    useEffect(() => {
-        if (techniciansFromChat.length > 0) {
-            setTechnicians(techniciansFromChat);
-        }
-    }, []);
-    
-    useEffect(() => {
-        if (isSOS) {
-            getMyLocation(); // 👈 يجيب الموقع تلقائي
-        }
-    }, [isSOS]);
 
     const getMyLocation = () => {
         if (!navigator.geolocation) return Swal.fire("خطأ", "المتصفح لا يدعم الموقع", "error");
@@ -95,8 +75,8 @@ const MaintenanceRequest = () => {
                 setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
                 setGettingLocation(false);
             },
-            () => { /* error handling */ },
-            { enableHighAccuracy: true, timeout: 10000 } // ضيف السطر ده للدقة
+            () => { setGettingLocation(false); },
+            { enableHighAccuracy: true, timeout: 10000 }
         );
     };
 
@@ -110,8 +90,6 @@ const MaintenanceRequest = () => {
         }
     };
 
-    // };
-
     const validateStepOne = () => {
         return (
             !!selectedCarId &&
@@ -121,45 +99,130 @@ const MaintenanceRequest = () => {
         );
     };
 
+    // const handleSubmitRequest = async () => {
+    //     if (!validateStepOne()) return;
+
+    //     setLoading(true);
+    //     try {
+    //         const token = sessionStorage.getItem('userToken');
+    //         const formData = new FormData();
+
+    //         formData.append("CarId", selectedCarId!);
+    //         formData.append("IssueDescription", issueDescription);
+    //         if (imageFile) formData.append("ProblemPhoto", imageFile);
+    //         formData.append("RequestType", requestType.toString());
+    //         formData.append("ServiceMode", serviceMode.toString());
+    //         formData.append("ServiceType", serviceType.toString());
+
+    //         if (requestType === 2) {
+    //             formData.append("ScheduledDate", scheduledDate);
+    //             formData.append("ScheduledTime", scheduledTime);
+    //         }
+
+    //         if (location) {
+    //             formData.append("Latitude", location.lat.toString());
+    //             formData.append("Longitude", location.lng.toString());
+    //         }
+
+    //         const response = await fetch("https://gearupapp.runasp.net/api/requests", {
+    //             method: 'POST',
+    //             headers: { 'Authorization': `Bearer ${token}` },
+    //             body: formData
+    //         });
+
+    //         if (response.ok) {
+    //             const responseData = await response.json();
+    //             const selectedCar = cars.find(c => c.id === selectedCarId);
+
+    //             // 1. تجهيز إشعار غني بالبيانات للـ LocalStorage
+    //             const newNotification = {
+    //                 title: "تم إرسال طلب صيانة",
+    //                 isRequest: true,
+    //                 carName: `${selectedCar?.brand} ${selectedCar?.model}`,
+    //                 serviceType: serviceType === 1 ? "تشخيص" : serviceType === 2 ? "إطارات" : serviceType === 3 ? "جسم" : "زيت",
+    //                 mode: serviceMode === 1 ? "ميكانيكي متنقل" : "ذهاب للورشة",
+    //                 description: issueDescription,
+    //                 time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
+    //                 requestId: responseData.id || "N/A"
+    //             };
+
+    //             const storageKey = `notifications_${token?.slice(-10)}`;
+    //             const savedNotifications = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    //             localStorage.setItem(storageKey, JSON.stringify([newNotification, ...savedNotifications]));
+
+    //             // 2. تنبيه الجرس
+    //             window.dispatchEvent(new Event("storage"));
+
+    //             Swal.fire("تم!", "تم إرسال طلبك بنجاح وجاري إبلاغ الفنيين", "success");
+    //         } else {
+    //             Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
+    //         }
+    //     } catch (error) {
+    //         Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const handleSubmitRequest = async () => {
-
         if (!validateStepOne()) return;
+    
         setLoading(true);
-
         try {
             const token = sessionStorage.getItem('userToken');
             const formData = new FormData();
+    
             formData.append("CarId", selectedCarId!);
             formData.append("IssueDescription", issueDescription);
-            formData.append("ServiceType", serviceType.toString());
             if (imageFile) formData.append("ProblemPhoto", imageFile);
-
-            // إرسال الإحداثيات كما هو مطلوب
+            formData.append("RequestType", requestType.toString());
+            formData.append("ServiceMode", serviceMode.toString());
+            formData.append("ServiceType", serviceType.toString());
+    
+            if (requestType === 2) {
+                formData.append("ScheduledDate", scheduledDate);
+                formData.append("ScheduledTime", scheduledTime);
+            }
+    
             if (location) {
                 formData.append("Latitude", location.lat.toString());
                 formData.append("Longitude", location.lng.toString());
             }
-
-            // تحديد الـ Endpoint بناءً على نوع الدخول للصفحة
-            const endpoint = isSOS
-                ? "https://gearupapp.runasp.net/api/requests/chatbot"
-                : "https://gearupapp.runasp.net/api/requests";
-
-            const response = await fetch(endpoint, {
+    
+            const response = await fetch("https://gearupapp.runasp.net/api/requests", {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
-
+    
             if (response.ok) {
-                Swal.fire("تم!", isSOS ? "تم إرسال استغاثة SOS بنجاح" : "تم إرسال طلبك بنجاح", "success");
-            } else if (response.status === 401) {
-                Swal.fire("خطأ", "انتهت جلسة التسجيل، يرجى الدخول مجدداً", "error"); //
+                const responseData = await response.json();
+                const selectedCar = cars.find(c => c.id === selectedCarId);
+    
+                // 1. تجهيز بيانات الإشعار بناءً على نوع الطلب
+                const newNotification = {
+                    title: requestType === 1 ? "طلب صيانة طارئ 🚨" : "طلب صيانة مجدول 📅",
+                    isRequest: true,
+                    carName: `${selectedCar?.brand} ${selectedCar?.model}`,
+                    // لو طارئة نعرض (ورشة/متنقل) .. لو مجدولة نعرض (التاريخ/الساعة)
+                    requestDetail: requestType === 1 
+                        ? (serviceMode === 1 ? "الوضع: ميكانيكي متنقل إليك" : "الوضع: ذهاب للورشة")
+                        : `الموعد: ${scheduledDate} الساعة ${scheduledTime}`,
+                    description: issueDescription,
+                    time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
+                    requestId: responseData.id || "N/A"
+                };
+    
+                const storageKey = `notifications_${token?.slice(-10)}`;
+                const savedNotifications = JSON.parse(localStorage.getItem(storageKey) || "[]");
+                localStorage.setItem(storageKey, JSON.stringify([newNotification, ...savedNotifications]));
+    
+                window.dispatchEvent(new Event("storage"));
+                Swal.fire("تم إرسال طلبك بنجاح وجاري إبلاغ الفنيين");
             } else {
-                Swal.fire("خطأ", "حدثت مشكلة في الخادم", "error");
+                Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
             }
         } catch (error) {
-            Swal.fire("خطأ", "فشل الاتصال بالإنترنت", "error");
+            Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
         } finally {
             setLoading(false);
         }
@@ -222,7 +285,7 @@ const MaintenanceRequest = () => {
                                 </div>
                             </section>
 
-                            {/* 3. الصندوق المتغير (التاريخ أو المكان) + اللوكيشن */}
+                            {/* 3. الصندوق المتغير + الخريطة */}
                             <div className="bg-white dark:bg-[#137FEC0D] p-6 rounded-[30px] border border-blue-500/10 shadow-sm space-y-8">
                                 {requestType === 1 ? (
                                     <section className="animate-in slide-in-from-right duration-300">
@@ -242,51 +305,36 @@ const MaintenanceRequest = () => {
                                     </section>
                                 )}
 
-
-                                {/* الخريطة الصغيرة الشيك */}
                                 <section>
                                     <h3 className={sectionTitleStyle}>تحديد الموقع</h3>
-
-
                                     <div className={`relative w-full h-64 rounded-[25px] overflow-hidden border-2 transition-all duration-500 ${location ? 'border-blue-500 shadow-lg' : 'border-dashed border-blue-500/20 bg-gray-50 dark:bg-gray-800'}`}>
-
                                         {location ? (
                                             <>
-                                                {isLoaded && (
+                                                {/* {isLoaded && (
                                                     <GoogleMap
                                                         mapContainerStyle={{ width: "100%", height: "100%" }}
-                                                        center={location || { lat: 25.8733, lng: 32.7526 }}
-                                                        zoom={location ? 15 : 10}
+                                                        center={location}
+                                                        zoom={15}
                                                     >
-                                                        {location && <Marker position={location} />}
+                                                        <Marker position={location} />
                                                     </GoogleMap>
-                                                )}
+                                                )} */}
 
-                                                {/* البار العلوي */}
-                                                <div className="absolute top-0 inset-x-0 p-2">
-                                                    <div className="flex justify-between items-center px-4 py-1.5 bg-white/70 dark:bg-[#1F2937]/80 backdrop-blur-md rounded-t-[23px] border-b border-blue-500/10">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="relative flex h-2 w-2">
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                                            </span>
-                                                            <p className="font-bold text-[11px] dark:text-white text-gray-700">الموقع ملتقط بدقة 📍</p>
-                                                        </div>
-                                                        <button
-                                                            onClick={getMyLocation}
-                                                            className="text-[10px] font-black text-blue-600 hover:text-blue-800 transition-colors"
-                                                        >
-                                                            تحديث الموقع
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* أيقونة اللوكيشن */}
-                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                    <div className="flex flex-col items-center mb-8">
-                                                        <MdLocationOn size={40} className="text-[#137FEC]" />
-                                                    </div>
-                                                </div>
+{isLoaded && location && (
+  <GoogleMap
+    mapContainerStyle={{ width: "100%", height: "100%" }}
+    center={location}
+    zoom={15}
+  >
+    <Marker
+      position={location}
+      icon={{
+        url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
+      }}
+    />
+  </GoogleMap>
+)}
+                                              
                                             </>
                                         ) : (
                                             <button onClick={getMyLocation} className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -298,14 +346,11 @@ const MaintenanceRequest = () => {
                                                 </p>
                                             </button>
                                         )}
-
                                     </div>
-
-
                                 </section>
                             </div>
 
-                            {/* وصف المشكلة والصور */}
+                            {/* وصف المشكلة */}
                             <section className="space-y-4">
                                 <h3 className={sectionTitleStyle}>تفاصيل العطل</h3>
                                 <textarea value={issueDescription} onChange={(e) => setIssueDescription(e.target.value)} placeholder="اكتب وصفاً للمشكلة..." className={inputStyle + " min-h-[100px]"} />
@@ -332,27 +377,20 @@ const MaintenanceRequest = () => {
                             </section>
 
                             <div className="pt-10 border-t border-gray-200 dark:border-gray-800">
-
-
                                 <button
                                     type="button"
                                     disabled={!isStepOneValid || loading}
-                                    onClick={() => {
-                                        if (validateStepOne()) {
-                                            handleSubmitRequest();
-                                        }
-                                    }}
+                                    onClick={handleSubmitRequest}
                                     className={`w-full py-4 rounded-2xl font-black text-xl shadow-xl transition-all
-    ${isStepOneValid ? "bg-[#137FEC] text-white" : "bg-gray-300 cursor-not-allowed"}`}
+                                    ${isStepOneValid ? "bg-[#137FEC] text-white" : "bg-gray-300 cursor-not-allowed"}`}
                                 >
                                     {loading ? "جاري الإرسال..." : "ارسال الطلب"}
                                 </button>
-
                             </div>
                         </div>
                     ) : (
                         <div className="animate-in slide-in-from-left duration-500">
-                            <MechanicSelection technicians={technicians} />
+                            <MechanicSelection />
                             <div className="flex justify-between mt-10">
                                 <button onClick={() => setCurrentStep(1)} className="bg-gray-700 text-white px-12 py-3 rounded-xl font-bold">رجوع</button>
                                 <button onClick={handleSubmitRequest} disabled={loading} className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold shadow-xl">

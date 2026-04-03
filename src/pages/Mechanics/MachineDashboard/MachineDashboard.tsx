@@ -51,7 +51,7 @@ const MachineDashboard = () => {
             لوحة التحكم
           </h1>
           <div className="flex items-center gap-2 sm:gap-4">
-            <NotificationBell size={22} />
+            <NotificationBell size={28} />
             <ThemeToggle />
           </div>
         </div>

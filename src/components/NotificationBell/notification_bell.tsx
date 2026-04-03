@@ -59,6 +59,20 @@ const NotificationBell = ({ size = 25 }) => {
     }
   };
 
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+        triggerShake(); // <--- ضيفي السطر ده هنا عشان الجرس يتهز أول ما الإشعار يوصل
+      }
+    };
+  
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+  
   const snoozeReminder = async (reminderId: number, snoozeType: number, index: number) => {
     try {
       await axios.post(
@@ -80,8 +94,69 @@ const NotificationBell = ({ size = 25 }) => {
   };
 
 
+  // useEffect(() => {
+  //   // 1. التأكد من وجود التوكن
+  //   if (!token) return;
+  //   const connection = new signalR.HubConnectionBuilder()
+  //     .withUrl("https://gearupapp.runasp.net/hubs/notifications", {
+  //       accessTokenFactory: () => token,
+  //       skipNegotiation: true, 
+  //       transport: signalR.HttpTransportType.WebSockets 
+  //     })
+  //     .withAutomaticReconnect()
+  //     .build();
+  
+  //   connection.on("ReceiveReminderNotification", (data: any) => {
+  //     console.log("🚨 استلام إشعار:", data);
+      
+
+
+
+      
+  //     setNotifications((oldNotifications) => {
+  //       // 1. شيل أي نسخة قديمة من نفس الـ reminderId عشان نحدثها بالجديدة
+  //       const filtered = oldNotifications.filter((n: any) => n.reminderId !== data.reminderId);
+    
+  //       const newNotification = {
+  //         title: data.title || "تنبيه صيانة",
+  //         message: data.message || "لديك تنبيه جديد",
+  //         reminderId: data.reminderId,
+  //         carId: data.carId,
+  //         time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+  //       };
+    
+  //       const updated = [newNotification, ...filtered];
+  //       localStorage.setItem(getStorageKey(), JSON.stringify(updated));
+  //       return updated;
+  //     });
+      
+  //     triggerShake();
+  //   });
+
+
+
+  
+  //   // تشغيل الاتصال
+  //   const startConnection = async () => {
+  //     try {
+  //       if (connection.state === signalR.HubConnectionState.Disconnected) {
+  //         await connection.start();
+  //         console.log("SignalR Connected ✅");
+  //       }
+  //     } catch (err) {
+  //       console.error("SignalR Connection Error ❌", err);
+  //     }
+  //   };
+  
+  //   startConnection();
+  
+  //   return () => {
+  //     if (connection) {
+  //       connection.stop();
+  //     }
+  //   };
+  // }, [token]); 
   useEffect(() => {
-    // 1. التأكد من وجود التوكن
     if (!token) return;
   
     const connection = new signalR.HubConnectionBuilder()
@@ -92,15 +167,12 @@ const NotificationBell = ({ size = 25 }) => {
       })
       .withAutomaticReconnect()
       .build();
-  
 
+    // 1. استماع لتنبيهات المواعيد (Reminders)
     connection.on("ReceiveReminderNotification", (data: any) => {
-      console.log("🚨 استلام إشعار:", data);
-      
+      console.log("🚨 استلام تنبيه موعد:", data);
       setNotifications((oldNotifications) => {
-        // 1. شيل أي نسخة قديمة من نفس الـ reminderId عشان نحدثها بالجديدة
         const filtered = oldNotifications.filter((n: any) => n.reminderId !== data.reminderId);
-    
         const newNotification = {
           title: data.title || "تنبيه صيانة",
           message: data.message || "لديك تنبيه جديد",
@@ -108,19 +180,36 @@ const NotificationBell = ({ size = 25 }) => {
           carId: data.carId,
           time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
         };
-    
         const updated = [newNotification, ...filtered];
         localStorage.setItem(getStorageKey(), JSON.stringify(updated));
         return updated;
       });
-      
       triggerShake();
     });
 
+    // 2. استماع لطلبات الصيانة الجديدة (Service Requests) - دي كانت محطوطة غلط جوه اللي فوقها
+    connection.on("ReceiveServiceRequest", (data: any) => {
+      console.log("🚨 طلب صيانة جديد وصل للميكانيكي! 🚨", data);
+      
+      setNotifications((oldNotifications) => {
+        const newNotification = {
+          title: "طلب صيانة جديد 🛠️",
+          isRequest: true,
+          carName: data.carName || "سيارة غير محددة",
+          // التأكد من عرض الداتا بناءً على نوع الطلب
+          requestDetail: data.requestType === 1 ? "طلب طارئ 🚨" : `موعد مجدول: ${data.scheduledDate}`,
+          description: data.issueDescription,
+          time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+        };
 
+        const updated = [newNotification, ...oldNotifications];
+        localStorage.setItem(getStorageKey(), JSON.stringify(updated));
+        return updated;
+      });
 
-  
-    // تشغيل الاتصال
+      triggerShake();
+    });
+
     const startConnection = async () => {
       try {
         if (connection.state === signalR.HubConnectionState.Disconnected) {
@@ -135,11 +224,9 @@ const NotificationBell = ({ size = 25 }) => {
     startConnection();
   
     return () => {
-      if (connection) {
-        connection.stop();
-      }
+      if (connection) connection.stop();
     };
-  }, [token]); 
+  }, [token]);
 
 
 
@@ -159,7 +246,7 @@ const NotificationBell = ({ size = 25 }) => {
   };
 
   const snoozeOptions = [
-    // { label: " دقيقتين", value: 5 },
+     { label: " دقيقتين", value: 5 },
     { label: "ساعة واحدة", value: 0 },
     { label: "3 ساعات", value: 1 },
     { label: "يوم واحد", value: 2 },
@@ -203,79 +290,72 @@ const NotificationBell = ({ size = 25 }) => {
             </button>
           </div>
 
-<div className="max-h-80 overflow-y-visible space-y-3 custom-scrollbar px-1">
-            {notifications.length > 0 ? notifications.map((n, i) => (
-              <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
-                dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"
-              }`}>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-[12px] text-blue-400 leading-tight mb-1">{n.title}</h4>
-                    <button onClick={() => removeNotificationFromList(i)} className="text-slate-600 hover:text-red-400">
-                      <FaTimes size={10} />
-                    </button>
-                  </div>
-                  
-                  {n.carId && (
-                    <div className={`text-[10px] font-medium mb-1 flex items-center gap-1 ${dark ? "text-slate-300" : "text-slate-600"}`}>
-                       <span className="opacity-70 text-[12px]">🚗</span> {getCarName(n.carId)}
-                    </div>
-                  )}
-                  
-                  {n.message && <p className="text-[11px] opacity-60 leading-snug mb-3">{n.message}</p>}
-                  
-                  <div className="flex gap-2 relative">
-                    <button
-                      onClick={() => completeReminder(n.reminderId, i)}
-                      className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-                    >
-                      <FaCheck size={10} /> إتمام
-                    </button>
+{/* <div className="max-h-80 overflow-y-visible space-y-3 custom-scrollbar px-1"> */}
+<div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
 
 
-<div className="flex-1 relative">
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      setActiveSnoozeIndex(activeSnoozeIndex === i ? null : i);
-    }}
-    className="w-full py-1.5 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1"
-  >
-    <FaClock size={10} /> تأجيل <FaChevronDown size={8} className={activeSnoozeIndex === i ? "rotate-180" : ""} />
-  </button>
 
-  {activeSnoozeIndex === i && (
-    <div 
-      className={`absolute bottom-full left-0 mb-2 w-32 rounded-lg shadow-2xl border z-[999] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-        dark ? "bg-slate-900 border-white/20" : "bg-white border-gray-200"
-      }`}
-      style={{ filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.2))" }} // لزيادة الوضوح
-    >
-      {snoozeOptions.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => snoozeReminder(n.reminderId, opt.value, i)}
-          className={`w-full text-right px-3 py-2 text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-colors border-b last:border-0 ${
-            dark ? "text-slate-200 border-white/5" : "text-slate-700 border-gray-100"
-          }`}
-        >
-          {opt.label}
+{notifications.length > 0 ? notifications.map((n, i) => (
+  <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
+    dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"
+  }`}>
+    <div className="flex-1 min-w-0 text-right">
+      <div className="flex justify-between items-start mb-1">
+        <h4 className="font-bold text-[12px] text-blue-400">{n.title}</h4>
+        <button onClick={() => removeNotificationFromList(i)} className="text-slate-600 hover:text-red-400">
+          <FaTimes size={10} />
         </button>
-      ))}
+      </div>
+
+      {/* عرض بيانات السيارة لو موجودة */}
+      {(n.carName || n.carId) && (
+        <div className="text-[11px] font-bold mb-1 flex items-center gap-1 dark:text-slate-200">
+          <span>🚗</span> {n.carName || getCarName(n.carId)}
+        </div>
+      )}
+
+      {/* تفاصيل إضافية للريكوست */}
+      {/* {n.isRequest && (
+        <div className="space-y-1 mb-2">
+          <p className="text-[10px] opacity-80">🛠️ نوع الخدمة: <span className="font-bold">{n.serviceType}</span></p>
+          <p className="text-[10px] opacity-80">📍 الوضع: <span className="font-bold">{n.mode}</span></p>
+          <p className="text-[10px] bg-blue-500/10 p-1.5 rounded italic">"{n.description}"</p>
+        </div>
+      )} */}
+      {/* تفاصيل إضافية للريكوست */}
+{n.isRequest && (
+  <div className="space-y-1 mb-2">
+    {/* هنا هيعرض "الوضع: متنقل" أو "الموعد: 2026-03-28 الساعة 10:00" تلقائياً */}
+    <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
+      {n.requestDetail}
+    </p>
+    <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
+      {n.description}
+    </p>
+  </div>
+)}
+
+      {/* لو مش ريكوست (تذكير عادي) اعرض الرسالة العادية */}
+      {!n.isRequest && n.message && (
+        <p className="text-[11px] opacity-60 mb-2">{n.message}</p>
+      )}
+
+      {/* إخفاء الأزرار مؤقتاً للريكوستات، وإظهارها فقط للتذكيرات القديمة لو حابة */}
+      {!n.isRequest && (
+        <div className="flex gap-2">
+           {/* الأزرار القديمة كانت هنا، شيلناها مؤقتاً */}
+        </div>
+      )}
+
+      <span className="text-[8px] mt-2 opacity-30 block font-mono">{n.time}</span>
     </div>
-  )}
-</div>
+  </div>
+)) : (
+  <div className="text-center py-6 opacity-30 text-[11px]">لا توجد تنبيهات</div>
+)}
 
 
 
-                  </div>
-                  <span className="text-[8px] mt-2 opacity-30 block font-mono">{n.time}</span>
-                </div>
-              </div>
-            )) : (
-              <div className="text-center py-6 opacity-30 text-[11px]">لا توجد تنبيهات جديدة</div>
-            )}
           </div>
 
           <button 
