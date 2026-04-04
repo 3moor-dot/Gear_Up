@@ -99,70 +99,6 @@ const MaintenanceRequest = () => {
         );
     };
 
-    // const handleSubmitRequest = async () => {
-    //     if (!validateStepOne()) return;
-
-    //     setLoading(true);
-    //     try {
-    //         const token = sessionStorage.getItem('userToken');
-    //         const formData = new FormData();
-
-    //         formData.append("CarId", selectedCarId!);
-    //         formData.append("IssueDescription", issueDescription);
-    //         if (imageFile) formData.append("ProblemPhoto", imageFile);
-    //         formData.append("RequestType", requestType.toString());
-    //         formData.append("ServiceMode", serviceMode.toString());
-    //         formData.append("ServiceType", serviceType.toString());
-
-    //         if (requestType === 2) {
-    //             formData.append("ScheduledDate", scheduledDate);
-    //             formData.append("ScheduledTime", scheduledTime);
-    //         }
-
-    //         if (location) {
-    //             formData.append("Latitude", location.lat.toString());
-    //             formData.append("Longitude", location.lng.toString());
-    //         }
-
-    //         const response = await fetch("https://gearupapp.runasp.net/api/requests", {
-    //             method: 'POST',
-    //             headers: { 'Authorization': `Bearer ${token}` },
-    //             body: formData
-    //         });
-
-    //         if (response.ok) {
-    //             const responseData = await response.json();
-    //             const selectedCar = cars.find(c => c.id === selectedCarId);
-
-    //             // 1. تجهيز إشعار غني بالبيانات للـ LocalStorage
-    //             const newNotification = {
-    //                 title: "تم إرسال طلب صيانة",
-    //                 isRequest: true,
-    //                 carName: `${selectedCar?.brand} ${selectedCar?.model}`,
-    //                 serviceType: serviceType === 1 ? "تشخيص" : serviceType === 2 ? "إطارات" : serviceType === 3 ? "جسم" : "زيت",
-    //                 mode: serviceMode === 1 ? "ميكانيكي متنقل" : "ذهاب للورشة",
-    //                 description: issueDescription,
-    //                 time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
-    //                 requestId: responseData.id || "N/A"
-    //             };
-
-    //             const storageKey = `notifications_${token?.slice(-10)}`;
-    //             const savedNotifications = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    //             localStorage.setItem(storageKey, JSON.stringify([newNotification, ...savedNotifications]));
-
-    //             // 2. تنبيه الجرس
-    //             window.dispatchEvent(new Event("storage"));
-
-    //             Swal.fire("تم!", "تم إرسال طلبك بنجاح وجاري إبلاغ الفنيين", "success");
-    //         } else {
-    //             Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
-    //         }
-    //     } catch (error) {
-    //         Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     const handleSubmitRequest = async () => {
         if (!validateStepOne()) return;
     
@@ -194,16 +130,15 @@ const MaintenanceRequest = () => {
                 body: formData
             });
     
+            
             if (response.ok) {
                 const responseData = await response.json();
                 const selectedCar = cars.find(c => c.id === selectedCarId);
-    
-                // 1. تجهيز بيانات الإشعار بناءً على نوع الطلب
+            
                 const newNotification = {
                     title: requestType === 1 ? "طلب صيانة طارئ 🚨" : "طلب صيانة مجدول 📅",
                     isRequest: true,
                     carName: `${selectedCar?.brand} ${selectedCar?.model}`,
-                    // لو طارئة نعرض (ورشة/متنقل) .. لو مجدولة نعرض (التاريخ/الساعة)
                     requestDetail: requestType === 1 
                         ? (serviceMode === 1 ? "الوضع: ميكانيكي متنقل إليك" : "الوضع: ذهاب للورشة")
                         : `الموعد: ${scheduledDate} الساعة ${scheduledTime}`,
@@ -211,14 +146,20 @@ const MaintenanceRequest = () => {
                     time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
                     requestId: responseData.id || "N/A"
                 };
-    
+            
                 const storageKey = `notifications_${token?.slice(-10)}`;
                 const savedNotifications = JSON.parse(localStorage.getItem(storageKey) || "[]");
                 localStorage.setItem(storageKey, JSON.stringify([newNotification, ...savedNotifications]));
-    
+            
                 window.dispatchEvent(new Event("storage"));
+            
                 Swal.fire("تم إرسال طلبك بنجاح وجاري إبلاغ الفنيين");
-            } else {
+            
+                // ✅ الانتقال التلقائي للخطوة 2
+                setCurrentStep(2);
+            }
+
+            else {
                 Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
             }
         } catch (error) {
@@ -234,7 +175,7 @@ const MaintenanceRequest = () => {
             <div className="flex-1 flex flex-col min-w-0">
                 <Header />
                 <main className="p-4 md:p-8 mt-12 lg:mt-0 max-w-5xl mx-auto w-full pb-20 text-right">
-                    <StepProgress currentStep={currentStep} onStepChange={setCurrentStep} />
+                    {/* <StepProgress currentStep={currentStep} onStepChange={setCurrentStep} /> */}
 
                     {currentStep === 1 ? (
                         <div className="space-y-10 animate-in fade-in duration-500">

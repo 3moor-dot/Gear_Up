@@ -93,80 +93,19 @@ const NotificationBell = ({ size = 25 }) => {
     }
   };
 
-
-  // useEffect(() => {
-  //   // 1. التأكد من وجود التوكن
-  //   if (!token) return;
-  //   const connection = new signalR.HubConnectionBuilder()
-  //     .withUrl("https://gearupapp.runasp.net/hubs/notifications", {
-  //       accessTokenFactory: () => token,
-  //       skipNegotiation: true, 
-  //       transport: signalR.HttpTransportType.WebSockets 
-  //     })
-  //     .withAutomaticReconnect()
-  //     .build();
-  
-  //   connection.on("ReceiveReminderNotification", (data: any) => {
-  //     console.log("🚨 استلام إشعار:", data);
-      
-
-
-
-      
-  //     setNotifications((oldNotifications) => {
-  //       // 1. شيل أي نسخة قديمة من نفس الـ reminderId عشان نحدثها بالجديدة
-  //       const filtered = oldNotifications.filter((n: any) => n.reminderId !== data.reminderId);
-    
-  //       const newNotification = {
-  //         title: data.title || "تنبيه صيانة",
-  //         message: data.message || "لديك تنبيه جديد",
-  //         reminderId: data.reminderId,
-  //         carId: data.carId,
-  //         time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
-  //       };
-    
-  //       const updated = [newNotification, ...filtered];
-  //       localStorage.setItem(getStorageKey(), JSON.stringify(updated));
-  //       return updated;
-  //     });
-      
-  //     triggerShake();
-  //   });
-
-
-
-  
-  //   // تشغيل الاتصال
-  //   const startConnection = async () => {
-  //     try {
-  //       if (connection.state === signalR.HubConnectionState.Disconnected) {
-  //         await connection.start();
-  //         console.log("SignalR Connected ✅");
-  //       }
-  //     } catch (err) {
-  //       console.error("SignalR Connection Error ❌", err);
-  //     }
-  //   };
-  
-  //   startConnection();
-  
-  //   return () => {
-  //     if (connection) {
-  //       connection.stop();
-  //     }
-  //   };
-  // }, [token]); 
   useEffect(() => {
     if (!token) return;
   
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("https://gearupapp.runasp.net/hubs/notifications", {
         accessTokenFactory: () => token,
-        skipNegotiation: true, 
-        transport: signalR.HttpTransportType.WebSockets 
+    
       })
       .withAutomaticReconnect()
       .build();
+
+      connection.serverTimeoutInMilliseconds = 60000; // بدل 30 ثانية
+connection.keepAliveIntervalInMilliseconds = 15000;
 
     // 1. استماع لتنبيهات المواعيد (Reminders)
     connection.on("ReceiveReminderNotification", (data: any) => {
@@ -192,14 +131,37 @@ const NotificationBell = ({ size = 25 }) => {
       console.log("🚨 طلب صيانة جديد وصل للميكانيكي! 🚨", data);
       
       setNotifications((oldNotifications) => {
+        // const newNotification = {
+        //   title: "طلب صيانة جديد 🛠️",
+        //   isRequest: true,
+        //   // carName: data.carName || "سيارة غير محددة",
+
+        //   carName: data.carBrand && data.carModel && data.carYear
+        //   ? `${data.carBrand} ${data.carModel} ${data.carYear}`
+        //   : "سيارة غير محددة"
+
+        //   // التأكد من عرض الداتا بناءً على نوع الطلب
+        //   requestDetail: data.requestType === 1 ? "طلب طارئ 🚨" : `موعد مجدول: ${data.scheduledDate}`,
+        //   description: data.issueDescription,
+        //   time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+        // };
         const newNotification = {
           title: "طلب صيانة جديد 🛠️",
           isRequest: true,
-          carName: data.carName || "سيارة غير محددة",
-          // التأكد من عرض الداتا بناءً على نوع الطلب
-          requestDetail: data.requestType === 1 ? "طلب طارئ 🚨" : `موعد مجدول: ${data.scheduledDate}`,
+        
+          carName: data.carBrand && data.carModel && data.carYear
+            ? `${data.carBrand} ${data.carModel} ${data.carYear}`
+            : "سيارة غير محددة",
+        
+          requestDetail: data.requestType === 1
+            ? "طلب طارئ 🚨"
+            : `موعد مجدول: ${data.scheduledDate}`,
+        
           description: data.issueDescription,
-          time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+          time: new Date().toLocaleTimeString("ar-EG", {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
         };
 
         const updated = [newNotification, ...oldNotifications];
@@ -290,7 +252,6 @@ const NotificationBell = ({ size = 25 }) => {
             </button>
           </div>
 
-{/* <div className="max-h-80 overflow-y-visible space-y-3 custom-scrollbar px-1"> */}
 <div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
 
 
