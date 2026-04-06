@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { MdImage, MdLocationOn } from "react-icons/md";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
-import StepProgress from "./step_progress";
 import MechanicSelection from "./mechanic_selection";
 import { FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
@@ -348,7 +347,7 @@ const MaintenanceRequest = () => {
                         </div>
                     ) : (
                         <div className="animate-in slide-in-from-left duration-500">
-                            <MechanicSelection />
+                            <MechanicSelection technicians={[]} />
                             <div className="flex justify-between mt-10">
                                 <button onClick={() => setCurrentStep(1)} className="bg-gray-700 text-white px-12 py-3 rounded-xl font-bold">رجوع</button>
                                 <button onClick={handleSubmitRequest} disabled={loading} className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold shadow-xl">
