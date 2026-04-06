@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaLocationArrow } from "react-icons/fa";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
@@ -14,13 +15,14 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   if (!isLoaded) return <div className="h-[250px] flex items-center justify-center animate-pulse bg-gray-200 rounded-xl">جاري تحميل الخريطة...</div>;
 
   // لو مفيش إحداثيات، بنخليه يفتح على القاهرة مثلاً كوضع افتراضي
-  const center = latitude && longitude 
-    ? { lat: Number(latitude), lng: Number(longitude) } 
-    : { lat: 30.0444, lng: 31.2357 };
+  const center = latitude && longitude
+  ? { lat: Number(latitude), lng: Number(longitude) }
+  : null;
+    console.log("MAP DATA =>", latitude, longitude);
 
   return (
     <div className={`rounded-xl overflow-hidden border ${dark ? "border-gray-700" : "border-gray-300"}`} style={{ height: "250px", width: "100%" }}>
-      <GoogleMap
+      {/* <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
         zoom={latitude ? 17 : 12} // 17 بيخلي الخريطة قريبة جداً فالدبوس يبان بوضوح
@@ -34,7 +36,25 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
             clickableIcons: isEditing,
             scrollwheel: true,
         }}
-      >
+      > */}
+
+<GoogleMap
+  mapContainerStyle={{ width: "100%", height: "100%" }}
+  center={center || { lat: 0, lng: 0 }} // fallback داخلي فقط لتفادي crash
+  zoom={latitude ? 17 : 2}
+  onClick={(e) => {
+    if (isEditing && e.latLng) {
+      setLocation(e.latLng.lat(), e.latLng.lng());
+    }
+  }}
+  options={{
+    draggable: isEditing,
+    clickableIcons: isEditing,
+    scrollwheel: true,
+  }}
+>
+
+
         {/* الدبوس (الـ Marker) */}
         {latitude && longitude && (
           <Marker 
@@ -47,7 +67,6 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
     </div>
   );
 }
-
 
 interface AdditionalData {
   location: string;
@@ -66,6 +85,11 @@ const specialties = ["ميكانيكا عامة", "كهرباء سيارات", "
 const AdditionalTab = () => {
   const { dark } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
+
+
+  const token = sessionStorage.getItem("userToken");
+  console.log("TOKEN =>", token);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [error, setError] = useState("");
@@ -132,14 +156,28 @@ const AdditionalTab = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // localStorage.setItem("mechanic_data", JSON.stringify(data));
+       localStorage.setItem("mechanic_data", JSON.stringify(data));
+      // await axios.post(
+      //   "https://gearupapp.runasp.net/api/mechanic/profile",
+      //   data,
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` }
+      //   }
+      // );
+
       await axios.post(
         "https://gearupapp.runasp.net/api/mechanic/profile",
         data,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         }
       );
+
+
+
       await new Promise((r) => setTimeout(r, 800));
       setSuccess("تم حفظ البيانات بنجاح ✅");
       setIsEditing(false);

@@ -15,7 +15,7 @@ const MechanicSelection = ({ }: Props) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" dir="rtl">
             {/* القائمة الجانبية للفلاتر */}
-            <div className="lg:col-span-3 space-y-6 text-right">
+            {/* <div className="lg:col-span-3 space-y-6 text-right">
                 <div className="flex justify-between items-center">
                     <h3 className="text-gray-400 font-bold">فرز حسب</h3>
                     <button className="text-blue-500 text-sm font-bold">إعادة ضبط</button>
@@ -37,7 +37,7 @@ const MechanicSelection = ({ }: Props) => {
                         </label>
                     ))}
                 </div>
-            </div>
+            </div> */}
 
             {/* قائمة الميكانيكيين */}
             <div className="lg:col-span-9 space-y-4">

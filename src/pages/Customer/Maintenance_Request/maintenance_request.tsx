@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { MdImage, MdLocationOn, MdMyLocation } from "react-icons/md";
+import { MdImage, MdLocationOn } from "react-icons/md";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import StepProgress from "./step_progress";
 import MechanicSelection from "./mechanic_selection";
+import { FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
@@ -27,7 +28,7 @@ const MaintenanceRequest = () => {
 
     const [scheduledDate, setScheduledDate] = useState("");
     const [scheduledTime, setScheduledTime] = useState("");
-
+    const selectedCar = cars.find(c => c.id === selectedCarId);
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
     useEffect(() => {
@@ -153,7 +154,7 @@ const MaintenanceRequest = () => {
             
                 window.dispatchEvent(new Event("storage"));
             
-                Swal.fire("تم إرسال طلبك بنجاح وجاري إبلاغ الفنيين");
+                Swal.fire("تم إرسال طلبك بنجاح ");
             
                 // ✅ الانتقال التلقائي للخطوة 2
                 setCurrentStep(2);
@@ -186,14 +187,30 @@ const MaintenanceRequest = () => {
                                 <div className="relative">
                                     <button onClick={() => !carsLoading && setIsOpen(!isOpen)} className={`${inputStyle} flex items-center justify-between p-5 border-2 ${isOpen ? 'border-blue-500' : 'border-blue-500/20'}`}>
                                         <div className="flex items-center gap-4">
-                                            {selectedCarId ? (
-                                                <>
-                                                    <img src={cars.find(c => c.id === selectedCarId)?.carPhotoUrl} className="w-16 h-12 object-cover rounded-xl" alt="" />
-                                                    <span className="text-xl font-black dark:text-white">{cars.find(c => c.id === selectedCarId)?.brand} {cars.find(c => c.id === selectedCarId)?.model}</span>
-                                                </>
-                                            ) : <span className="text-gray-400">اختر سيارة...</span>}
+                                      
+
+{selectedCar ? (
+    <div className="flex items-center gap-4">
+        <img
+            src={selectedCar.carPhotoUrl}
+            className="w-16 h-12 object-cover rounded-xl"
+            alt=""
+        />
+        <div className="flex flex-col text-right">
+            <span className="text-xl font-black dark:text-white">
+                {selectedCar.brand} {selectedCar.model}
+            </span>
+            <span className="text-xs text-gray-500">
+                {selectedCar.plateNumber}
+            </span>
+        </div>
+    </div>
+) : (
+    <span className="text-gray-400">اختر سيارة...</span>
+)}
+
                                         </div>
-                                        <MdMyLocation size={24} className="text-blue-500" />
+                                        <FaChevronDown className="text-blue-500 text-xl" />
                                     </button>
                                     {isOpen && (
                                         <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1F2937] border-2 border-blue-500/20 rounded-[25px] shadow-2xl overflow-hidden">

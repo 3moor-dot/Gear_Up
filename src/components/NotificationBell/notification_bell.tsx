@@ -8,6 +8,8 @@ import axios from "axios";
 import toast from 'react-hot-toast';
 
 const NotificationBell = ({ size = 25 }) => {
+  // console.log("🔔 NotificationBell Mounted");
+
   const { dark } = useTheme();
   const navigate = useNavigate();
   const [isShaking, setIsShaking] = useState(false);
@@ -126,49 +128,47 @@ connection.keepAliveIntervalInMilliseconds = 15000;
       triggerShake();
     });
 
-    // 2. استماع لطلبات الصيانة الجديدة (Service Requests) - دي كانت محطوطة غلط جوه اللي فوقها
+ 
     connection.on("ReceiveServiceRequest", (data: any) => {
-      console.log("🚨 طلب صيانة جديد وصل للميكانيكي! 🚨", data);
+      console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
+      // console.log("🚨 طلب صيانة جديد وصل للميكانيكي! 🚨", data);
       
       setNotifications((oldNotifications) => {
-        // const newNotification = {
-        //   title: "طلب صيانة جديد 🛠️",
-        //   isRequest: true,
-        //   // carName: data.carName || "سيارة غير محددة",
-
-        //   carName: data.carBrand && data.carModel && data.carYear
-        //   ? `${data.carBrand} ${data.carModel} ${data.carYear}`
-        //   : "سيارة غير محددة"
-
-        //   // التأكد من عرض الداتا بناءً على نوع الطلب
-        //   requestDetail: data.requestType === 1 ? "طلب طارئ 🚨" : `موعد مجدول: ${data.scheduledDate}`,
-        //   description: data.issueDescription,
-        //   time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
-        // };
+      
         const newNotification = {
           title: "طلب صيانة جديد 🛠️",
           isRequest: true,
-        
-          carName: data.carBrand && data.carModel && data.carYear
-            ? `${data.carBrand} ${data.carModel} ${data.carYear}`
-            : "سيارة غير محددة",
-        
+    
+          carName: data.car?.brand && data.car?.model && data.car?.year
+  ? `${data.car.brand} ${data.car.model} ${data.car.year}`
+  : "سيارة غير محددة",
+
+plateNumber: data.car?.plateNumber || "غير متوفر",
+
+location: data.location
+  ? {
+      lat: data.location.latitude,
+      lng: data.location.longitude
+    }
+  : null,
+    
           requestDetail: data.requestType === 1
             ? "طلب طارئ 🚨"
             : `موعد مجدول: ${data.scheduledDate}`,
-        
+    
           description: data.issueDescription,
+    
           time: new Date().toLocaleTimeString("ar-EG", {
             hour: "2-digit",
             minute: "2-digit"
           })
         };
-
+    
         const updated = [newNotification, ...oldNotifications];
         localStorage.setItem(getStorageKey(), JSON.stringify(updated));
         return updated;
       });
-
+    
       triggerShake();
     });
 
@@ -215,7 +215,6 @@ connection.keepAliveIntervalInMilliseconds = 15000;
     { label: "3 أيام", value: 3 },
     { label: "أسبوع", value: 4 },
  
-    
   ];
 
   return (
@@ -275,6 +274,24 @@ connection.keepAliveIntervalInMilliseconds = 15000;
         </div>
       )}
 
+{n.customerName && (
+  <div className="text-[11px] opacity-80">
+    👤 {n.customerName}
+  </div>
+)}
+
+{n.plateNumber && (
+  <div className="text-[11px] opacity-80">
+    🔢 {n.plateNumber}
+  </div>
+)}
+
+{n.location && (
+  <div className="text-[11px] opacity-80">
+    📍 {n.location.lat}, {n.location.lng}
+  </div>
+)}
+
       {/* تفاصيل إضافية للريكوست */}
       {/* {n.isRequest && (
         <div className="space-y-1 mb-2">
@@ -301,10 +318,39 @@ connection.keepAliveIntervalInMilliseconds = 15000;
         <p className="text-[11px] opacity-60 mb-2">{n.message}</p>
       )}
 
-      {/* إخفاء الأزرار مؤقتاً للريكوستات، وإظهارها فقط للتذكيرات القديمة لو حابة */}
       {!n.isRequest && (
         <div className="flex gap-2">
-           {/* الأزرار القديمة كانت هنا، شيلناها مؤقتاً */}
+
+           <button
+      onClick={() => completeReminder(n.reminderId, i)}
+      className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition"
+    >
+      <FaCheck /> إتمام
+    </button>
+
+    {/* زرار تأجيل */}
+    <div className="relative">
+      <button
+        onClick={() => setActiveSnoozeIndex(i)}
+        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white transition"
+      >
+        <FaClock /> تأجيل
+      </button>
+
+      {activeSnoozeIndex === i && (
+        <div className="absolute right-0 mt-1 bg-white dark:bg-slate-800 shadow-lg rounded p-2 z-50">
+          {snoozeOptions.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => snoozeReminder(n.reminderId, opt.value, i)}
+              className="text-[10px] px-2 py-1 hover:bg-blue-100 dark:hover:bg-slate-700 cursor-pointer rounded"
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
         </div>
       )}
 
@@ -319,14 +365,14 @@ connection.keepAliveIntervalInMilliseconds = 15000;
 
           </div>
 
-          <button 
+          {/* <button 
             onClick={() => { setIsOpen(false); navigate("/customer/reminders"); }} 
             className={`w-full mt-3 py-2 text-[11px] font-bold rounded-lg transition-all ${
               dark ? "bg-blue-500/10 text-blue-400 hover:bg-blue-600 hover:text-white" : "bg-blue-50 text-blue-600"
             }`}
           >
             عرض سجل التنبيهات الكامل
-          </button>
+          </button> */}
         </div>
       )}
     </div>
