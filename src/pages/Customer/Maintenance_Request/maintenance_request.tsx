@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { MdImage, MdLocationOn } from "react-icons/md";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
-import MechanicSelection from "./mechanic_selection";
+// import StepProgress from "./step_progress";
+// import MechanicSelection from "./mechanic_selection";
 import { FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
@@ -20,19 +21,157 @@ const MaintenanceRequest = () => {
     const [issueDescription, setIssueDescription] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
+    const [requestId, setRequestId] = useState<string | null>(null);
 
     const [requestType, setRequestType] = useState(1); // Emergency=1, Scheduled=2
     const [serviceMode, setServiceMode] = useState(2); // MechanicComes=1, CustomerGoes=2
-    const [serviceType, setServiceType] = useState(1);
+    // const [serviceType, setServiceType] = useState(1);
+    const [serviceType, setServiceType] = useState<number | null>(null);
 
     const [scheduledDate, setScheduledDate] = useState("");
     const [scheduledTime, setScheduledTime] = useState("");
     const selectedCar = cars.find(c => c.id === selectedCarId);
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+    const [acceptedMechanics, setAcceptedMechanics] = useState<any[]>([]);
+
+
+    const [acceptedMechanicName, setAcceptedMechanicName] = useState<string | null>(null);
+
     useEffect(() => {
         console.log("LOCATION:", location);
     }, [location]);
+
+    // useEffect(() => {
+    //     const handleMechanicAccepted = () => {
+    //       const name = localStorage.getItem("accepted_mechanic_name");
+    //       if (name) {
+    //         setAcceptedMechanicName(name);
+    //       }
+    //     };
+      
+    //     window.addEventListener("mechanicAccepted", handleMechanicAccepted);
+      
+    //     // أول تحميل للصفحة
+    //     handleMechanicAccepted();
+      
+    //     return () => {
+    //       window.removeEventListener("mechanicAccepted", handleMechanicAccepted);
+    //     };
+    //   }, []);
+    useEffect(() => {
+        const handleMechanicAccepted = () => {
+          const stored = localStorage.getItem("accepted_mechanic");
+      
+          if (!stored) return;
+      
+          const parsed = JSON.parse(stored);
+      
+          // 👇 أهم شرط
+          if (parsed.requestId === requestId) {
+            setAcceptedMechanicName(parsed.name);
+          }
+        };
+      
+        window.addEventListener("mechanicAccepted", handleMechanicAccepted);
+      
+        handleMechanicAccepted();
+      
+        return () => {
+          window.removeEventListener("mechanicAccepted", handleMechanicAccepted);
+        };
+      }, [requestId]);
+
+    useEffect(() => {
+        const token = sessionStorage.getItem("userToken");
+    
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+
+            console.log("FULL PAYLOAD:", payload);
+            
+            const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+            
+            console.log("ROLE:", role);
+        }
+    }, []);
+
+
+
+    // useEffect(() => {
+        // if (!requestId || currentStep !== 2) return;
+        useEffect(() => {
+            if (!requestId) return;
+    
+        const token = sessionStorage.getItem("userToken");
+    
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(
+                    `https://gearupapp.runasp.net/api/requests/${requestId}/accepted-mechanics`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+    
+                // if (res.ok) {
+                //     const data = await res.json();
+                //     setAcceptedMechanics(data);
+                // }
+
+                if (res.ok) {
+                    // const data = await res.json();
+                
+                    // const mechanics = data.data || data; // 👈 handle both cases
+                
+                    // setAcceptedMechanics(mechanics);
+
+
+                    const data = await res.json();
+
+                    console.log("MECHANICS RESPONSE:", data);
+                    
+
+
+//  let mechanics: any[] = [];
+
+// if (Array.isArray(data)) {
+//   mechanics = data;
+// } else if (Array.isArray(data?.data)) {
+//   mechanics = data.data;
+// } else if (Array.isArray(data?.mechanics)) {
+//   mechanics = data.mechanics;
+// }
+
+// setAcceptedMechanics(mechanics);
+let mechanics: any[] = [];
+
+if (Array.isArray(data)) {
+  mechanics = data;
+} else if (Array.isArray(data?.mechanics)) {
+  mechanics = data.mechanics;
+} else if (Array.isArray(data?.data)) {
+  mechanics = data.data;
+}
+
+console.log("FINAL MECHANICS:", mechanics);
+
+setAcceptedMechanics(mechanics);
+
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }, 5000);
+    
+        return () => clearInterval(interval);
+    }, [requestId, currentStep]);
+
+
+
 
     const [gettingLocation, setGettingLocation] = useState(false);
 
@@ -53,6 +192,7 @@ const MaintenanceRequest = () => {
         const fetchCars = async () => {
             try {
                 const token = sessionStorage.getItem('userToken');
+                console.log("TOKEN:", token);
                 const response = await fetch("https://gearupapp.runasp.net/api/requests/cars", {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -112,7 +252,10 @@ const MaintenanceRequest = () => {
             if (imageFile) formData.append("ProblemPhoto", imageFile);
             formData.append("RequestType", requestType.toString());
             formData.append("ServiceMode", serviceMode.toString());
-            formData.append("ServiceType", serviceType.toString());
+            // formData.append("ServiceType", serviceType.toString());
+            if (serviceType !== null) {
+                formData.append("ServiceType", serviceType.toString());
+            }
     
             if (requestType === 2) {
                 formData.append("ScheduledDate", scheduledDate);
@@ -120,9 +263,14 @@ const MaintenanceRequest = () => {
             }
     
             if (location) {
-                formData.append("Latitude", location.lat.toString());
-                formData.append("Longitude", location.lng.toString());
+                // formData.append("Latitude", location.lat.toString());
+                // formData.append("Longitude", location.lng.toString());
+                formData.append("Location", JSON.stringify({
+                    latitude: location.lat,
+                    longitude: location.lng
+                  }));
             }
+
     
             const response = await fetch("https://gearupapp.runasp.net/api/requests", {
                 method: 'POST',
@@ -133,6 +281,12 @@ const MaintenanceRequest = () => {
             
             if (response.ok) {
                 const responseData = await response.json();
+
+localStorage.removeItem("accepted_mechanic");
+setAcceptedMechanicName(null);
+
+                console.log("FULL RESPONSE:", responseData);
+
                 const selectedCar = cars.find(c => c.id === selectedCarId);
             
                 const newNotification = {
@@ -140,10 +294,11 @@ const MaintenanceRequest = () => {
                     isRequest: true,
                     carName: `${selectedCar?.brand} ${selectedCar?.model}`,
                     requestDetail: requestType === 1 
-                        ? (serviceMode === 1 ? "الوضع: ميكانيكي متنقل إليك" : "الوضع: ذهاب للورشة")
+                    ? (serviceMode === 1 ? "طريقة تلقي الخدمة: ميكانيكي متنقل إليك" : "طريقة تلقي الخدمة: ذهاب للورشة")
                         : `الموعد: ${scheduledDate} الساعة ${scheduledTime}`,
                     description: issueDescription,
                     time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
+                    // requestId: responseData.id || "N/A"
                     requestId: responseData.id || "N/A"
                 };
             
@@ -153,10 +308,19 @@ const MaintenanceRequest = () => {
             
                 window.dispatchEvent(new Event("storage"));
             
+            
+                // setRequestId(responseData.requestId);
+
+//                 setRequestId(responseData.id);
+// console.log("REQUEST ID AFTER SET:", responseData.requestId);
+
+setRequestId(responseData.requestId || responseData.id);
+console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
+
                 Swal.fire("تم إرسال طلبك بنجاح ");
             
                 // ✅ الانتقال التلقائي للخطوة 2
-                setCurrentStep(2);
+                 setCurrentStep(2);
             }
 
             else {
@@ -168,6 +332,35 @@ const MaintenanceRequest = () => {
             setLoading(false);
         }
     };
+
+
+    const handleSelectMechanic = async (mechanicUserId: string) => {
+        try {
+          const token = sessionStorage.getItem("userToken");
+      
+          const res = await fetch(
+            `https://gearupapp.runasp.net/api/requests/${requestId}/select-mechanic/${mechanicUserId}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+      
+          if (res.ok) {
+            Swal.fire("تم اختيار الميكانيكي بنجاح ✅");
+          } else {
+            Swal.fire("خطأ", "فشل اختيار الميكانيكي", "error");
+          }
+        } catch (err) {
+          console.error(err);
+          Swal.fire("خطأ", "مشكلة في الاتصال", "error");
+        }
+      };
+
+
+
 
     return (
         <div className="flex min-h-screen dark:bg-primary_BGD bg-gray-50" dir="rtl">
@@ -267,15 +460,7 @@ const MaintenanceRequest = () => {
                                     <div className={`relative w-full h-64 rounded-[25px] overflow-hidden border-2 transition-all duration-500 ${location ? 'border-blue-500 shadow-lg' : 'border-dashed border-blue-500/20 bg-gray-50 dark:bg-gray-800'}`}>
                                         {location ? (
                                             <>
-                                                {/* {isLoaded && (
-                                                    <GoogleMap
-                                                        mapContainerStyle={{ width: "100%", height: "100%" }}
-                                                        center={location}
-                                                        zoom={15}
-                                                    >
-                                                        <Marker position={location} />
-                                                    </GoogleMap>
-                                                )} */}
+                                            
 
 {isLoaded && location && (
   <GoogleMap
@@ -347,7 +532,68 @@ const MaintenanceRequest = () => {
                         </div>
                     ) : (
                         <div className="animate-in slide-in-from-left duration-500">
-                            <MechanicSelection technicians={[]} />
+
+
+<div className="mb-6">
+
+
+{acceptedMechanics.length > 0 ? (
+  <div className="space-y-4">
+    <h2 className="font-bold text-lg dark:text-white">
+      الميكانيكيين الذين قبلوا الطلب
+    </h2>
+
+
+{acceptedMechanics.map((m: any) => (
+  <div
+    key={m.mechanicUserId}
+    className="w-full max-w-md bg-white dark:bg-[#1F2937] rounded-2xl shadow-lg border border-blue-500/10 p-4"
+  >
+    {/* Header */}
+    <div className="flex items-center gap-3">
+      <img
+        src={m.profilePhotoUrl}
+        alt="mechanic"
+        className="w-12 h-12 rounded-full object-cover border"
+      />
+
+      <div className="text-right flex-1">
+        <p className="dark:text-white font-bold text-sm">
+          👨‍🔧 {m.firstName} {m.lastName}
+        </p>
+
+        <p className="text-xs text-gray-500">
+          📞 {m.phoneNumber}
+        </p>
+      </div>
+    </div>
+
+    {/* Status */}
+    <p className="text-green-500 text-xs mt-3 font-bold text-right">
+      تم قبول الطلب ✅
+    </p>
+
+    {/* Button */}
+    <button
+      onClick={() => handleSelectMechanic(m.mechanicUserId)}
+      className="mt-4 w-full bg-[#137FEC] hover:bg-blue-600 text-white py-2 rounded-xl text-sm font-bold transition-all"
+    >
+      اختيار الميكانيكي
+    </button>
+  </div>
+))}
+
+  </div>
+) 
+
+: (
+  <p className="text-gray-500">في انتظار قبول ميكانيكي...</p>
+)}
+
+        </div>
+
+
+                            {/* <MechanicSelection /> */}
                             <div className="flex justify-between mt-10">
                                 <button onClick={() => setCurrentStep(1)} className="bg-gray-700 text-white px-12 py-3 rounded-xl font-bold">رجوع</button>
                                 <button onClick={handleSubmitRequest} disabled={loading} className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold shadow-xl">

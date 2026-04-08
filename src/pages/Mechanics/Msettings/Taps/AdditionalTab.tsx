@@ -165,9 +165,29 @@ const AdditionalTab = () => {
       //   }
       // );
 
+      // await axios.post(
+      //   "https://gearupapp.runasp.net/api/mechanic/profile",
+      //   data,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //       "Content-Type": "application/json"
+      //     }
+      //   }
+      // );
       await axios.post(
-        "https://gearupapp.runasp.net/api/mechanic/profile",
-        data,
+        "http://gearupapp.runasp.net/api/mechanics/complete-profile",
+        {
+          location: data.location,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          mainSpecialty: data.mainSpecialty,
+          subSpecialty: data.subSpecialty,
+          fieldVisit: data.fieldVisit,
+          workingHoursFrom: data.workingHoursFrom,
+          workingHoursTo: data.workingHoursTo,
+          experience: data.experience
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,

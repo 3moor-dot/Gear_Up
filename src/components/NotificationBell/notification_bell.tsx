@@ -8,7 +8,6 @@ import axios from "axios";
 import toast from 'react-hot-toast';
 
 const NotificationBell = ({ size = 25 }) => {
-  // console.log("🔔 NotificationBell Mounted");
 
   const { dark } = useTheme();
   const navigate = useNavigate();
@@ -18,6 +17,55 @@ const NotificationBell = ({ size = 25 }) => {
   const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(null);
 
   const token = sessionStorage.getItem("userToken");
+  // const userData = JSON.parse(sessionStorage.getItem("userData") || "null");
+  // const role = userData?.role;
+  // console.log("ROLE:", role);
+  let role = null;
+
+try {
+  const token = sessionStorage.getItem("userToken");
+
+
+  if (token) {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+
+      role =
+        payload?.[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+    }
+  }
+} catch (error) {
+  console.error("JWT parse error:", error);
+}
+
+
+
+
+let userName = null;
+
+try {
+  const token = sessionStorage.getItem("userToken");
+
+  if (token) {
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+
+      userName =
+        payload?.[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+        ];
+    }
+  }
+} catch (error) {
+  console.error("JWT parse error:", error);
+}
+
+
+console.log("ROLE:", role);
 
   const getStorageKey = () => {
     if (!token) return "guest_notifications";
@@ -95,6 +143,38 @@ const NotificationBell = ({ size = 25 }) => {
     }
   };
 
+
+  const handleAccept = async (requestId: string, index: number) => {
+    try {
+      await axios.post(
+        `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/accept`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      toast.success("تم قبول الطلب ✅");
+      removeNotificationFromList(index);
+    } catch (error) {
+      toast.error("فشل قبول الطلب ❌");
+    }
+  };
+  
+  const handleReject = async (requestId: string, index: number) => {
+    try {
+      await axios.post(
+        `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/reject`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      toast.success("تم رفض الطلب ❌");
+      removeNotificationFromList(index);
+    } catch (error) {
+      toast.error("فشل رفض الطلب ❌");
+    }
+  };
+
+
   useEffect(() => {
     if (!token) return;
   
@@ -138,6 +218,7 @@ connection.keepAliveIntervalInMilliseconds = 15000;
         const newNotification = {
           title: "طلب صيانة جديد 🛠️",
           isRequest: true,
+          requestId: data.requestId,
     
           carName: data.car?.brand && data.car?.model && data.car?.year
   ? `${data.car.brand} ${data.car.model} ${data.car.year}`
@@ -171,6 +252,93 @@ location: data.location
     
       triggerShake();
     });
+
+
+connection.on("MechanicAccepted", async (data) => {
+  console.log("MECHANIC DATA FULL:", data);
+
+  let mechanicName = "ميكانيكي";
+
+  try {
+    const res = await axios.get(
+      `https://gearupapp.runasp.net/api/requests/${data.serviceRequestId}/accepted-mechanics`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    console.log("MECHANICS RESPONSE FULL:", res.data);
+
+    const mechanic = res.data?.mechanics?.find(
+      (m: any) => m.mechanicUserId === data.mechanicUserId
+    );
+
+    if (mechanic) {
+      mechanicName = `${mechanic.firstName} ${mechanic.lastName}`;
+    }
+
+  } catch (error) {
+    console.error("Error fetching mechanic:", error);
+  }
+
+
+  // localStorage.setItem("accepted_mechanic_name", mechanicName);
+  localStorage.setItem(
+    "accepted_mechanic",
+    JSON.stringify({
+      requestId: data.serviceRequestId,
+      name: mechanicName
+    })
+  );
+  window.dispatchEvent(new Event("mechanicAccepted"));
+
+
+  const newNotification = {
+    title: "تم قبول طلبك 🎉",
+    message: `تم قبول الطلب بواسطة الميكانيكي ${mechanicName} 🛠️`,
+    mechanicName: mechanicName, // 👈 مهم جدا
+    requestId: data.serviceRequestId,
+    time: new Date().toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  };
+
+
+  const storageKey = getStorageKey();
+  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+  const updated = [newNotification, ...saved];
+  localStorage.setItem(storageKey, JSON.stringify(updated));
+
+  setNotifications(updated);
+  triggerShake();
+});
+
+
+connection.on("YouAreSelected", (data: any) => {
+  console.log("🎉 MechanicSelected:", data);
+
+  const newNotification = {
+    title: "تم اختيارك 🎉",
+    // message: data.message || "تم اختيارك لتنفيذ الطلب",
+    message: "تم اختيارك من قبل العميل. ",
+    requestId: data.requestId,
+    time: new Date().toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  };
+
+  const storageKey = getStorageKey();
+  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
+  const updated = [newNotification, ...saved];
+  localStorage.setItem(storageKey, JSON.stringify(updated));
+
+  setNotifications(updated);
+  triggerShake();
+});
+
+  
 
     const startConnection = async () => {
       try {
@@ -254,7 +422,6 @@ location: data.location
 <div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
 
 
-
 {notifications.length > 0 ? notifications.map((n, i) => (
   <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
     dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"
@@ -262,6 +429,21 @@ location: data.location
     <div className="flex-1 min-w-0 text-right">
       <div className="flex justify-between items-start mb-1">
         <h4 className="font-bold text-[12px] text-blue-400">{n.title}</h4>
+
+
+        {n.requestTitle && (
+  <div className="text-[11px] font-bold mb-1 text-blue-500">
+    🛠️ {n.requestTitle}
+  </div>
+)}
+
+{n.requestDescription && (
+  <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
+    {n.requestDescription}
+  </p>
+)}
+
+
         <button onClick={() => removeNotificationFromList(i)} className="text-slate-600 hover:text-red-400">
           <FaTimes size={10} />
         </button>
@@ -292,24 +474,42 @@ location: data.location
   </div>
 )}
 
-      {/* تفاصيل إضافية للريكوست */}
-      {/* {n.isRequest && (
-        <div className="space-y-1 mb-2">
-          <p className="text-[10px] opacity-80">🛠️ نوع الخدمة: <span className="font-bold">{n.serviceType}</span></p>
-          <p className="text-[10px] opacity-80">📍 الوضع: <span className="font-bold">{n.mode}</span></p>
-          <p className="text-[10px] bg-blue-500/10 p-1.5 rounded italic">"{n.description}"</p>
-        </div>
-      )} */}
-      {/* تفاصيل إضافية للريكوست */}
+
 {n.isRequest && (
-  <div className="space-y-1 mb-2">
-    {/* هنا هيعرض "الوضع: متنقل" أو "الموعد: 2026-03-28 الساعة 10:00" تلقائياً */}
+  <div className="space-y-2 mb-2">
+
+    {/* تفاصيل الطلب تظهر للجميع */}
     <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
       {n.requestDetail}
     </p>
+
     <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
       {n.description}
     </p>
+
+    {/* الأزرار تظهر فقط للميكانيكي */}
+    {/* {role === 2 && ( */}
+    {/* {String(role) === "2" && ( */}{role === "Mechanic" && (
+
+      <div className="flex gap-2 mt-2">
+
+        <button
+          onClick={() => handleAccept(n.requestId, i)}
+          className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
+        >
+          قبول
+        </button>
+
+        <button
+          onClick={() => handleReject(n.requestId, i)}
+          className="flex-1 text-[11px] py-1 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition font-bold"
+        >
+          رفض
+        </button>
+
+      </div>
+    )}
+
   </div>
 )}
 
@@ -318,41 +518,6 @@ location: data.location
         <p className="text-[11px] opacity-60 mb-2">{n.message}</p>
       )}
 
-      {!n.isRequest && (
-        <div className="flex gap-2">
-
-           <button
-      onClick={() => completeReminder(n.reminderId, i)}
-      className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition"
-    >
-      <FaCheck /> إتمام
-    </button>
-
-    {/* زرار تأجيل */}
-    <div className="relative">
-      <button
-        onClick={() => setActiveSnoozeIndex(i)}
-        className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white transition"
-      >
-        <FaClock /> تأجيل
-      </button>
-
-      {activeSnoozeIndex === i && (
-        <div className="absolute right-0 mt-1 bg-white dark:bg-slate-800 shadow-lg rounded p-2 z-50">
-          {snoozeOptions.map((opt) => (
-            <div
-              key={opt.value}
-              onClick={() => snoozeReminder(n.reminderId, opt.value, i)}
-              className="text-[10px] px-2 py-1 hover:bg-blue-100 dark:hover:bg-slate-700 cursor-pointer rounded"
-            >
-              {opt.label}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-        </div>
-      )}
 
       <span className="text-[8px] mt-2 opacity-30 block font-mono">{n.time}</span>
     </div>
@@ -360,8 +525,6 @@ location: data.location
 )) : (
   <div className="text-center py-6 opacity-30 text-[11px]">لا توجد تنبيهات</div>
 )}
-
-
 
           </div>
 
