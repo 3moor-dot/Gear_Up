@@ -127,7 +127,8 @@ const MachineSidebar: React.FC = () => {
 const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, dark, to, closeSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isActive = to ? location.pathname === to : false;
+  // const isActive = to ? location.pathname === to : false;
+  const isActive = to ? location.pathname.startsWith(to) : false;
 
   return (
     <div

@@ -33,6 +33,7 @@ import MaintenanceReminders from "./pages/Customer/Reminder/maintenance_reminder
 import ServiceHistory from "./pages/Customer/service_history";
 import ProfileSettings from "./pages/Customer/Profile_Settings/profile_settings";
 import MaintenanceRequest from "./pages/Customer/Maintenance_Request/maintenance_request";
+import RequestTracking from "./pages/Customer/Maintenance_Request/request_tracking";
 import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenance_bookings";
 import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
@@ -44,6 +45,7 @@ import Schedule from "./pages/Mechanics/Schedule/Schedule";
 import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
+import MRequestTracking from "./pages/Mechanics/Request/Mrequest_tracking";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 const App: React.FC = () => {
@@ -91,7 +93,6 @@ const App: React.FC = () => {
 />
 
 
-
       <Router>
         <Routes>
           {/* CUSTOMER PAGES */}
@@ -105,6 +106,8 @@ const App: React.FC = () => {
           <Route path="/reschedule-booking" element={<RescheduleModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/cancel-booking" element={<CancelBookingModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/customer/chatbot" element={<Chatbot />} />
+          <Route path="/customer/maintenance_request/request_tracking/:requestId" element={<RequestTracking />} />
+
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
@@ -120,6 +123,7 @@ const App: React.FC = () => {
           <Route path="/mechanics/booking/mbookingdetails/:id"element={<MBookingDetails />}/>
           <Route path="/mechanics/mprofile" element={<Mprofile />} />
           <Route path="/mechanics/machineprofile" element={<Mechine_profile  />} />
+          <Route path="/mechanics/request/mrequest_tracking/:requestId" element={<MRequestTracking />} />
 
           <Route path="/notification" element={<Notification />} />
           {/* ADMIN PAGES */}

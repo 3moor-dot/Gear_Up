@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { FaBell, FaTimes, FaCheck, FaClock, FaChevronDown } from "react-icons/fa";
+import { FaBell, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
@@ -17,29 +17,29 @@ const NotificationBell = ({ size = 25 }) => {
   const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(null);
 
   const token = sessionStorage.getItem("userToken");
-  // const userData = JSON.parse(sessionStorage.getItem("userData") || "null");
-  // const role = userData?.role;
-  // console.log("ROLE:", role);
-  let role = null;
 
-try {
-  const token = sessionStorage.getItem("userToken");
+  const [role, setRole] = useState<string | null>(null);
 
+useEffect(() => {
+  try {
+    const token = sessionStorage.getItem("userToken");
+    if (token) {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
 
-  if (token) {
-    const parts = token.split(".");
-    if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1]));
+        const r =
+          payload[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          ];
 
-      role =
-        payload?.[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
+        setRole(r);
+      }
     }
+  } catch (error) {
+    console.error(error);
   }
-} catch (error) {
-  console.error("JWT parse error:", error);
-}
+}, []);
 
 
 
@@ -145,6 +145,7 @@ console.log("ROLE:", role);
 
 
   const handleAccept = async (requestId: string, index: number) => {
+    console.log("ACCEPT CLICK requestId:", requestId);
     try {
       await axios.post(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/accept`,
@@ -208,50 +209,57 @@ connection.keepAliveIntervalInMilliseconds = 15000;
       triggerShake();
     });
 
- 
-    connection.on("ReceiveServiceRequest", (data: any) => {
-      console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
-      // console.log("🚨 طلب صيانة جديد وصل للميكانيكي! 🚨", data);
-      
-      setNotifications((oldNotifications) => {
-      
-        const newNotification = {
-          title: "طلب صيانة جديد 🛠️",
-          isRequest: true,
-          requestId: data.requestId,
-    
-          carName: data.car?.brand && data.car?.model && data.car?.year
-  ? `${data.car.brand} ${data.car.model} ${data.car.year}`
-  : "سيارة غير محددة",
+connection.on("ReceiveServiceRequest", (data: any) => {
+  console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
 
-plateNumber: data.car?.plateNumber || "غير متوفر",
+  const formattedDate = data.scheduledDateTime
+    ? new Date(data.scheduledDateTime).toLocaleString("ar-EG")
+    : `${data.scheduledDate || ""} ${data.scheduledTime || ""}`;
 
-location: data.location
-  ? {
-      lat: data.location.latitude,
-      lng: data.location.longitude
-    }
-  : null,
-    
-          requestDetail: data.requestType === 1
-            ? "طلب طارئ 🚨"
-            : `موعد مجدول: ${data.scheduledDate}`,
-    
-          description: data.issueDescription,
-    
-          time: new Date().toLocaleTimeString("ar-EG", {
-            hour: "2-digit",
-            minute: "2-digit"
-          })
-        };
-    
-        const updated = [newNotification, ...oldNotifications];
-        localStorage.setItem(getStorageKey(), JSON.stringify(updated));
-        return updated;
-      });
-    
-      triggerShake();
-    });
+  setNotifications((oldNotifications) => {
+
+    const newNotification = {
+      title: "طلب صيانة جديد 🛠️",
+      isRequest: true,
+      requestId: data.requestId || data.serviceRequestId,
+      scheduledDateTime: data.scheduledDateTime,
+
+      carName:
+        data.car?.brand && data.car?.model && data.car?.year
+          ? `${data.car.brand} ${data.car.model} ${data.car.year}`
+          : "سيارة غير محددة",
+
+      plateNumber: data.car?.plateNumber || "غير متوفر",
+
+      location: data.location
+        ? {
+            lat: data.location.latitude,
+            lng: data.location.longitude
+          }
+        : null,
+
+  requestDetail:
+  data.requestType === "Emergency"
+    ? "طلب طارئ 🚨"
+    : data.requestType === "Scheduled"
+    ? "طلب مجدول 📅"
+    : "طلب صيانة",
+
+      description: data.issueDescription,
+
+      time: new Date().toLocaleTimeString("ar-EG", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    };
+
+    const updated = [newNotification, ...oldNotifications];
+    localStorage.setItem(getStorageKey(), JSON.stringify(updated));
+    return updated;
+  });
+
+  triggerShake();
+});
 
 
 connection.on("MechanicAccepted", async (data) => {
@@ -295,7 +303,8 @@ connection.on("MechanicAccepted", async (data) => {
     title: "تم قبول طلبك 🎉",
     message: `تم قبول الطلب بواسطة الميكانيكي ${mechanicName} 🛠️`,
     mechanicName: mechanicName, // 👈 مهم جدا
-    requestId: data.serviceRequestId,
+    // requestId: data.serviceRequestId,
+    requestId: data.requestId || data.serviceRequestId,
     time: new Date().toLocaleTimeString("ar-EG", {
       hour: "2-digit",
       minute: "2-digit"
@@ -315,14 +324,18 @@ connection.on("MechanicAccepted", async (data) => {
 
 
 connection.on("YouAreSelected", (data: any) => {
+  console.log("NOTIFICATION DATA:", data);
   console.log("🎉 MechanicSelected:", data);
 
   const newNotification = {
     title: "تم اختيارك 🎉",
     // message: data.message || "تم اختيارك لتنفيذ الطلب",
     message: "تم اختيارك من قبل العميل. ",
-    requestId: data.requestId,
-    time: new Date().toLocaleTimeString("ar-EG", {
+    requestId: data.serviceRequestId,
+    hasTracking: true,
+    isRequest: true,
+    isSelected: true, 
+  time: new Date().toLocaleTimeString("ar-EG", {
       hour: "2-digit",
       minute: "2-digit"
     })
@@ -338,7 +351,6 @@ connection.on("YouAreSelected", (data: any) => {
   triggerShake();
 });
 
-  
 
     const startConnection = async () => {
       try {
@@ -422,27 +434,14 @@ connection.on("YouAreSelected", (data: any) => {
 <div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
 
 
-{notifications.length > 0 ? notifications.map((n, i) => (
+      {notifications.length > 0 ? notifications.map((n, i) => (
   <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
     dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"
   }`}>
+    
     <div className="flex-1 min-w-0 text-right">
       <div className="flex justify-between items-start mb-1">
         <h4 className="font-bold text-[12px] text-blue-400">{n.title}</h4>
-
-
-        {n.requestTitle && (
-  <div className="text-[11px] font-bold mb-1 text-blue-500">
-    🛠️ {n.requestTitle}
-  </div>
-)}
-
-{n.requestDescription && (
-  <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
-    {n.requestDescription}
-  </p>
-)}
-
 
         <button onClick={() => removeNotificationFromList(i)} className="text-slate-600 hover:text-red-400">
           <FaTimes size={10} />
@@ -478,23 +477,44 @@ connection.on("YouAreSelected", (data: any) => {
 {n.isRequest && (
   <div className="space-y-2 mb-2">
 
-    {/* تفاصيل الطلب تظهر للجميع */}
-    <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
-      {n.requestDetail}
-    </p>
+    {/* لو تم اختيار الميكانيكي */}
+    {n.requestId && n.title?.includes("تم اختيارك") && (
+      <div className="text-[11px] bg-green-500/10 border-r-2 border-green-500 p-2 rounded-lg text-green-500 font-bold">
+        {n.message}
+      </div>
+    )}
 
-    <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
-      {n.description}
-    </p>
+    {/* زر التتبع فقط */}
+    {n.hasTracking && role?.toLowerCase() === "mechanic" && (
+      <button
 
-    {/* الأزرار تظهر فقط للميكانيكي */}
-    {/* {role === 2 && ( */}
-    {/* {String(role) === "2" && ( */}{role === "Mechanic" && (
 
+        onClick={() => {
+          console.log("Navigating with requestId:", n.requestId);
+          navigate(`/mechanics/request/mrequest_tracking/${n.requestId}`);
+        }}
+
+
+        className="mt-2 w-full bg-blue-500 text-white py-1 rounded text-xs"
+      >
+        تتبع الطلب
+      </button>
+    )}
+
+    {/* أزرار قبول/رفض تظهر فقط لو مش "تم اختيارك" */}
+    {role?.toLowerCase() === "mechanic" && !n.hasTracking && (
       <div className="flex gap-2 mt-2">
 
         <button
-          onClick={() => handleAccept(n.requestId, i)}
+          // onClick={() => handleAccept(n.requestId, i)}
+          onClick={() => {
+            if (!n.requestId) {
+              console.error("Missing requestId", n);
+              toast.error("requestId غير موجود");
+              return;
+            }
+            handleAccept(n.requestId, i);
+          }}
           className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
         >
           قبول
@@ -509,6 +529,19 @@ connection.on("YouAreSelected", (data: any) => {
 
       </div>
     )}
+
+    <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
+      {n.requestDetail}
+    </p>
+    {n.scheduledDateTime && (
+  <div className="text-[11px] opacity-80 mt-1">
+   {new Date(n.scheduledDateTime).toLocaleString("ar-EG")}
+  </div>
+  )}
+
+    <p className="text-[10px] bg-blue-500/10 p-2 rounded-lg italic border-r-2 border-blue-400">
+      {n.description}
+    </p>
 
   </div>
 )}

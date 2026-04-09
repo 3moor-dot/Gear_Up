@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MdImage, MdLocationOn } from "react-icons/md";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
-// import StepProgress from "./step_progress";
-// import MechanicSelection from "./mechanic_selection";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
+
 const MaintenanceRequest = () => {
+    const { dark } = useTheme();
     const [currentStep, setCurrentStep] = useState(1);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -38,27 +40,14 @@ const MaintenanceRequest = () => {
 
     const [acceptedMechanicName, setAcceptedMechanicName] = useState<string | null>(null);
 
+
+    const navigate = useNavigate();
+
     useEffect(() => {
         console.log("LOCATION:", location);
     }, [location]);
 
-    // useEffect(() => {
-    //     const handleMechanicAccepted = () => {
-    //       const name = localStorage.getItem("accepted_mechanic_name");
-    //       if (name) {
-    //         setAcceptedMechanicName(name);
-    //       }
-    //     };
-      
-    //     window.addEventListener("mechanicAccepted", handleMechanicAccepted);
-      
-    //     // أول تحميل للصفحة
-    //     handleMechanicAccepted();
-      
-    //     return () => {
-    //       window.removeEventListener("mechanicAccepted", handleMechanicAccepted);
-    //     };
-    //   }, []);
+
     useEffect(() => {
         const handleMechanicAccepted = () => {
           const stored = localStorage.getItem("accepted_mechanic");
@@ -97,11 +86,9 @@ const MaintenanceRequest = () => {
     }, []);
 
 
-
-    // useEffect(() => {
-        // if (!requestId || currentStep !== 2) return;
         useEffect(() => {
-            if (!requestId) return;
+            // if (!requestId) return;
+            if (!requestId || currentStep !== 2) return;
     
         const token = sessionStorage.getItem("userToken");
     
@@ -116,36 +103,15 @@ const MaintenanceRequest = () => {
                     }
                 );
     
-                // if (res.ok) {
-                //     const data = await res.json();
-                //     setAcceptedMechanics(data);
-                // }
+
 
                 if (res.ok) {
-                    // const data = await res.json();
-                
-                    // const mechanics = data.data || data; // 👈 handle both cases
-                
-                    // setAcceptedMechanics(mechanics);
-
 
                     const data = await res.json();
 
                     console.log("MECHANICS RESPONSE:", data);
                     
 
-
-//  let mechanics: any[] = [];
-
-// if (Array.isArray(data)) {
-//   mechanics = data;
-// } else if (Array.isArray(data?.data)) {
-//   mechanics = data.data;
-// } else if (Array.isArray(data?.mechanics)) {
-//   mechanics = data.mechanics;
-// }
-
-// setAcceptedMechanics(mechanics);
 let mechanics: any[] = [];
 
 if (Array.isArray(data)) {
@@ -169,7 +135,6 @@ setAcceptedMechanics(mechanics);
     
         return () => clearInterval(interval);
     }, [requestId, currentStep]);
-
 
 
 
@@ -250,9 +215,10 @@ setAcceptedMechanics(mechanics);
             formData.append("CarId", selectedCarId!);
             formData.append("IssueDescription", issueDescription);
             if (imageFile) formData.append("ProblemPhoto", imageFile);
+          
             formData.append("RequestType", requestType.toString());
+              
             formData.append("ServiceMode", serviceMode.toString());
-            // formData.append("ServiceType", serviceType.toString());
             if (serviceType !== null) {
                 formData.append("ServiceType", serviceType.toString());
             }
@@ -290,7 +256,14 @@ setAcceptedMechanicName(null);
                 const selectedCar = cars.find(c => c.id === selectedCarId);
             
                 const newNotification = {
-                    title: requestType === 1 ? "طلب صيانة طارئ 🚨" : "طلب صيانة مجدول 📅",
+  
+title:
+  requestType === 1
+    ? "طلب صيانة طارئ 🚨"
+    : requestType === 2
+    ? "طلب صيانة مجدول 📅"
+    : "طلب صيانة",
+
                     isRequest: true,
                     carName: `${selectedCar?.brand} ${selectedCar?.model}`,
                     requestDetail: requestType === 1 
@@ -309,16 +282,19 @@ setAcceptedMechanicName(null);
                 window.dispatchEvent(new Event("storage"));
             
             
-                // setRequestId(responseData.requestId);
+const newRequestId = responseData.requestId || responseData.id;
 
-//                 setRequestId(responseData.id);
-// console.log("REQUEST ID AFTER SET:", responseData.requestId);
-
-setRequestId(responseData.requestId || responseData.id);
+setRequestId(newRequestId);
 console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
 
-                Swal.fire("تم إرسال طلبك بنجاح ");
-            
+                // Swal.fire("تم إرسال طلبك بنجاح ");
+                Swal.fire({
+                    title: "تم إرسال طلبك بنجاح",
+                    icon: "success",
+                    background: dark ? "#0B1220" : "#ffffff",
+                    color: dark ? "#ffffff" : "#1f2937",
+                    confirmButtonColor: "#137FEC"
+                  });
                 // ✅ الانتقال التلقائي للخطوة 2
                  setCurrentStep(2);
             }
@@ -350,6 +326,11 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
       
           if (res.ok) {
             Swal.fire("تم اختيار الميكانيكي بنجاح ✅");
+            console.log("NAVIGATING WITH ID:", requestId);
+            // ✅ هنا بقى التنقل
+            if (requestId) {
+            navigate(`/Customer/Maintenance_request/request_tracking/${requestId}`);}
+      
           } else {
             Swal.fire("خطأ", "فشل اختيار الميكانيكي", "error");
           }
@@ -358,7 +339,6 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
           Swal.fire("خطأ", "مشكلة في الاتصال", "error");
         }
       };
-
 
 
 
@@ -534,8 +514,8 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
                         <div className="animate-in slide-in-from-left duration-500">
 
 
-<div className="mb-6">
-
+{/* <div className="mb-6"> */}
+<div className="mb-6 mt-6 w-full text-right">
 
 {acceptedMechanics.length > 0 ? (
   <div className="space-y-4">
@@ -590,17 +570,22 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
   <p className="text-gray-500">في انتظار قبول ميكانيكي...</p>
 )}
 
+   </div>
+
+
+<div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-primary_BGD border-t border-gray-200 dark:border-gray-700 z-50">
+  <div className="max-w-5xl mx-auto flex justify-start">
+    <button
+      onClick={() => setCurrentStep(1)}
+      className="bg-gray-700 text-white px-8 py-3 rounded-xl font-bold w-full md:w-auto"
+    >
+      رجوع
+    </button>
+  </div>
+</div>
+
         </div>
-
-
-                            {/* <MechanicSelection /> */}
-                            <div className="flex justify-between mt-10">
-                                <button onClick={() => setCurrentStep(1)} className="bg-gray-700 text-white px-12 py-3 rounded-xl font-bold">رجوع</button>
-                                <button onClick={handleSubmitRequest} disabled={loading} className="bg-[#137FEC] text-white px-12 py-3 rounded-xl font-bold shadow-xl">
-                                    {loading ? "جاري الإرسال..." : "تأكيد الطلب"}
-                                </button>
-                            </div>
-                        </div>
+                     
                     )}
                 </main>
             </div>
