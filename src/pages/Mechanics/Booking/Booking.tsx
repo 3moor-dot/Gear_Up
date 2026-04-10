@@ -1,87 +1,83 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+ 
+import { useState, useEffect } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaSearch } from "react-icons/fa";
 
+// Types
+interface Booking {
+  id: string;
+  customerId: string;
+  mechanicId: string;
+  carId: string;
+  subSpecializationId: string;
+  customerName: string;
+  mechanicName: string;
+  carInfo: string;
+  subSpecializationName: string;
+  date: string;
+  slotStart: string;
+  slotEnd: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 const Booking = () => {
   const { dark } = useTheme();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // البيانات التجريبية
-  const allBookings = [
-    {
-      id: 1,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "new",
-    },
-    {
-      id: 2,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "new",
-    },
-    {
-      id: 3,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "new",
-    },
-    {
-      id: 4,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "pending",
-    },
-    {
-      id: 5,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "confirmed",
-    },
-    {
-      id: 6,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "confirmed",
-    },
-    {
-      id: 7,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "confirmed",
-    },
-    {
-      id: 8,
-      client: "Alice Martin",
-      car: "Toyota Camry",
-      service: "Oil Change",
-      date: "Oct 26, 2:00 PM",
-      status: "confirmed",
-    },
-  ];
+  const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
-  // حساب العدد الفعلي لكل حالة
+  // Fetch all bookings
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const token = sessionStorage.getItem("userToken");
+        const response = await fetch(
+          "https://gearupapp.runasp.net/api/bookings/mechanic/my",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!response.ok) throw new Error(`فشل في تحميل البيانات (${response.status})`);
+        const data: Booking[] = await response.json();
+        setAllBookings(data);
+      } catch (err: any) {
+        setError(err.message || "حدث خطأ أثناء تحميل الحجوزات");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
+
+  // تم إضافة حالات إضافية لضمان شمولية التعريب
+  const statusMap: Record<string, { label: string; tabLabel: string }> = {
+    Pending: { label: "في انتظار الموافقة", tabLabel: "في انتظار" },
+    Confirmed: { label: "موافقة", tabLabel: "موافقة" },
+    Accepted: { label: "موافقة", tabLabel: "موافقة" }, // حالة إضافية محتملة
+    Cancelled: { label: "ملغي", tabLabel: "ملغي" },
+    Rejected: { label: "مرفوض", tabLabel: "مرفوض" }, // حالة إضافية محتملة
+    Completed: { label: "مكتمل", tabLabel: "مكتمل" },
+  };
+
+  const uniqueStatuses = [...new Set(allBookings.map((b) => b.status))];
+
   const getCount = (status: string) => {
     if (status === "all") return allBookings.length;
     return allBookings.filter((b) => b.status === status).length;
@@ -89,170 +85,226 @@ const Booking = () => {
 
   const tabs = [
     { id: "all", label: "الجميع", count: getCount("all") },
-    { id: "new", label: "جديد", count: getCount("new") },
-    { id: "pending", label: "في انتظار الموافقة", count: getCount("pending") },
-    { id: "confirmed", label: "موافقة", count: getCount("confirmed") },
+    ...uniqueStatuses.map((s) => ({
+      id: s,
+      label: statusMap[s]?.tabLabel || s, // استخدام التسمية العربية أو القيمة الأصلية كحل أخير
+      count: getCount(s),
+    })),
   ];
 
-  // تصفية البيانات حسب التاب والبحث
-  const filteredBookings = allBookings.filter((booking) => {
-    const matchesTab = activeTab === "all" || booking.status === activeTab;
-    const matchesSearch =
-      booking.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.car.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
-
-  // الانتقال لصفحة التفاصيل
-  const handleViewDetails = (bookingId: number) => {
-    navigate(`/mechanics/booking/mbookingdetails/${bookingId}`);
+  const formatDateTime = (date: string, slotStart: string, slotEnd: string) => {
+    const d = new Date(date);
+    const formattedDate = d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
+    return `${formattedDate}، ${slotStart.slice(0, 5)} - ${slotEnd.slice(0, 5)}`;
   };
 
-  // معالجة الموافقة
-  const handleAccept = (bookingId: number) => {
-    console.log("تم قبول الحجز:", bookingId);
-    // هنا تضيف API call
+  const filteredBookings = allBookings
+    .filter((booking) => {
+      const matchesTab = activeTab === "all" || booking.status === activeTab;
+      const matchesSearch =
+        booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.carInfo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.subSpecializationName.includes(searchTerm);
+      return matchesTab && matchesSearch;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const paginatedBookings = filteredBookings.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // View Details - opens drawer
+  const handleViewDetails = async (bookingId: string) => {
+    setDrawerLoading(true);
+    setSelectedBooking(null);
+    try {
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في جلب التفاصيل");
+      const data = await response.json();
+      setSelectedBooking(data);
+    } catch (err) {
+      console.error("خطأ:", err);
+    } finally {
+      setDrawerLoading(false);
+    }
   };
 
-  // معالجة الرفض
-  const handleReject = (bookingId: number) => {
-    console.log("تم رفض الحجز:", bookingId);
-    // هنا تضيف API call
+  const handleAccept = async (bookingId: string) => {
+    try {
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}/accept`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في قبول الحجز");
+      setAllBookings((prev) =>
+        prev.map((b) => b.id === bookingId ? { ...b, status: "Confirmed" } : b)
+      );
+    } catch (err) {
+      console.error("خطأ في قبول الحجز:", err);
+    }
   };
 
-  const getStatusButton = (status: string, bookingId: number) => {
-    switch (status) {
-      case "new":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={() => handleAccept(bookingId)}
-              className="px-3 md:px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap"
-            >
-              موافقة
-            </button>
-            <button 
-              onClick={() => handleReject(bookingId)}
-              className="px-3 md:px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap"
-            >
-              رفض
-            </button>
-            <button 
-              onClick={() => handleViewDetails(bookingId)}
-              className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap"
-            >
-              عرض تفاصيل
-            </button>
-          </div>
-        );
-      case "pending":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-block px-3 md:px-4 py-1.5 bg-yellow-600/20 text-yellow-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">
-              في انتظار الموافقة
-            </span>
-            <button 
-              onClick={() => handleViewDetails(bookingId)}
-              className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap"
-            >
-              عرض
-            </button>
-          </div>
-        );
-      case "confirmed":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-block px-3 md:px-4 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">
-              موافقة
-            </span>
-            <button 
-              onClick={() => handleViewDetails(bookingId)}
-              className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap"
-            >
-              عرض
-            </button>
-          </div>
-        );
-      default:
-        return null;
+  const handleReject = async (bookingId: string) => {
+    try {
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في رفض الحجز");
+      setAllBookings((prev) =>
+        prev.map((b) => b.id === bookingId ? { ...b, status: "Cancelled" } : b)
+      );
+    } catch (err) {
+      console.error("خطأ في رفض الحجز:", err);
     }
   };
 
   const getStatusBadge = (status: string) => {
+    const colorMap: Record<string, string> = {
+      Pending: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
+      Confirmed: "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400",
+      Accepted: "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400",
+      Cancelled: "bg-rose-100 text-rose-800 dark:bg-red-600/20 dark:text-red-400",
+      Rejected: "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400",
+      Completed: "bg-sky-100 text-sky-800 dark:bg-blue-600/20 dark:text-blue-400",
+    };
+    
+    // استخدام التسمية العربية، وإذا لم تكن موجودة نستخدم النص الأصلي
+    const displayLabel = statusMap[status]?.label || status;
+
+    return (
+      <span className={`inline-block px-2.5 md:px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${colorMap[status] || "bg-gray-600/20 text-gray-400"}`}>
+        {displayLabel}
+      </span>
+    );
+  };
+
+  const getStatusButton = (status: string, bookingId: string) => {
     switch (status) {
-      case "new":
+      case "Pending":
         return (
-          <span className="inline-block px-2.5 md:px-3 py-1 bg-blue-600/20 text-blue-400 rounded-lg text-xs font-medium whitespace-nowrap">
-            جديد
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => handleAccept(bookingId)} className="px-3 md:px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+              موافقة
+            </button>
+            <button onClick={() => handleReject(bookingId)} className="px-3 md:px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+              رفض
+            </button>
+            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+              عرض
+            </button>
+          </div>
         );
-      case "pending":
+      case "Confirmed":
+      case "Accepted":
         return (
-          <span className="inline-block px-2.5 md:px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-lg text-xs font-medium whitespace-nowrap">
-            في انتظار
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-block px-3 md:px-4 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">موافقة</span>
+            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+              عرض
+            </button>
+          </div>
         );
-      case "confirmed":
+      case "Cancelled":
+      case "Rejected":
         return (
-          <span className="inline-block px-2.5 md:px-3 py-1 bg-green-600/20 text-green-400 rounded-lg text-xs font-medium whitespace-nowrap">
-            موافقة
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-block px-3 md:px-4 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">ملغي</span>
+            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+              عرض
+            </button>
+          </div>
         );
       default:
-        return null;
+        return (
+          <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
+            عرض
+          </button>
+        );
     }
   };
 
+  if (loading) {
+    return (
+      <div dir="rtl" className={`flex min-h-screen ${!dark ? "bg-gray-50" : "bg-[#0B1220]"}`}>
+        <MachineSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className={!dark ? "text-gray-600" : "text-gray-400"}>جاري تحميل الحجوزات...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div dir="rtl" className={`flex min-h-screen ${!dark ? "bg-gray-50" : "bg-[#0B1220]"}`}>
+        <MachineSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <p className="text-red-500 text-lg">{error}</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              إعادة المحاولة
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div
-      dir="rtl"
-      className={`
-        flex min-h-screen transition-colors duration-500
-        ${!dark ? "bg-gray-50 text-[#1E3A5F]" : "bg-[#0B1220] text-white"}
-      `}
-    >
+    <div dir="rtl" className={`flex min-h-screen transition-colors duration-500 ${!dark ? "bg-gray-50 text-[#1E3A5F]" : "bg-[#0B1220] text-white"}`}>
       <MachineSidebar />
       <main className="flex-1 p-3 md:p-6 lg:p-8 space-y-4 md:space-y-6 w-full overflow-x-hidden">
+
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 mt-14 lg:mt-0">
-          <div>
-            <h1
-              className={`text-xl md:text-2xl lg:text-3xl font-bold transition-colors ${
-                !dark ? "text-black" : "text-white"
-              }`}
-            >
-              الحجوزات
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-3 md:gap-4 self-end sm:self-auto bg-gray-50 dark:bg-white/5 p-2 rounded-2xl sm:bg-transparent sm:dark:bg-transparent">
+          <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${!dark ? "text-black" : "text-white"}`}>
+            الحجوزات
+          </h1>
+          <div className="flex items-center gap-3 md:gap-4 self-end sm:self-auto">
             <NotificationBell size={20} />
             <ThemeToggle />
           </div>
         </div>
 
-        {/* SEARCH BAR */}
-        <div className="w-full">
-          <div
-            className={`flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${
-              !dark
-                ? "bg-white shadow-md border border-gray-200"
-                : "bg-[#0d1629] border border-gray-800"
-            }`}
-          >
-            <FaSearch
-              className={`text-base md:text-lg ${!dark ? "text-gray-400" : "text-gray-500"}`}
-            />
-            <input
-              type="text"
-              placeholder="البحث حسب العميل أو السيارة..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`flex-1 bg-transparent outline-none text-sm md:text-base ${
-                !dark ? "text-gray-900" : "text-white"
-              } placeholder-gray-500`}
-            />
-          </div>
+        {/* SEARCH */}
+        <div className={`flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${!dark ? "bg-white shadow-md border border-gray-200" : "bg-[#0d1629] border border-gray-800"}`}>
+          <FaSearch className={`text-base md:text-lg ${!dark ? "text-gray-400" : "text-gray-500"}`} />
+          <input
+            type="text"
+            placeholder="البحث حسب العميل أو السيارة أو الخدمة..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className={`flex-1 bg-transparent outline-none text-sm md:text-base ${!dark ? "text-gray-900" : "text-white"} placeholder-gray-500`}
+          />
         </div>
 
         {/* TABS */}
@@ -260,13 +312,11 @@ const Booking = () => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
               className={`px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                  : !dark
-                  ? "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-                  : "bg-[#0d1629] text-gray-300 hover:bg-[#131c2f] border border-gray-800"
+                  : !dark ? "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200" : "bg-[#0d1629] text-gray-300 hover:bg-[#131c2f] border border-gray-800"
               }`}
             >
               {tab.label} ({tab.count})
@@ -274,224 +324,207 @@ const Booking = () => {
           ))}
         </div>
 
-        {/* TABLE - Desktop & Tablet */}
-        <div
-          className={`hidden md:block rounded-xl overflow-hidden ${
-            !dark ? "bg-white shadow-md" : "bg-[#0d1629]"
-          }`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr
-                  className={`text-right text-xs lg:text-sm ${
-                    !dark
-                      ? "bg-gray-50 text-gray-700"
-                      : "bg-[#131c2f] text-gray-300"
-                  }`}
-                >
-                  <th className="p-3 lg:p-4 font-semibold">عميل</th>
-                  <th className="p-3 lg:p-4 font-semibold">عربة</th>
-                  <th className="p-3 lg:p-4 font-semibold">الحالة</th>
-                  <th className="p-3 lg:p-4 font-semibold">خدمة</th>
-                  <th className="p-3 lg:p-4 font-semibold">التاريخ والمطلوب</th>
-                  <th className="p-3 lg:p-4 font-semibold">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className={`border-b transition-colors ${
-                      !dark
-                        ? "border-gray-200 hover:bg-gray-50"
-                        : "border-gray-800 hover:bg-[#131c2f]"
-                    }`}
-                  >
-                    <td className="p-3 lg:p-4 font-medium text-xs lg:text-sm">
-                      {booking.client}
-                    </td>
-                    <td
-                      className={`p-3 lg:p-4 text-xs lg:text-sm ${
-                        !dark ? "text-gray-600" : "text-gray-400"
-                      }`}
-                    >
-                      {booking.car}
-                    </td>
-                    <td className="p-3 lg:p-4">{getStatusBadge(booking.status)}</td>
-                    <td
-                      className={`p-3 lg:p-4 text-xs lg:text-sm ${
-                        !dark ? "text-gray-600" : "text-gray-400"
-                      }`}
-                    >
-                      {booking.service}
-                    </td>
-                    <td
-                      className={`p-3 lg:p-4 text-xs lg:text-sm ${
-                        !dark ? "text-gray-600" : "text-gray-400"
-                      }`}
-                    >
-                      {booking.date}
-                    </td>
-                    <td className="p-3 lg:p-4">
-                      {getStatusButton(booking.status, booking.id)}
-                    </td>
+        {/* EMPTY */}
+        {filteredBookings.length === 0 && (
+          <div className={`text-center py-16 rounded-xl ${!dark ? "bg-white" : "bg-[#0d1629]"}`}>
+            <p className={!dark ? "text-gray-500" : "text-gray-400"}>لا توجد حجوزات</p>
+          </div>
+        )}
+
+        {/* TABLE - Desktop */}
+        {filteredBookings.length > 0 && (
+          <div className={`hidden md:block rounded-xl overflow-hidden ${!dark ? "bg-white shadow-md" : "bg-[#0d1629]"}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead>
+                  <tr className={`text-right text-xs lg:text-sm ${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
+                    <th className="p-3 lg:p-4 font-semibold">عميل</th>
+                    <th className="p-3 lg:p-4 font-semibold">السيارة</th>
+                    <th className="p-3 lg:p-4 font-semibold">الحالة</th>
+                    <th className="p-3 lg:p-4 font-semibold">خدمة</th>
+                    <th className="p-3 lg:p-4 font-semibold">التاريخ والوقت</th>
+                    <th className="p-3 lg:p-4 font-semibold">الإجراءات</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {paginatedBookings.map((booking) => (
+                    <tr key={booking.id} className={`border-b transition-colors ${!dark ? "border-gray-200 hover:bg-gray-50" : "border-gray-800 hover:bg-[#131c2f]"}`}>
+                      <td className="p-3 lg:p-4 font-medium text-xs lg:text-sm">{booking.customerName}</td>
+                      <td className={`p-3 lg:p-4 text-xs lg:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>{booking.carInfo}</td>
+                      <td className="p-3 lg:p-4">{getStatusBadge(booking.status)}</td>
+                      <td className={`p-3 lg:p-4 text-xs lg:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>{booking.subSpecializationName}</td>
+                      <td className={`p-3 lg:p-4 text-xs lg:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>{formatDateTime(booking.date, booking.slotStart, booking.slotEnd)}</td>
+                      <td className="p-3 lg:p-4">{getStatusButton(booking.status, booking.id)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* PAGINATION */}
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+              <p className={`text-xs md:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>
+                عرض {(currentPage - 1) * itemsPerPage + 1} إلى {Math.min(currentPage * itemsPerPage, filteredBookings.length)} من {filteredBookings.length} حجز
+              </p>
+              <div className="flex gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button key={page} onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
+                      currentPage === page ? "bg-blue-600 text-white" : !dark ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
+                    }`}>
+                    {page}
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* PAGINATION */}
-          <div
-            className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t ${
-              !dark ? "border-gray-200" : "border-gray-800"
-            }`}
-          >
-            <p
-              className={`text-xs md:text-sm ${
-                !dark ? "text-gray-600" : "text-gray-400"
-              }`}
-            >
-              عرض 1 إلى {filteredBookings.length} من {allBookings.length} حجز
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(1)}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
-                  currentPage === 1
-                    ? "bg-blue-600 text-white"
-                    : !dark
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                }`}
-              >
-                1
-              </button>
-              <button
-                onClick={() => setCurrentPage(2)}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
-                  currentPage === 2
-                    ? "bg-blue-600 text-white"
-                    : !dark
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                }`}
-              >
-                2
-              </button>
-              <button
-                onClick={() => setCurrentPage(3)}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
-                  currentPage === 3
-                    ? "bg-blue-600 text-white"
-                    : !dark
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                }`}
-              >
-                3
-              </button>
-              <span className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-gray-500 text-xs md:text-sm">
-                ...
-              </span>
-              <button
-                onClick={() => setCurrentPage(10)}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
-                  currentPage === 10
-                    ? "bg-blue-600 text-white"
-                    : !dark
-                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                }`}
-              >
-                10
-              </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* CARDS VIEW - Mobile */}
-        <div className="md:hidden space-y-3">
-          {filteredBookings.map((booking) => (
-            <div
-              key={booking.id}
-              className={`p-4 rounded-xl ${
-                !dark
-                  ? "bg-white shadow-md border border-gray-200"
-                  : "bg-[#0d1629] border border-gray-800"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-sm mb-1">{booking.client}</h3>
-                  <p className={`text-xs ${!dark ? "text-gray-600" : "text-gray-400"}`}>
-                    {booking.car}
-                  </p>
+        {/* CARDS - Mobile */}
+        {filteredBookings.length > 0 && (
+          <div className="md:hidden space-y-3">
+            {paginatedBookings.map((booking) => (
+              <div key={booking.id} className={`p-4 rounded-xl ${!dark ? "bg-white shadow-md border border-gray-200" : "bg-[#0d1629] border border-gray-800"}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">{booking.customerName}</h3>
+                    <p className={`text-xs ${!dark ? "text-gray-600" : "text-gray-400"}`}>{booking.carInfo}</p>
+                  </div>
+                  {getStatusBadge(booking.status)}
                 </div>
-                {getStatusBadge(booking.status)}
+                <div className="space-y-2 mb-3">
+                  <div className="flex justify-between text-xs">
+                    <span className={!dark ? "text-gray-600" : "text-gray-400"}>الخدمة:</span>
+                    <span className="font-medium">{booking.subSpecializationName}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className={!dark ? "text-gray-600" : "text-gray-400"}>الموعد:</span>
+                    <span className="font-medium">{formatDateTime(booking.date, booking.slotStart, booking.slotEnd)}</span>
+                  </div>
+                </div>
+                {getStatusButton(booking.status, booking.id)}
               </div>
-
-              <div className="space-y-2 mb-3">
-                <div className="flex justify-between text-xs">
-                  <span className={!dark ? "text-gray-600" : "text-gray-400"}>
-                    الخدمة:
-                  </span>
-                  <span className="font-medium">{booking.service}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className={!dark ? "text-gray-600" : "text-gray-400"}>
-                    الموعد:
-                  </span>
-                  <span className="font-medium">{booking.date}</span>
-                </div>
-              </div>
-
-              {getStatusButton(booking.status, booking.id)}
+            ))}
+            <div className="flex justify-center gap-2 mt-4">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button key={page} onClick={() => setCurrentPage(page)}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                    currentPage === page ? "bg-blue-600 text-white" : !dark ? "bg-white text-gray-700 border border-gray-200" : "bg-[#131c2f] text-gray-300 border border-gray-800"
+                  }`}>
+                  {page}
+                </button>
+              ))}
             </div>
-          ))}
-
-          {/* Mobile Pagination */}
-          <div className="flex justify-center gap-2 mt-4">
-            <button
-              onClick={() => setCurrentPage(1)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                currentPage === 1
-                  ? "bg-blue-600 text-white"
-                  : !dark
-                  ? "bg-white text-gray-700 border border-gray-200"
-                  : "bg-[#131c2f] text-gray-300 border border-gray-800"
-              }`}
-            >
-              1
-            </button>
-            <button
-              onClick={() => setCurrentPage(2)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                currentPage === 2
-                  ? "bg-blue-600 text-white"
-                  : !dark
-                  ? "bg-white text-gray-700 border border-gray-200"
-                  : "bg-[#131c2f] text-gray-300 border border-gray-800"
-              }`}
-            >
-              2
-            </button>
-            <button
-              onClick={() => setCurrentPage(3)}
-              className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                currentPage === 3
-                  ? "bg-blue-600 text-white"
-                  : !dark
-                  ? "bg-white text-gray-700 border border-gray-200"
-                  : "bg-[#131c2f] text-gray-300 border border-gray-800"
-              }`}
-            >
-              3
-            </button>
           </div>
-        </div>
+        )}
+
       </main>
+
+      {/* OVERLAY */}
+      {(selectedBooking || drawerLoading) && (
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedBooking(null)} />
+      )}
+
+      {/* DRAWER */}
+      <div
+        dir="rtl"
+        className={`fixed top-0 left-0 h-full w-full sm:w-[420px] z-50 shadow-2xl transition-transform duration-300 overflow-y-auto
+          ${selectedBooking || drawerLoading ? "translate-x-0" : "-translate-x-full"}
+          ${!dark ? "bg-white" : "bg-[#0d1629]"}
+        `}
+      >
+        {/* Drawer Header */}
+        <div className={`flex items-center justify-between p-5 border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+          <h2 className="text-lg font-bold">تفاصيل الحجز</h2>
+          <button
+            onClick={() => setSelectedBooking(null)}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition ${!dark ? "hover:bg-gray-100 text-gray-600" : "hover:bg-gray-800 text-gray-400"}`}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Drawer Loading */}
+        {drawerLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Drawer Content */}
+        {selectedBooking && !drawerLoading && (
+          <div className="p-5 space-y-5">
+
+            <div className="flex justify-center">
+              {getStatusBadge(selectedBooking.status)}
+            </div>
+
+            {/* Customer */}
+            <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>بيانات العميل</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                  {selectedBooking.customerName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{selectedBooking.customerName}</p>
+                  <p className={`text-xs ${!dark ? "text-gray-500" : "text-gray-400"}`}>عميل</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Booking Details */}
+            <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>تفاصيل الحجز</h3>
+              {[
+                { label: "السيارة", value: selectedBooking.carInfo, icon: "🚗" },
+                { label: "الخدمة", value: selectedBooking.subSpecializationName, icon: "🔧" },
+                { label: "التاريخ", value: new Date(selectedBooking.date).toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), icon: "📅" },
+                { label: "الوقت", value: `${selectedBooking.slotStart.slice(0, 5)} - ${selectedBooking.slotEnd.slice(0, 5)}`, icon: "⏰" },
+                { label: "الميكانيكي", value: selectedBooking.mechanicName, icon: "👨‍🔧" },
+              ].map(({ label, value, icon }) => (
+                <div key={label} className={`flex items-center justify-between py-2 border-b last:border-0 ${!dark ? "border-gray-200" : "border-gray-700"}`}>
+                  <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>{icon} {label}</span>
+                  <span className="text-sm font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Timestamps */}
+            <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>سجل الوقت</h3>
+              {[
+                { label: "تاريخ الإنشاء", value: new Date(selectedBooking.createdAt).toLocaleString("ar-EG") },
+                { label: "آخر تحديث", value: selectedBooking.updatedAt ? new Date(selectedBooking.updatedAt).toLocaleString("ar-EG") : "—" },
+              ].map(({ label, value }) => (
+                <div key={label} className={`flex items-center justify-between py-2 border-b last:border-0 ${!dark ? "border-gray-200" : "border-gray-700"}`}>
+                  <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>{label}</span>
+                  <span className="text-sm font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions for Pending */}
+            {selectedBooking.status === "Pending" && (
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { handleAccept(selectedBooking.id); setSelectedBooking(null); }}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition"
+                >
+                  ✓ موافقة
+                </button>
+                <button
+                  onClick={() => { handleReject(selectedBooking.id); setSelectedBooking(null); }}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition"
+                >
+                  ✕ رفض
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };

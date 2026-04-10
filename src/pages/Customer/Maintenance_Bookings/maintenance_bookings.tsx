@@ -33,6 +33,15 @@ interface Booking extends BookingResponse {
   actions: boolean;
 }
 
+const statusLabels: Record<string, string> = {
+  Pending: "قيد الانتظار",
+  Confirmed: "مؤكد",
+  Accepted: "مقبول",
+  Cancelled: "ملغي",
+  Rejected: "مرفوض",
+  Completed: "مكتمل",
+};
+
 const MaintenanceBookings = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
@@ -41,9 +50,9 @@ const MaintenanceBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // فلتر الحالة
-  const [selectedStatus, setSelectedStatus] = useState("All");
-const [selectedTimeFilter, setSelectedTimeFilter] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("الكل");
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState("الكل");
+
   const token = sessionStorage.getItem("userToken");
 
   const fetchBookings = async () => {
@@ -64,31 +73,51 @@ const [selectedTimeFilter, setSelectedTimeFilter] = useState("All");
 
       const data: BookingResponse[] = await res.json();
 
-      const mapped: Booking[] = data.map((b) => ({
-        ...b,
+      const mapped: Booking[] = data.map((b) => {
+        let statusColor = "";
+        let borderColor = "";
 
-        time: `${b.slotStart.slice(0, 5)} - ${b.slotEnd.slice(0, 5)}`,
+        switch (b.status) {
+          case "Pending":
+            statusColor =
+              "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300";
+            borderColor = "border-r-amber-500";
+            break;
 
-        statusColor:
-          b.status === "Completed"
-            ? "bg-[#0BDA651A] text-[#16a34a]"
-            : b.status === "Pending"
-            ? "bg-[#EAB3081A] text-[#a16207]"
-            : b.status === "Cancelled"
-            ? "bg-[#EF444433] text-[#dc2626]"
-            : "bg-gray-200 text-gray-700",
+          case "Confirmed":
+          case "Accepted":
+            statusColor =
+              "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400";
+            borderColor = "border-r-green-500";
+            break;
 
-        borderColor:
-          b.status === "Completed"
-            ? "border-r-green-500"
-            : b.status === "Pending"
-            ? "border-r-yellow-500"
-            : b.status === "Cancelled"
-            ? "border-r-red-500"
-            : "border-r-gray-400",
+          case "Cancelled":
+          case "Rejected":
+            statusColor =
+              "bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300";
+            borderColor = "border-r-rose-500";
+            break;
 
-        actions: b.status === "Pending",
-      }));
+          case "Completed":
+            statusColor =
+              "bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-300";
+            borderColor = "border-r-sky-500";
+            break;
+
+          default:
+            statusColor =
+              "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+            borderColor = "border-r-gray-400";
+        }
+
+        return {
+          ...b,
+          time: `${b.slotStart.slice(0, 5)} - ${b.slotEnd.slice(0, 5)}`,
+          statusColor,
+          borderColor,
+          actions: b.status === "Pending",
+        };
+      });
 
       setBookings(mapped);
     } catch (err) {
@@ -102,56 +131,51 @@ const [selectedTimeFilter, setSelectedTimeFilter] = useState("All");
     fetchBookings();
   }, []);
 
-  // الفلترة حسب الحالة
-const filteredBookings = bookings
-  .filter((booking) => {
-    // فلتر الحالة
-    const statusMatch =
-      selectedStatus === "All" || booking.status === selectedStatus;
-    
-    // فلتر الوقت
-    const bookingDate = new Date(`${booking.date}T${booking.slotStart}`);
-    
-    const now = new Date();
+  const filteredBookings = bookings
+    .filter((booking) => {
+      const statusMatch =
+        selectedStatus === "الكل" ||
+        statusLabels[booking.status] === selectedStatus;
 
-    let timeMatch = true;
+      const bookingDate = new Date(`${booking.date}T${booking.slotStart}`);
+      const now = new Date();
 
-    if (selectedTimeFilter === "Today") {
-      timeMatch =
-        bookingDate.toDateString() === now.toDateString();
-    }
+      let timeMatch = true;
 
-    if (selectedTimeFilter === "Week") {
-      const nextWeek = new Date();
-      nextWeek.setDate(now.getDate() + 7);
+      if (selectedTimeFilter === "اليوم") {
+        timeMatch =
+          bookingDate.toDateString() === now.toDateString();
+      }
 
-      timeMatch =
-        bookingDate >= now && bookingDate <= nextWeek;
-    }
+      if (selectedTimeFilter === "هذا الأسبوع") {
+        const nextWeek = new Date();
+        nextWeek.setDate(now.getDate() + 7);
 
-    if (selectedTimeFilter === "Month") {
-      timeMatch =
-        bookingDate.getMonth() === now.getMonth() &&
-        bookingDate.getFullYear() === now.getFullYear();
-    }
+        timeMatch =
+          bookingDate >= now && bookingDate <= nextWeek;
+      }
 
-    return statusMatch && timeMatch;
-  })
-  .sort((a, b) => {
-    // ترتيب الأقرب أولًا
-    const dateA = new Date(`${a.date}T${a.slotStart}`);
-    const dateB = new Date(`${b.date}T${b.slotStart}`);
+      if (selectedTimeFilter === "هذا الشهر") {
+        timeMatch =
+          bookingDate.getMonth() === now.getMonth() &&
+          bookingDate.getFullYear() === now.getFullYear();
+      }
 
-    return dateA.getTime() - dateB.getTime();
-  });
+      return statusMatch && timeMatch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.slotStart}`);
+      const dateB = new Date(`${b.date}T${b.slotStart}`);
+      return dateA.getTime() - dateB.getTime();
+    });
 
   return (
-  <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
-  <Sidebar />
-  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-    <Header />
-    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-          {/* رأس الصفحة */}
+    <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+
           <div className="flex justify-between items-center">
             <div className="text-right">
               <h2 className="text-2xl font-bold dark:text-white text-gray-800">
@@ -169,52 +193,48 @@ const filteredBookings = bookings
               <MdAdd size={22} /> حجز جديد
             </button>
           </div>
+                    {/* شريط الفلترة */}
+          <div className="bg-[#0F172A] border border-white/10 rounded-2xl p-4 shadow-lg">
+            <div className="flex flex-col md:flex-row gap-5 items-end">
 
-          {/* شريط الفلترة */}
-         
-<div className="bg-[#0F172A] border border-white/10 rounded-2xl p-2 shadow-lg">
-  <div className="flex flex-col md:flex-row gap-5 items-end">
+              {/* فلتر التوقيت */}
+              <div className="flex-1 w-full">
+                <label className="text-white text-sm font-bold mb-2 block text-right">
+                  التوقيت
+                </label>
+                <select
+                  value={selectedTimeFilter}
+                  onChange={(e) => setSelectedTimeFilter(e.target.value)}
+                  className="w-full bg-[#1E293B] text-white border border-[#334155] rounded-2xl py-3 px-4 outline-none cursor-pointer text-sm font-medium hover:border-[#137FEC] focus:border-[#137FEC] transition-all"
+                >
+                  <option value="الكل">كل الوقت</option>
+                  <option value="اليوم">اليوم</option>
+                  <option value="هذا الأسبوع">هذا الأسبوع</option>
+                  <option value="هذا الشهر">هذا الشهر</option>
+                </select>
+              </div>
 
-    {/* فلتر التوقيت */}
-    <div className="flex-1 w-full">
-      <label className="text-white text-sm font-bold mb-2 block text-right">
-        التوقيت
-      </label>
-      <div className="relative">
-       <select
-  value={selectedTimeFilter}
-  onChange={(e) => setSelectedTimeFilter(e.target.value)}
-  className="w-full bg-[#1E293B] text-white border border-[#334155] rounded-2xl py-3 px-4 pr-4 outline-none cursor-pointer text-sm font-medium hover:border-[#137FEC] focus:border-[#137FEC] transition-all"
->
-  <option value="All">كل الوقت</option>
-  <option value="Today">اليوم</option>
-  <option value="Week">هذا الأسبوع</option>
-  <option value="Month">هذا الشهر</option>
-</select>
-      </div>
-    </div>
-
-    {/* فلتر الحالة */}
-    <div className="flex-1 w-full">
-      <label className="text-white text-sm font-bold mb-2 block text-right">
-        الحالة
-      </label>
-      <div className="relative">
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="w-full bg-[#1E293B] text-white border border-[#334155] rounded-2xl py-3 px-4 outline-none cursor-pointer text-sm font-medium hover:border-[#137FEC] focus:border-[#137FEC] transition-all shadow-sm"
-        >
-          <option value="All">All  </option>
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-      </div>
-    </div>
-
-  </div>
-</div>
+              {/* فلتر الحالة */}
+              <div className="flex-1 w-full">
+                <label className="text-white text-sm font-bold mb-2 block text-right">
+                  الحالة
+                </label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full bg-[#1E293B] text-white border border-[#334155] rounded-2xl py-3 px-4 outline-none cursor-pointer text-sm font-medium hover:border-[#137FEC] focus:border-[#137FEC] transition-all"
+                >
+                  <option value="الكل">الكل</option>
+                  <option value="قيد الانتظار">قيد الانتظار</option>
+                  {/* <option value="مؤكد">مؤكد</option> */}
+                  <option value="مقبول">مقبول</option>
+                  <option value="ملغي">ملغي</option>
+                  <option value="مرفوض">مرفوض</option>
+                  <option value="مكتمل">مكتمل</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {/* قائمة الحجوزات */}
           {loading ? (
@@ -232,6 +252,7 @@ const filteredBookings = bookings
                 >
                   <div className="flex justify-between items-start w-full">
                     <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+
                       <div className="flex items-center gap-2">
                         <p className="text-[#137FEC] font-bold text-sm">
                           الميكانيكي:
@@ -272,7 +293,7 @@ const filteredBookings = bookings
                     <span
                       className={`px-5 py-1.5 rounded-lg text-xs font-bold shrink-0 ${booking.statusColor}`}
                     >
-                      {booking.status}
+                      {statusLabels[booking.status] || booking.status}
                     </span>
                   </div>
 
@@ -306,14 +327,14 @@ const filteredBookings = bookings
         </main>
       </div>
 
-      {/* Add Booking */}
+      {/* Add Booking Modal */}
       <AddBookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => fetchBookings()}
       />
 
-      {/* Reschedule */}
+      {/* Reschedule Modal */}
       <RescheduleModal
         isOpen={isRescheduleOpen}
         booking={selectedBooking}
@@ -321,7 +342,7 @@ const filteredBookings = bookings
         onSuccess={() => fetchBookings()}
       />
 
-      {/* Cancel */}
+      {/* Cancel Modal */}
       <CancelBookingModal
         isOpen={isCancelModalOpen}
         booking={selectedBooking}

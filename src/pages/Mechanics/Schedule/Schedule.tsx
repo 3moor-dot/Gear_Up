@@ -1,126 +1,164 @@
-import { useState } from "react";
+ 
+import { useState, useEffect } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
+interface Booking {
+  id: string;
+  customerName: string;
+  mechanicName: string;
+  carInfo: string;
+  subSpecializationName: string;
+  date: string;
+  slotStart: string;
+  slotEnd: string;
+  status: string;
+}
+
+const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
 const Schedule = () => {
   const { dark } = useTheme();
-  const [selectedView, setSelectedView] = useState("week"); // day, week, month
-  const [currentDate, setCurrentDate] = useState(new Date(2023, 9, 5)); // October 5, 2023
+  // تم التعديل: جعل الاختيار الافتراضي هو "اليوم"
+  const [selectedView, setSelectedView] = useState("day");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
 
-  // مواعيد اليوم
-  const todayAppointments = [
-    {
-      id: 1,
-      client: "جون دو - تويوتا كامري",
-      service: "تغيير الزيت",
-      time: "9:00 AM",
-      status: "confirmed",
-    },
-    {
-      id: 2,
-      client: "سارة سميث - فورد إف-150",
-      service: "فحص الفرامل",
-      time: "11:00 AM",
-      status: "confirmed",
-    },
-    {
-      id: 3,
-      client: "ألكس جونسون - هوندا سيفيك",
-      service: "فحص المحرك",
-      time: "1:30 PM",
-      status: "pending",
-    },
-    {
-      id: 4,
-      client: "ماريا غارسيا - نيسان روج",
-      service: "غسيل وتلميع",
-      time: "3:00 PM",
-      status: "completed",
-    },
-  ];
+  // API State
+  const [todayAppointments, setTodayAppointments] = useState<Booking[]>([]);
+  const [scheduleBookings, setScheduleBookings] = useState<Booking[]>([]);
+  const [loadingToday, setLoadingToday] = useState(true);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  // أيام الأسبوع
+  // ======= Fetch Today =======
+  useEffect(() => {
+    const fetchToday = async () => {
+      try {
+        setLoadingToday(true);
+        const token = sessionStorage.getItem("userToken");
+        const res = await fetch(
+          "https://gearupapp.runasp.net/api/bookings/mechanic/my/today",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error();
+        const data: Booking[] = await res.json();
+        data.sort((a, b) => a.slotStart.localeCompare(b.slotStart));
+        setTodayAppointments(data);
+      } catch {
+        setTodayAppointments([]);
+      } finally {
+        setLoadingToday(false);
+      }
+    };
+    fetchToday();
+  }, []);
+
+  // ======= Fetch Schedule =======
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        setLoadingSchedule(true);
+        const token = sessionStorage.getItem("userToken");
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const from = formatDate(new Date(year, month, 1));
+        const to = formatDate(new Date(year, month + 1, 0));
+
+        const res = await fetch(
+          `https://gearupapp.runasp.net/api/bookings/mechanic/my/schedule?from=${from}&to=${to}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error();
+        const data: Booking[] = await res.json();
+        setScheduleBookings(data);
+      } catch {
+        setScheduleBookings([]);
+      } finally {
+        setLoadingSchedule(false);
+      }
+    };
+    fetchSchedule();
+  }, [currentDate]);
+
+  const daysWithBookings = new Set(
+    scheduleBookings.map((b) => new Date(b.date).getDate())
+  );
+
+  const selectedDayBookings = selectedDay
+    ? scheduleBookings
+        .filter((b) => new Date(b.date).getDate() === selectedDay)
+        .sort((a, b) => a.slotStart.localeCompare(b.slotStart))
+    : todayAppointments;
+
+  const displayedAppointments =
+    selectedDay === new Date().getDate() &&
+    currentDate.getMonth() === new Date().getMonth()
+      ? todayAppointments
+      : selectedDayBookings;
+
   const weekDays = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
-  // الحصول على أيام الشهر
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const days = [];
-    // إضافة الأيام الفارغة في البداية
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null);
-    }
-    // إضافة أيام الشهر
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
+    const days: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(i);
     return days;
   };
 
   const monthDays = getDaysInMonth(currentDate);
 
   const getMonthName = (date: Date) => {
-    const months = [
-      "يناير",
-      "فبراير",
-      "مارس",
-      "أبريل",
-      "مايو",
-      "يونيو",
-      "يوليو",
-      "أغسطس",
-      "سبتمبر",
-      "أكتوبر",
-      "نوفمبر",
-      "ديسمبر",
-    ];
+    const months = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
     return months[date.getMonth()];
   };
 
   const handlePrevMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
+    setSelectedDay(null);
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
+    setSelectedDay(null);
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
+  // تم التعديل: إضافة حالات Accepted و Rejected مع الألوان المناسبة
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return "text-green-400";
-      case "pending":
-        return "text-blue-400";
-      case "completed":
-        return "text-red-400";
-      default:
-        return "text-gray-400";
+      case "Confirmed": return "bg-green-600/20 text-green-400";
+      case "Accepted":  return "bg-green-600/20 text-green-400"; // أخضر
+      case "Pending":   return "bg-yellow-600/20 text-yellow-400";
+      case "Cancelled": return "bg-red-600/20 text-red-400";
+      case "Rejected":  return "bg-red-600/20 text-red-400"; // أحمر
+      case "Completed": return "bg-blue-600/20 text-blue-400";
+      default:          return "bg-gray-600/20 text-gray-400";
     }
   };
 
+  // تم التعديل: إضافة النصوص العربية لحالتي Accepted و Rejected
   const getStatusText = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return "مؤكد";
-      case "pending":
-        return "قيد الانتظار";
-      case "completed":
-        return "مكتمل";
-      default:
-        return "";
+      case "Confirmed": return "مؤكد";
+      case "Accepted":  return "مقبول"; // نص عربي
+      case "Pending":   return "في انتظار";
+      case "Cancelled": return "ملغي";
+      case "Rejected":  return "مرفوض"; // نص عربي
+      case "Completed": return "مكتمل";
+      default:          return status;
     }
   };
+
+  const today = new Date().getDate();
+  const isCurrentMonth = currentDate.getMonth() === new Date().getMonth() &&
+    currentDate.getFullYear() === new Date().getFullYear();
 
   return (
     <div
@@ -131,165 +169,138 @@ const Schedule = () => {
     >
       <MachineSidebar />
       <main className="flex-1 p-3 md:p-6 lg:p-8 space-y-4 md:space-y-6 w-full overflow-x-hidden">
+
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 mt-14 lg:mt-0">
           <div>
-            <h1
-              className={`text-xl md:text-2xl lg:text-3xl font-bold transition-colors ${
-                !dark ? "text-black" : "text-white"
-              }`}
-            >
+            <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${!dark ? "text-black" : "text-white"}`}>
               جدول المواعيد
             </h1>
             <p className={`text-sm mt-1 ${!dark ? "text-gray-600" : "text-gray-400"}`}>
               عرض جدول المواعيد
             </p>
           </div>
-
-          <div className="flex items-center gap-3 md:gap-4 self-end sm:self-auto bg-gray-50 dark:bg-white/5 p-2 rounded-2xl sm:bg-transparent sm:dark:bg-transparent">
+          <div className="flex items-center gap-3 md:gap-4 self-end sm:self-auto">
             <NotificationBell size={20} />
             <ThemeToggle />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+
           {/* Calendar Section */}
           <div className="lg:col-span-2 space-y-4">
-            {/* View Selector & Month Navigation */}
-            <div
-              className={`rounded-xl p-4 ${
-                !dark 
-                  ? "bg-white shadow-lg" 
-                  : "bg-[#0d1629] shadow-2xl shadow-blue-900/20"
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                {/* View Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedView("day")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      selectedView === "day"
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40"
-                        : !dark
-                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                    }`}
-                  >
-                    اليوم
-                  </button>
-                  <button
-                    onClick={() => setSelectedView("week")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      selectedView === "week"
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40"
-                        : !dark
-                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                    }`}
-                  >
-                    الأسبوع
-                  </button>
-                  <button
-                    onClick={() => setSelectedView("month")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      selectedView === "month"
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40"
-                        : !dark
-                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
-                    }`}
-                  >
-                    الشهر
-                  </button>
-                </div>
 
-                {/* Month Navigation */}
+            {/* View Selector & Month Navigation */}
+            <div className={`rounded-xl p-4 ${!dark ? "bg-white shadow-lg" : "bg-[#0d1629] shadow-2xl shadow-blue-900/20"}`}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex gap-2">
+                  {["day", "week", "month"].map((view) => (
+                    <button
+                      key={view}
+                      onClick={() => setSelectedView(view)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                        selectedView === view
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40"
+                          : !dark ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
+                      }`}
+                    >
+                      {view === "day" ? "اليوم" : view === "week" ? "الأسبوع" : "الشهر"}
+                    </button>
+                  ))}
+                </div>
                 <div className="flex items-center gap-4">
-                  <button
-                    onClick={handlePrevMonth}
-                    className={`p-2 rounded-lg transition ${
-                      !dark
-                        ? "bg-gray-100 hover:bg-gray-200"
-                        : "bg-[#131c2f] hover:bg-[#1a2332]"
-                    }`}
-                  >
+                  <button onClick={handlePrevMonth} className={`p-2 rounded-lg transition ${!dark ? "bg-gray-100 hover:bg-gray-200" : "bg-[#131c2f] hover:bg-[#1a2332]"}`}>
                     <FaChevronLeft size={16} />
                   </button>
                   <span className="font-semibold text-lg min-w-[150px] text-center">
                     {getMonthName(currentDate)} {currentDate.getFullYear()}
                   </span>
-                  <button
-                    onClick={handleNextMonth}
-                    className={`p-2 rounded-lg transition ${
-                      !dark
-                        ? "bg-gray-100 hover:bg-gray-200"
-                        : "bg-[#131c2f] hover:bg-[#1a2332]"
-                    }`}
-                  >
+                  <button onClick={handleNextMonth} className={`p-2 rounded-lg transition ${!dark ? "bg-gray-100 hover:bg-gray-200" : "bg-[#131c2f] hover:bg-[#1a2332]"}`}>
                     <FaChevronRight size={16} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Calendar Grid - مع Shadow مميز */}
-            <div
-              className={`rounded-xl p-6 ${
-                !dark 
-                  ? "bg-white shadow-xl border border-gray-100" 
-                  : "bg-gradient-to-br from-[#0d1629] to-[#0a1120] shadow-2xl shadow-blue-900/30 border border-blue-900/20"
-              }`}
-            >
-              {/* Week Days Header */}
+            {/* Calendar Grid */}
+            <div className={`rounded-xl p-6 relative ${!dark ? "bg-white shadow-xl border border-gray-100" : "bg-gradient-to-br from-[#0d1629] to-[#0a1120] shadow-2xl shadow-blue-900/30 border border-blue-900/20"}`}>
+
+              {loadingSchedule && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl z-10">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
               <div className="grid grid-cols-7 gap-2 mb-4">
                 {weekDays.map((day) => (
-                  <div
-                    key={day}
-                    className={`text-center text-sm font-semibold py-2 ${
-                      !dark ? "text-gray-600" : "text-gray-400"
-                    }`}
-                  >
+                  <div key={day} className={`text-center text-sm font-semibold py-2 ${!dark ? "text-gray-600" : "text-gray-400"}`}>
                     {day}
                   </div>
                 ))}
               </div>
 
-              {/* Calendar Days */}
               <div className="grid grid-cols-7 gap-2">
                 {monthDays.map((day, index) => (
                   <div
                     key={index}
-                    className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition cursor-pointer ${
+                    onClick={() => day && setSelectedDay(day)}
+                    className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm font-medium transition cursor-pointer relative ${
                       day === null
                         ? "invisible"
-                        : day === 5
+                        : day === selectedDay
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/50 scale-105"
+                        : isCurrentMonth && day === today
+                        ? "ring-2 ring-blue-500 " + (!dark ? "bg-blue-50 text-blue-600" : "bg-blue-900/20 text-blue-400")
                         : !dark
                         ? "bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md"
-                        : "bg-[#1a2332] text-gray-300 hover:bg-[#243044] hover:shadow-lg hover:shadow-blue-900/20"
+                        : "bg-[#1a2332] text-gray-300 hover:bg-[#243044]"
                     }`}
                   >
                     {day}
+                    {day && daysWithBookings.has(day) && day !== selectedDay && (
+                      <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-blue-400" />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Today's Appointments */}
-          <div
-            className={`rounded-xl overflow-hidden ${
-              !dark 
-                ? "bg-white shadow-xl border border-gray-100" 
-                : "bg-gradient-to-br from-[#0d1629] to-[#0a1120] shadow-2xl shadow-blue-900/30 border border-blue-900/20"
-            }`}
-          >
-            <div className="p-6 border-b border-gray-700">
-              <h2 className="text-lg font-bold">مواعيد اليوم</h2>
+          {/* Appointments Panel */}
+          <div className={`rounded-xl overflow-hidden ${!dark ? "bg-white shadow-xl border border-gray-100" : "bg-gradient-to-br from-[#0d1629] to-[#0a1120] shadow-2xl shadow-blue-900/30 border border-blue-900/20"}`}>
+            <div className={`p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold">
+                  {selectedDay
+                    ? `مواعيد ${selectedDay} ${getMonthName(currentDate)}`
+                    : "مواعيد اليوم"}
+                </h2>
+                {!loadingToday && !loadingSchedule && (
+                  <span className="text-xs px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg font-medium">
+                    {displayedAppointments.length} موعد
+                  </span>
+                )}
+              </div>
             </div>
+
             <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-              {todayAppointments.map((appointment) => (
+
+              {(loadingToday || loadingSchedule) && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
+              {!loadingToday && !loadingSchedule && displayedAppointments.length === 0 && (
+                <div className="text-center py-12">
+                  <p className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>
+                    لا توجد مواعيد
+                  </p>
+                </div>
+              )}
+
+              {!loadingToday && !loadingSchedule && displayedAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
                   className={`p-4 rounded-lg border transition hover:scale-[1.02] ${
@@ -300,30 +311,30 @@ const Schedule = () => {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-sm mb-1">
-                        {appointment.client}
-                      </h4>
-                      <p
-                        className={`text-xs ${
-                          !dark ? "text-gray-600" : "text-gray-400"
-                        }`}
-                      >
-                        {appointment.service}
+                      <h4 className="font-semibold text-sm mb-1">{appointment.customerName}</h4>
+                      <p className={`text-xs mb-1 ${!dark ? "text-gray-600" : "text-gray-400"}`}>
+                        🚗 {appointment.carInfo}
+                      </p>
+                      <p className={`text-xs ${!dark ? "text-gray-600" : "text-gray-400"}`}>
+                        🔧 {appointment.subSpecializationName}
                       </p>
                     </div>
-                    <span className="text-sm font-bold">{appointment.time}</span>
+                    <div className="text-left shrink-0">
+                      <p className="text-xs font-bold">{appointment.slotStart.slice(0, 5)}</p>
+                      <p className={`text-xs ${!dark ? "text-gray-500" : "text-gray-500"}`}>
+                        {appointment.slotEnd.slice(0, 5)}
+                      </p>
+                    </div>
                   </div>
-                  <span
-                    className={`text-xs font-medium ${getStatusColor(
-                      appointment.status
-                    )}`}
-                  >
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${getStatusColor(appointment.status)}`}>
                     {getStatusText(appointment.status)}
                   </span>
                 </div>
               ))}
+
             </div>
           </div>
+
         </div>
       </main>
     </div>
