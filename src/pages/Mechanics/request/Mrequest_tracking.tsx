@@ -7,6 +7,7 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { Car } from "lucide-react";
 
 
      const statusOptions = [
@@ -17,7 +18,8 @@ import { useTheme } from "../../../contexts/ThemeContext";
          { value: "Completed", label: "تم الانتهاء" },
          { value: "Cancelled", label: "تم الإلغاء" }
        ];
-    const statusMap: any = {
+
+       const statusMap: any = {
         Accepted: 3,
         OnTheWay: 4,
         Arrived: 5,
@@ -25,6 +27,14 @@ import { useTheme } from "../../../contexts/ThemeContext";
         Completed: 7,
         Cancelled: 8
       };
+
+      const statusOrder = [
+        "Accepted",
+        "OnTheWay",
+        "Arrived",
+        "InProgress",
+        "Completed",
+      ];
 
 
 
@@ -133,25 +143,7 @@ const updateStatus = async (newStatus: string) => {
 
               {request && (
   <>
-    {/* 🚗 car image + info */}
-    {/* <div className="flex items-center gap-3">
-      {/* {request.carPhotoUrl && ( *
-      {request.car?.carPhotoUrl && (
-        <img
-          src={request.carPhotoUrl}
-          className="w-20 h-20 rounded-lg object-cover"
-        />
-      )}
 
-      <div>
-        <p className="flex flex-wrap items-center gap-2">
-  <strong>🚗 السيارة:</strong>
-  <span>
-    {request.car?.brand} {request.car?.model} - {request.car?.year} - {request.car?.plateNumber}
-  </span>
-</p>
-      </div>
-    </div> */}
     <div className="flex items-center gap-3">
   {request.car?.carPhotoUrl && (
     <img
@@ -212,19 +204,54 @@ const updateStatus = async (newStatus: string) => {
 
         </div>
 
-        {/* Status Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-      
-          {statusOptions.map((s) => (
-  <button
-    key={s.value}
-    onClick={() => updateStatus(s.value)}
-    className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-  >
-    {s.label}
-  </button>
-))}
-        </div>
+<h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
+<Car className="w-5 h-5 drive-animation" />
+  تحديث حالة الطلب
+</h2>
+
+
+<div className="flex items-center justify-between mt-6">
+  {statusOrder.map((step, index) => {
+    const currentIndex = statusOrder.indexOf(status || "");
+    const isCompleted = index < currentIndex;
+    const isActive = index === currentIndex;
+
+    return (
+      <div key={step} className="flex-1 flex flex-col items-center relative">
+
+        {/* الخط */}
+        {index !== statusOrder.length - 1 && (
+          <div
+            className={`absolute top-4 right-1/2 w-full h-1 z-0 ${
+              index < currentIndex ? "bg-green-500" : "bg-gray-300"
+            }`}
+          />
+        )}
+
+        {/* الدائرة */}
+        <button
+          onClick={() => updateStatus(step)}
+          className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+            ${
+              isCompleted
+                ? "bg-green-500 text-white"
+                : isActive
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
+            }`}
+        >
+          {index + 1}
+        </button>
+
+        {/* اللابل */}
+        <span className="text-xs mt-2 text-center">
+          {statusOptions.find(s => s.value === step)?.label}
+        </span>
+      </div>
+    );
+  })}
+</div>
+
 
       </main>
     </div>

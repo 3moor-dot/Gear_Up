@@ -7,22 +7,30 @@ import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
 
-// const statusMap: any = {
-//   3: "تم القبول",
-//   4: "في الطريق",
-//   5: "وصل",
-//   6: "قيد الإصلاح",
-//   7: "تم الانتهاء",
-//   8: "تم الإلغاء"
-// };
-const statusMap: any = {
-  Accepted: "تم القبول",
-  OnTheWay: "في الطريق",
-  Arrived: "وصل",
-  InProgress: "قيد الإصلاح",
-  Completed: "تم الانتهاء",
-  Cancelled: "تم الإلغاء"
-};
+ const statusMap: any = {
+   Accepted: "تم القبول",
+   OnTheWay: "في الطريق",
+   Arrived: "وصل",
+   InProgress: "قيد الإصلاح",
+   Completed: "تم الانتهاء",
+   Cancelled: "تم الإلغاء"
+ };
+const statusOptions = [
+  { value: "Accepted", label: "تم القبول" },
+  { value: "OnTheWay", label: "في الطريق" },
+  { value: "Arrived", label: "وصل" },
+  { value: "InProgress", label: "قيد الإصلاح" },
+  { value: "Completed", label: "تم الانتهاء" },
+  { value: "Cancelled", label: "تم الإلغاء" }
+];
+
+const statusOrder = [
+  "Accepted",
+  "OnTheWay",
+  "Arrived",
+  "InProgress",
+  "Completed",
+];
 
 const RequestTracking = () => {
   const { requestId } = useParams();
@@ -33,6 +41,7 @@ const RequestTracking = () => {
   const [loading, setLoading] = useState(true);
 
   const token = sessionStorage.getItem("userToken");
+  const currentIndex = statusOrder.indexOf(request?.status);
 
   const fetchRequest = async () => {
 
@@ -53,8 +62,19 @@ const RequestTracking = () => {
     }
   };
 
+  // useEffect(() => {
+  //   if (requestId) fetchRequest();
+  // }, [requestId]);
   useEffect(() => {
-    if (requestId) fetchRequest();
+    if (!requestId) return;
+  
+    fetchRequest();
+  
+    const interval = setInterval(() => {
+      fetchRequest();
+    }, 5000); // خليها 5 ثواني مش 3 عشان تقلل “النط”
+  
+    return () => clearInterval(interval);
   }, [requestId]);
 
 
@@ -116,14 +136,6 @@ const RequestTracking = () => {
 </p>
 
 
-{/* <p>
-  <strong>🚚 نوع الخدمة:</strong>{" "}
-  {request?.serviceMode === 1
-    ? "الميكانيكي يجي لك"
-    : request?.serviceMode === 2
-    ? "أنت تروح للورشة"
-    : "غير محدد"}
-</p> */}
 <p>
   <strong>🚚 نوع الخدمة:</strong>{" "}
   {request?.serviceMode === "MechanicComesToCustomer"
@@ -152,6 +164,46 @@ const RequestTracking = () => {
   {statusMap[request?.status] || request?.status}
 </p>
 
+<div className="flex items-center justify-between mt-6">
+  {statusOrder.map((step, index) => {
+    const isCompleted = index < currentIndex;
+    const isActive = index === currentIndex;
+
+    return (
+      <div key={step} className="flex-1 flex flex-col items-center relative">
+
+        {/* line */}
+        {index !== statusOrder.length - 1 && (
+          <div
+            className={`absolute top-4 right-1/2 w-full h-1 z-0 ${
+              index < currentIndex ? "bg-green-500" : "bg-gray-300"
+            }`}
+          />
+        )}
+
+        {/* circle */}
+        <div
+          className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+            ${
+              isCompleted
+                ? "bg-green-500 text-white"
+                : isActive
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-black"
+            }`}
+        >
+          {index + 1}
+        </div>
+
+        {/* label */}
+        <span className="text-xs mt-2 text-center">
+          {statusOptions.find(s => s.value === step)?.label}
+        </span>
+      </div>
+    );
+  })}
+</div>
+
 {/* 🔧 الميكانيكي */}
 {request?.mechanic && (
   <div className="flex items-center gap-3 pt-3 border-t">
@@ -162,9 +214,6 @@ const RequestTracking = () => {
     />
 
     <div>
-      {/* <p className="font-bold">
-        🔧 {request.mechanic.firstName} {request.mechanic.lastName}
-      </p> */}
       <p className="font-bold">
   🔧 الميكانيكي: {request.mechanic.firstName} {request.mechanic.lastName}
 </p>

@@ -31,3 +31,25 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.8s ease-out forwards;
 }
+
+@keyframes drive-rtl {
+  0% {
+    transform: translateX(8px) scaleX(-1);
+  }
+  50% {
+    transform: translateX(-8px) scaleX(-1);
+  }
+  100% {
+    transform: translateX(8px) scaleX(-1);
+  }
+}
+
+.drive-animation {
+  animation: drive-rtl 3.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+.car-rtl {
+  transform: scaleX(-1);
+  display: inline-block;
+}
