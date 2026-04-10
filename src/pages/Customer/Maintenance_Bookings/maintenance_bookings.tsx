@@ -146,13 +146,11 @@ const filteredBookings = bookings
   });
 
   return (
-    <div className="flex min-h-screen dark:bg-primary_BGD" dir="rtl">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-
-        <main className="p-4 md:p-8 space-y-6">
+  <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+  <Sidebar />
+  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <Header />
+    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {/* رأس الصفحة */}
           <div className="flex justify-between items-center">
             <div className="text-right">
