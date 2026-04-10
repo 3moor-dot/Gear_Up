@@ -448,24 +448,23 @@ connection.on("YouAreSelected", (data: any) => {
         </button>
       </div>
 
-      {/* عرض بيانات السيارة لو موجودة */}
-      {(n.carName || n.carId) && (
-        <div className="text-[11px] font-bold mb-1 flex items-center gap-1 dark:text-slate-200">
-          <span>🚗</span> {n.carName || getCarName(n.carId)}
-        </div>
-      )}
 
-{n.customerName && (
-  <div className="text-[11px] opacity-80">
-    👤 {n.customerName}
+{(n.carName || n.carId) && (
+  <div className="text-[11px] font-bold mb-1 flex items-center gap-1 dark:text-slate-200">
+    
+    {n.plateNumber && (
+      <span className="text-[10px] opacity-70">
+        {n.plateNumber}
+      </span>
+    )}
+
+    <span>
+      {n.carName || getCarName(n.carId)}
+    </span>
+
   </div>
 )}
 
-{n.plateNumber && (
-  <div className="text-[11px] opacity-80">
-    🔢 {n.plateNumber}
-  </div>
-)}
 
 {n.location && (
   <div className="text-[11px] opacity-80">

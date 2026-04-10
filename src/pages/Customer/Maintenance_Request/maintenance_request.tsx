@@ -205,6 +205,7 @@ setAcceptedMechanics(mechanics);
     };
 
     const handleSubmitRequest = async () => {
+        console.log("LOCATION BEFORE SEND:", location); 
         if (!validateStepOne()) return;
     
         setLoading(true);
@@ -229,12 +230,13 @@ setAcceptedMechanics(mechanics);
             }
     
             if (location) {
-                // formData.append("Latitude", location.lat.toString());
-                // formData.append("Longitude", location.lng.toString());
-                formData.append("Location", JSON.stringify({
-                    latitude: location.lat,
-                    longitude: location.lng
-                  }));
+           
+                // formData.append("Location", JSON.stringify({
+                //     latitude: location.lat,
+                //     longitude: location.lng
+                //   }));
+                formData.append("Latitude", location.lat.toString());
+formData.append("Longitude", location.lng.toString());
             }
 
     
