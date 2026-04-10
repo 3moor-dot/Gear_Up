@@ -50,7 +50,7 @@ const RequestTracking = () => {
 
   const token = sessionStorage.getItem("userToken");
   const currentIndex = statusOrder.indexOf(request?.status);
-
+  const [openImg, setOpenImg] = useState(false);
   const fetchRequest = async () => {
 
     try {
@@ -122,7 +122,7 @@ const RequestTracking = () => {
 
         <div className="p-6">
           {/* <div className="max-w-xl mx-auto text-right"> */}
-          <div className="max-w-xl ml-auto text-right">
+           <div className="max-w-xl ml-auto text-right"> 
             <h1 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
   تتبع حالة الطلب
 </h1>
@@ -182,17 +182,57 @@ const RequestTracking = () => {
     : "غير محدد"}
 </p>
 
-{/* 📝 المشكلة */}
 <p>
   <strong>📝 المشكلة:</strong> {request?.issueDescription}
 </p>
 
+
+    {/* {request?.problemPhotoUrl && (
+  <img
+    src={request.problemPhotoUrl}
+    className="w-full h-40 object-cover rounded-lg mt-2 cursor-pointer"
+    onClick={() => {
+      console.log("IMAGE CLICKED");
+      setOpenImg(true);
+    }}
+  />
+)}
+{openImg && request?.problemPhotoUrl && (
+  <div
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
+    onClick={() => setOpenImg(false)}
+  >
+    <img
+      src={request.problemPhotoUrl}
+      className="max-w-[90%] max-h-[90%] object-contain rounded-lg"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+)} */}
 {/* 🖼️ صورة المشكلة */}
 {request?.problemPhotoUrl && (
   <img
     src={request.problemPhotoUrl}
-    className="w-full h-44 object-cover rounded-lg"
+    className="w-full h-40 object-cover rounded-lg mt-2 cursor-pointer"
+    onClick={() => {
+      console.log("IMAGE CLICKED");
+      setOpenImg(true);
+    }}
   />
+)}
+
+{/* Modal */}
+{openImg && request?.problemPhotoUrl && (
+  <div
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
+    onClick={() => setOpenImg(false)}
+  >
+    <img
+      src={request.problemPhotoUrl}
+      className="max-w-[90%] max-h-[90%] object-contain rounded-lg"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
 )}
 
 {/* 📌 الحالة */}

@@ -67,7 +67,8 @@ const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const token = sessionStorage.getItem("userToken");
-
+  const [openImg, setOpenImg] = useState(false);
+const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
 const fetchRequest = async () => {
     try {
@@ -154,9 +155,14 @@ const updateStatus = async (newStatus: string) => {
         </div>
 
         {/* Content Card */}
-        <div className={`p-4 rounded-xl shadow ${
+        {/* <div className={`p-4 rounded-xl shadow ${
           !dark ? "bg-white" : "bg-[#0d1629]"
-        }`}>
+        }`}> */}
+        <div
+  className={`w-full max-w-4xl mx-auto p-4 rounded-xl shadow ${
+    !dark ? "bg-white" : "bg-[#0d1629]"
+  }`}
+>
 
               {request && (
   <>
@@ -199,12 +205,34 @@ const updateStatus = async (newStatus: string) => {
     {/* 🛠 problem */}
     <p><strong>📝 المشكلة:</strong> {request.issueDescription}</p>
 
-    {request.problemPhotoUrl && (
+    {/* {request.problemPhotoUrl && (
       <img
         src={request.problemPhotoUrl}
-        className="w-full h-40 object-cover rounded-lg mt-2"
+        // className="w-full max-h-[400px] object-contain rounded-lg mt-2 bg-gray-100"
+        className="w-full h-64 object-cover rounded-lg mt-2"
       />
-    )}
+    )} */}
+    {request.problemPhotoUrl && (
+  <img
+    src={request.problemPhotoUrl}
+    onClick={() => {
+      setSelectedImg(request.problemPhotoUrl);
+      setOpenImg(true);
+    }}
+    className="w-full h-64 object-cover rounded-lg mt-2 cursor-pointer hover:opacity-90 transition"
+  />
+)}
+{openImg && selectedImg && (
+  <div
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+    onClick={() => setOpenImg(false)}
+  >
+    <img
+      src={selectedImg}
+      className="max-w-[95%] max-h-[95%] object-contain rounded-lg"
+    />
+  </div>
+)}
 
     <hr className="my-3" />
 
