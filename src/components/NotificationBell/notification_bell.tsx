@@ -466,10 +466,20 @@ connection.on("YouAreSelected", (data: any) => {
 )}
 
 
-{n.location && (
+{/* {n.location && (
   <div className="text-[11px] opacity-80">
     📍 {n.location.lat}, {n.location.lng}
   </div>
+)} */}
+{n.location && (
+  <a
+    href={`https://www.google.com/maps?q=${n.location.lat},${n.location.lng}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-[11px] opacity-80 text-blue-500 underline hover:text-blue-700"
+  >
+    📍 عرض الموقع على الخريطة
+  </a>
 )}
 
 
