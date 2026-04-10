@@ -3,17 +3,13 @@ import Sidebar from "../../../components/Customer/customer_sidebar";
 
 const Dashboard = () => {
     return (
-        <div className="flex min-h-screen dark:bg-primary_BGD" dir="rtl">
-            {/* 1. استدعاء السايد بار مباشرة بدون div مقيد */}
-            {/* هو سيتولى مسألة الاختفاء في الموبايل والظهور في الديسكتوب داخلياً */}
-            <Sidebar />
+      <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+  <Sidebar />
+  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <Header />
+    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
 
-            <div className="flex-1 flex flex-col min-w-0">
-                {/* 2. الهيدر */}
-                <Header />
-
-                {/* 3. المحتوى الرئيسي مع مراعاة الهوامش للموبايل */}
-                <main className="p-4 md:p-8 space-y-6 md:space-y-8 mt-12 lg:mt-0">
+          
 
                     {/* Welcome Text */}
                     <div className="text-right">

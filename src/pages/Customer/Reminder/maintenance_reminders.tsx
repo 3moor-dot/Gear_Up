@@ -211,11 +211,11 @@ const MaintenanceReminders = () => {
   }, [completedReminders, selectedCar, cars]);
 
   return (
-    <div className={`flex min-h-screen ${dark ? "dark:bg-primary_BGD text-white" : "bg-[#F8FAFC] text-slate-800"}`} dir="rtl">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto scrollbar-hide">
-        <Header />
-        <main className="p-4 md:p-10 max-w-7xl mx-auto w-full">
+     <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+  <Sidebar />
+  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <Header />
+    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           <div className="mb-10 flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-2xl md:text-3xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h3>
