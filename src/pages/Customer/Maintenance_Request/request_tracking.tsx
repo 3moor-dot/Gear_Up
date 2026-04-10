@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { Car, Wrench,ClipboardCheck, Phone, ClipboardList, MapPin, AlertTriangle, Calendar, Settings } from "lucide-react";
 
  const statusMap: any = {
    Accepted: "تم القبول",
@@ -121,7 +122,7 @@ const RequestTracking = () => {
         <Header />
 
         <div className="p-6">
-          {/* <div className="max-w-xl mx-auto text-right"> */}
+      
            <div className="max-w-xl ml-auto text-right"> 
             <h1 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
   تتبع حالة الطلب
@@ -143,38 +144,41 @@ const RequestTracking = () => {
 
   <div className="flex-1">
     <p className="font-bold">
-      🚗 {request?.car?.brand} {request?.car?.model}
-      <span className="text-sm font-normal opacity-70">
-        {" "}({request?.car?.year}) - {request?.car?.plateNumber}
-      </span>
+      <Car className="w-4 h-4 inline-block mr-1 text-blue-500" />
+
+{request?.car?.brand} {request?.car?.model}
+
+<span className="text-sm font-normal opacity-70">
+  ({request?.car?.year}) - {request?.car?.plateNumber}
+</span>
     </p>
   </div>
 
 </div>
 
-{/* 🛠️ الخدمة */}
 
-{/* {request?.serviceType && (
-  <p>
-    <strong>🛠️ الخدمة:</strong> {request.serviceType}
-  </p>
-)} */}
 {request?.serviceType && (
   <p>
-    <strong>🛠 الخدمة:</strong>{" "}
+    
+    <Wrench className="w-4 h-4 inline-block mr-1" />
     {serviceTypeMap[request.serviceType] || request.serviceType}
   </p>
 )}
 
 {/* 📌 نوع الطلب */}
-<p>
-  <strong>📌 نوع الطلب:</strong>{" "}
-  {request?.requestType === "Emergency" ? "🚨 طارئ" : "📅 مجدول"}
+
+<p className="flex items-center gap-2">
+  {/* <AlertTriangle className="w-4 h-4 text-red-500" /> */}
+  <AlertTriangle className="w-4 h-4 text-sky-500" />
+  <strong>نوع الطلب:</strong>{" "}
+  {request?.requestType === "Emergency" ? "طارئ" : "مجدول"}
 </p>
 
 
-<p>
-  <strong>🚚 نوع الخدمة:</strong>{" "}
+
+<p className="flex items-center gap-2">
+  <Wrench className="w-4 h-4 text-sky-500" />
+  <strong>نوع الخدمة:</strong>{" "}
   {request?.serviceMode === "MechanicComesToCustomer"
     ? "ميكانيكي متنقل"
     : request?.serviceMode === "CustomerGoesToMechanic"
@@ -182,33 +186,12 @@ const RequestTracking = () => {
     : "غير محدد"}
 </p>
 
-<p>
-  <strong>📝 المشكلة:</strong> {request?.issueDescription}
+<p className="flex items-start gap-2">
+  <ClipboardList className="w-4 h-4 text-sky-500 mt-1" />
+  <strong>المشكلة:</strong> {request?.issueDescription}
 </p>
 
 
-    {/* {request?.problemPhotoUrl && (
-  <img
-    src={request.problemPhotoUrl}
-    className="w-full h-40 object-cover rounded-lg mt-2 cursor-pointer"
-    onClick={() => {
-      console.log("IMAGE CLICKED");
-      setOpenImg(true);
-    }}
-  />
-)}
-{openImg && request?.problemPhotoUrl && (
-  <div
-    className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
-    onClick={() => setOpenImg(false)}
-  >
-    <img
-      src={request.problemPhotoUrl}
-      className="max-w-[90%] max-h-[90%] object-contain rounded-lg"
-      onClick={(e) => e.stopPropagation()}
-    />
-  </div>
-)} */}
 {/* 🖼️ صورة المشكلة */}
 {request?.problemPhotoUrl && (
   <img
@@ -236,9 +219,12 @@ const RequestTracking = () => {
 )}
 
 {/* 📌 الحالة */}
-<p>
-  <strong>📌 الحالة:</strong>{" "}
-  {statusMap[request?.status] || request?.status}
+<p className="flex items-center gap-2 text-sky-500 font-medium">
+  <ClipboardCheck className="w-4 h-4 text-sky-500" />
+  <strong className="text-sky-500">الحالة:</strong>{" "}
+  <span className="text-sky-500">
+    {statusMap[request?.status] || request?.status}
+  </span>
 </p>
 
 <div className="flex items-center justify-between mt-6">
@@ -291,12 +277,17 @@ const RequestTracking = () => {
     />
 
     <div>
-      <p className="font-bold">
-  🔧 الميكانيكي: {request.mechanic.firstName} {request.mechanic.lastName}
-</p>
+      <p className="font-bold flex items-center gap-1">
+        <Wrench className="w-4 h-4" />
+        الميكانيكي:
+        <span className="mr-1">
+          {request.mechanic.firstName} {request.mechanic.lastName}
+        </span>
+      </p>
 
-      <p className="text-sm opacity-70">
-        📞 {request.mechanic.phoneNumber}
+      <p className="text-sm opacity-70 flex items-center gap-1">
+        <Phone className="w-4 h-4" />
+        {request.mechanic.phoneNumber}
       </p>
     </div>
 

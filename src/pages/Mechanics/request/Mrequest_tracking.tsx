@@ -7,7 +7,7 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { Car } from "lucide-react";
+import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings } from "lucide-react";
 
 
      const statusOptions = [
@@ -154,10 +154,7 @@ const updateStatus = async (newStatus: string) => {
           </div>
         </div>
 
-        {/* Content Card */}
-        {/* <div className={`p-4 rounded-xl shadow ${
-          !dark ? "bg-white" : "bg-[#0d1629]"
-        }`}> */}
+       
         <div
   className={`w-full max-w-4xl mx-auto p-4 rounded-xl shadow ${
     !dark ? "bg-white" : "bg-[#0d1629]"
@@ -202,16 +199,12 @@ const updateStatus = async (newStatus: string) => {
 
     <hr className="my-3" />
 
-    {/* 🛠 problem */}
-    <p><strong>📝 المشكلة:</strong> {request.issueDescription}</p>
+   
+    <p>
+  <ClipboardList className="w-4 h-4 text-sky-500 inline-block ml-1" />
+  <strong>المشكلة:</strong> {request.issueDescription}
+</p>
 
-    {/* {request.problemPhotoUrl && (
-      <img
-        src={request.problemPhotoUrl}
-        // className="w-full max-h-[400px] object-contain rounded-lg mt-2 bg-gray-100"
-        className="w-full h-64 object-cover rounded-lg mt-2"
-      />
-    )} */}
     {request.problemPhotoUrl && (
   <img
     src={request.problemPhotoUrl}
@@ -237,13 +230,15 @@ const updateStatus = async (newStatus: string) => {
     <hr className="my-3" />
 
     {/* 📌 request info */}
-    <p>
-  <strong>📌 نوع الطلب:</strong>{" "}
+<p>
+  <AlertTriangle className="w-4 h-4 text-sky-500 inline-block ml-1" />
+  <strong> نوع الطلب:</strong>{" "}
   {requestTypeMap[request.requestType] || request.requestType}
 </p>
 
 <p>
-  <strong>📌 طريقة الخدمة:</strong>{" "}
+  <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
+  <strong> طريقة الخدمة:</strong>{" "}
   {serviceModeMap[request?.serviceMode] || request?.serviceMode}
 </p>
  
@@ -256,10 +251,12 @@ const updateStatus = async (newStatus: string) => {
             </>
           )}
 
+      
           <p>
-            <strong>📌 الحالة الحالية:</strong>{" "}
-            {getStatusLabel(status)}
-          </p>
+          <ClipboardCheck className="w-4 h-4 text-sky-500 inline-block ml-1" />
+  <strong> حالة الطلب:</strong>{" "}
+{getStatusLabel(status)}
+</p>
 
         </div>
 
