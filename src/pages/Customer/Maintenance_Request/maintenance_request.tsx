@@ -325,7 +325,14 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
           );
       
           if (res.ok) {
-            Swal.fire("تم اختيار الميكانيكي بنجاح ✅");
+            // Swal.fire("تم اختيار الميكانيكي بنجاح ✅");
+            Swal.fire({
+                title: "تم اختيار الميكانيكي بنجاح",
+                icon: "success",
+                background: dark ? "#0B1220" : "#ffffff",
+                color: dark ? "#ffffff" : "#1f2937",
+                confirmButtonColor: "#137FEC"
+              });
             console.log("NAVIGATING WITH ID:", requestId);
             // ✅ هنا بقى التنقل
             if (requestId) {
@@ -347,8 +354,9 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
                 <Header />
-                <main className="p-4 md:p-8 mt-12 lg:mt-0 max-w-5xl mx-auto w-full pb-20 text-right">
-                    {/* <StepProgress currentStep={currentStep} onStepChange={setCurrentStep} /> */}
+                {/* <main className="p-4 md:p-8 mt-12 lg:mt-0 max-w-5xl mx-auto w-full pb-20 text-right">
+           */}
+           <main className="relative p-4 md:p-8 mt-12 lg:mt-0 max-w-5xl mx-auto w-full pb-20 text-right">
 
                     {currentStep === 1 ? (
                         <div className="space-y-10 animate-in fade-in duration-500">
@@ -514,7 +522,6 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
                         <div className="animate-in slide-in-from-left duration-500">
 
 
-{/* <div className="mb-6"> */}
 <div className="mb-6 mt-6 w-full text-right">
 
 {acceptedMechanics.length > 0 ? (
@@ -573,18 +580,20 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
    </div>
 
 
-<div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-primary_BGD border-t border-gray-200 dark:border-gray-700 z-50">
-  <div className="max-w-5xl mx-auto flex justify-start">
-    <button
-      onClick={() => setCurrentStep(1)}
-      className="bg-gray-700 text-white px-8 py-3 rounded-xl font-bold w-full md:w-auto"
-    >
-      رجوع
-    </button>
-  </div>
+<div className="mt-[400px] pt-8 border-t border-gray-200 dark:border-gray-700 w-full" />
+
+{/* حاوية الزرار مع padding bottom كبير عشان الصفحة متخلصش فجأة */}
+<div className="flex justify-start mt-12 pb-60"> 
+  <button
+    onClick={() => setCurrentStep(1)}
+    className="bg-gray-500 hover:bg-gray-600 text-white px-20 py-4 rounded-2xl font-black shadow-2xl transition-all"
+  >
+    رجوع
+  </button>
 </div>
 
-        </div>
+</div>
+
                      
                     )}
                 </main>

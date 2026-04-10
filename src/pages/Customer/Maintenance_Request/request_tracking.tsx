@@ -30,7 +30,15 @@ const statusOrder = [
   "Arrived",
   "InProgress",
   "Completed",
+  // "Cancelled",
 ];
+
+const serviceTypeMap: any = {
+  Diagnosis: "تشخيص",
+  Tires: "إطارات",
+  BodyRepair: "إصلاح هيكل",
+  OilChange: "تغيير زيت",
+};
 
 const RequestTracking = () => {
   const { requestId } = useParams();
@@ -62,17 +70,37 @@ const RequestTracking = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (requestId) fetchRequest();
-  // }, [requestId]);
   useEffect(() => {
     if (!requestId) return;
   
-    fetchRequest();
+    let lastStatus = null;
   
-    const interval = setInterval(() => {
-      fetchRequest();
-    }, 5000); // خليها 5 ثواني مش 3 عشان تقلل “النط”
+    const load = async () => {
+      try {
+        const res = await axios.get(
+          `https://gearupapp.runasp.net/api/requests/${requestId}/status`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+  
+        const newData = res.data;
+  
+        // مهم جدًا: ما نعملش update إلا لو في تغيير
+        if (newData.status !== lastStatus) {
+          lastStatus = newData.status;
+          setRequest(newData);
+        }
+      } catch (err) {
+        toast.error("فشل تحميل بيانات الطلب");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    load(); // أول مرة بس
+  
+    const interval = setInterval(load, 5000);
   
     return () => clearInterval(interval);
   }, [requestId]);
@@ -125,9 +153,18 @@ const RequestTracking = () => {
 </div>
 
 {/* 🛠️ الخدمة */}
-<p>
-  <strong>🛠️ الخدمة:</strong> {request?.serviceType}
-</p>
+
+{/* {request?.serviceType && (
+  <p>
+    <strong>🛠️ الخدمة:</strong> {request.serviceType}
+  </p>
+)} */}
+{request?.serviceType && (
+  <p>
+    <strong>🛠 الخدمة:</strong>{" "}
+    {serviceTypeMap[request.serviceType] || request.serviceType}
+  </p>
+)}
 
 {/* 📌 نوع الطلب */}
 <p>

@@ -34,8 +34,25 @@ import { Car } from "lucide-react";
         "Arrived",
         "InProgress",
         "Completed",
+        // "Cancelled",
       ];
+     
+      const serviceTypeMap: any = {
+        Diagnosis: "تشخيص",
+        Tires: "إطارات",
+        BodyRepair: "إصلاح هيكل",
+        OilChange: "تغيير زيت",
+      };
 
+      const requestTypeMap: any = {
+        Emergency: "طارئ",
+        Scheduled: "مجدول",
+      };
+
+      const serviceModeMap: any = {
+        MechanicComesToCustomer: "الميكانيكي يذهب للعميل",
+        CustomerGoesToMechanic: "العميل يأتي للميكانيكي",
+      };
 
 
 const MRequestTracking = () => {
@@ -192,8 +209,22 @@ const updateStatus = async (newStatus: string) => {
     <hr className="my-3" />
 
     {/* 📌 request info */}
-    <p><strong>📌 نوع الطلب:</strong> {request.requestType}</p>
-    <p><strong>🛠 الخدمة:</strong> {request.serviceType}</p>
+    <p>
+  <strong>📌 نوع الطلب:</strong>{" "}
+  {requestTypeMap[request.requestType] || request.requestType}
+</p>
+
+<p>
+  <strong>📌 طريقة الخدمة:</strong>{" "}
+  {serviceModeMap[request?.serviceMode] || request?.serviceMode}
+</p>
+ 
+{request?.serviceType && (
+  <p>
+    <strong>🛠 الخدمة:</strong>{" "}
+    {serviceTypeMap[request.serviceType] || request.serviceType}
+  </p>
+)}
             </>
           )}
 
