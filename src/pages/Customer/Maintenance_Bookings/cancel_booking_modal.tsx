@@ -1,66 +1,83 @@
+ 
 import { MdClose } from "react-icons/md";
-
+import axios from "axios";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 interface CancelBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  booking?: { id: string; date: string; time: string } | null;
+  token?: string;
+  onSuccess?: () => void;
 }
 
-const CancelBookingModal = ({ isOpen, onClose }: CancelBookingModalProps) => {
+const CancelBookingModal = ({ isOpen, onClose, booking, token, onSuccess }: CancelBookingModalProps) => {
   if (!isOpen) return null;
 
-  // التنسيق الموحد للحقول الداكنة (بناءً على ستايل الكود الذي قدمته)
-  const textareaStyle = "w-full bg-[#0F132380] border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none cursor-text hover:bg-[#1e293b] transition-all focus:border-red-500/50 min-h-[150px] resize-none";
-  const labelStyle = "text-right font-bold text-white mb-4 block text-lg pr-1";
+const handleCancel = async () => {
+  console.log("Booking ID:", booking?.id);
+  console.log("Token:", token);
+
+  if (!booking?.id) {
+    toast.error("معرف الحجز غير موجود");
+    return;
+  }
+
+  try {
+    await axios.post(
+      `https://gearupapp.runasp.net/api/bookings/${booking.id}/cancel`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "*/*",
+        },
+      }
+    );
+
+    Swal.fire({
+      icon: "success",
+      title: "تم إلغاء الحجز",
+      text: "تم إلغاء الحجز بنجاح",
+    });
+    onSuccess?.();
+    onClose();
+  } catch (error: any) {
+    console.error("Cancel error:", error.response?.data || error);
+    Swal.fire({
+      icon: "error",
+      title: "فشل إلغاء الحجز",
+      text: error.response?.data?.message || "فشل إلغاء الحجز",
+    });
+  }
+};
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-      {/* الخلفية المعتمة مع Blur خفيف */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-        onClick={onClose}
-      ></div>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose}></div>
 
-      {/* نافذة البوب أب */}
-      <div className="relative w-full max-w-2xl bg-[#137FEC5C] rounded-[40px] shadow-2xl overflow-hidden border border-white/10 animate-in fade-in zoom-in duration-300">
-        
-        {/* زر الإغلاق X */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-8 left-8 text-gray-400 hover:text-white transition-colors z-10"
-        >
-          <MdClose size={32} />
+<div className="relative w-full max-w-md bg-[#0F172A] rounded-[40px] shadow-2xl overflow-hidden border border-blue-500/20">
+        <button onClick={onClose} className="absolute top-6 left-6 text-gray-600 hover:text-white transition-colors z-10">
+          <MdClose size={28} />
         </button>
 
-        <div className="p-8 md:p-12">
-          {/* عنوان البوب أب بجهة اليمين */}
-          <h2 className="text-3xl font-black text-white text-right mb-10">إلغاء الطلب</h2>
+        <div className="p-8 md:p-10 text-right">
+          <h2 className="text-2xl font-black text-white mb-3">هل أنت متأكد؟</h2>
+          <p className="text-white/60 text-sm mb-8">لن تتمكن من استعادة هذا الحجز بعد الإلغاء!</p>
 
-          <div className="space-y-6">
-            
-            {/* حقل سبب الإلغاء */}
-            <div className="text-right">
-              <label className={labelStyle}>سبب إلغاء الطلب</label>
-              <textarea
-                placeholder="اكتب سبب الإلغاء هنا..."
-                className={textareaStyle}
-                dir="rtl"
-              />
-            </div>
-
-            {/* زر الإلغاء النهائي (أحمر) في المنتصف */}
-            <div className="flex justify-center pt-6">
-              <button
-                type="button"
-                className="bg-[#EF444433] text-[#EF4444] px-16 py-4 rounded-2xl font-black text-xl border border-[#EF444455] hover:bg-[#EF4444] hover:text-white transition-all active:scale-95 shadow-lg shadow-red-900/20"
-                onClick={() => {
-                  alert("تم إلغاء الطلب بنجاح");
-                  onClose();
-                }}
-              >
-                الغاء الطلب الان
-              </button>
-            </div>
-
+          <div className="flex gap-3" dir="rtl">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-[#0F1323] text-white py-3 rounded-2xl font-bold border border-white/5 hover:bg-[#1e293b] transition-all"
+            >
+              تراجع
+            </button>
+            <button
+              onClick={handleCancel}
+              className="flex-1 bg-[#EF444433] text-[#EF4444] py-3 rounded-2xl font-bold border border-[#EF444455] hover:bg-[#EF4444] hover:text-white transition-all"
+            >
+              إلغاء الحجز
+            </button>
           </div>
         </div>
       </div>
