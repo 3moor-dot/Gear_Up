@@ -142,11 +142,10 @@ const serviceTypeMap: Record<string, string> = {
                   {/* HEADER */}
                   <thead className={`${dark ? "bg-[#1E293B] text-gray-200" : "bg-gray-100 text-gray-700"} text-sm`}>
                     <tr>
+                    <th className="p-3 text-right">المشكلة</th>
+                    <th className="p-3 text-right">العميل</th>
                       <th className="p-3 text-right">السيارة</th>
-                      <th className="p-3 text-right">العميل</th>
-                      <th className="p-3 text-right">الوصف</th>
                       <th className="p-3 text-right">نوع الخدمة</th>
-               
                       <th className="p-3 text-right">الحالة</th>
                       <th className="p-3 text-right">التاريخ</th>
                     </tr>
@@ -167,17 +166,16 @@ onClick={() =>
   }`}
 >
       
-                        <td className="p-3">
-  <div className="font-semibold">
-    {req.car.brand} {req.car.model}
-  </div>
-  <div className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
-    {req.car.plateNumber}
-  </div>
-</td>
+
       
                        
-                        <td className="p-3">
+                    
+
+              <td className={`text-sm max-w-xs truncate ${dark ? "text-gray-300" : "text-gray-600"}`}>
+  {req.issueDescription}
+</td>
+
+<td className="p-3">
   <div className="flex items-center gap-3">
     
     <img
@@ -193,10 +191,15 @@ onClick={() =>
 
   </div>
 </td>
-      
 
-                        <td className={`text-sm max-w-xs truncate ${dark ? "text-gray-300" : "text-gray-600"}`}>
-  {req.issueDescription}
+
+<td className="p-3">
+  <div className="font-semibold">
+    {req.car.brand} {req.car.model}
+  </div>
+  <div className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
+    {req.car.plateNumber}
+  </div>
 </td>
                 
                         <td className="p-3">

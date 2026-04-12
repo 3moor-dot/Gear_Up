@@ -5,8 +5,28 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
+
+type ServiceRequest = {
+  requestId: string;
+  issueDescription: string;
+  createdAt: string;
+  status: string;
+  serviceType: string;
+  car?: {
+    brand?: string;
+    model?: string;
+  };
+  assignedMechanic?: {
+    profilePhotoUrl?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+};
+
 const ServiceHistory = () => {
-  const [historyData, setHistoryData] = useState([]);
+  // const [historyData, setHistoryData] = useState([]);
+  const [historyData, setHistoryData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +55,20 @@ const ServiceHistory = () => {
     Completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
     Cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   };
+
+
+  const allowedStatuses = [
+    "Accepted",
+    "OnTheWay",
+    "Arrived",
+    "InProgress",
+    "Completed",
+  ];
+  
+  const filteredHistory = historyData.filter((item) =>
+    allowedStatuses.includes(item.status)
+  );
+
   
   const serviceTypeMap = {
     Diagnosis: "تشخيص",
@@ -58,7 +92,7 @@ const ServiceHistory = () => {
 
         setHistoryData(res.data?.requests || []);
         setCurrentPage(1);
-      } catch (err) {
+      } catch {
         setHistoryData([]);
       } finally {
         setLoading(false);
@@ -70,8 +104,10 @@ const ServiceHistory = () => {
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
-  const currentItems = historyData.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(historyData.length / itemsPerPage);
+  // const currentItems = historyData.slice(indexOfFirst, indexOfLast);
+  // const totalPages = Math.ceil(historyData.length / itemsPerPage);
+  const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
+const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
@@ -115,13 +151,13 @@ const ServiceHistory = () => {
                 <tbody className="text-gray-700 dark:text-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan="6" className="text-center p-6">
+                      <td colSpan={6} className="text-center p-6">
                         جاري التحميل...
                       </td>
                     </tr>
                   ) : currentItems.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="text-center p-6">
+                      <td colSpan={6} className="text-center p-6">
                         لا يوجد بيانات
                       </td>
                     </tr>
@@ -146,29 +182,17 @@ const ServiceHistory = () => {
                           {row.car?.brand} {row.car?.model}
                         </td>
 
-                        <td className="p-3">{serviceTypeMap[row.serviceType] || "—"}</td>
+                        <td className="p-3">{serviceTypeMap[row.serviceType as keyof typeof serviceTypeMap] || "—"}</td>
 
-                        {/* <td className="p-3">
-                          <span className="px-2 py-1 rounded text-xs bg-gray-200 dark:bg-gray-700">
-                           
-                            <span
-  className={`px-2 py-1 rounded text-xs ${
-    statusColorMap[row.status] ||
-    "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-  }`}
->
-  {statusMap[row.status] || "—"}
-</span>
-                          </span>
-                        </td> */}
+            
                         <td className="p-3">
   <span
     className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-      statusColorMap[row.status] ||
+      statusColorMap[row.status as keyof typeof statusColorMap] ||
       "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
     }`}
   >
-    {statusMap[row.status] || "—"}
+    {statusMap[row.status as keyof typeof statusMap] || "—"}
   </span>
 </td>
 
