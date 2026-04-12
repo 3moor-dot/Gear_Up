@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { Car, Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle } from "lucide-react";
+import {  Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle } from "lucide-react";
 
  const statusMap: any = {
    Accepted: "تم القبول",
@@ -87,7 +87,7 @@ const RequestTracking = () => {
   
         const newData = res.data;
   
-        // مهم جدًا: ما نعملش update إلا لو في تغيير
+    
         if (newData.status !== lastStatus) {
           lastStatus = newData.status;
           setRequest(newData);
@@ -122,17 +122,22 @@ const RequestTracking = () => {
         <Header />
 
         <div className="p-6">
-      
-           <div className="max-w-xl ml-auto text-right"> 
-            <h1 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-  تتبع حالة الطلب
-</h1>
+    
+ 
+<div className="w-full text-right mb-4 pr-6">
+  <h1 className="text-xl font-bold">
+    تتبع حالة الطلب
+  </h1>
+</div>
 
-<div className="bg-white dark:bg-gray-800 shadow p-4 rounded-xl space-y-2 text-gray-900 dark:text-gray-100">
+<div className="w-full max-w-3xl mx-auto text-right">
+  <div className="bg-white dark:bg-gray-800 shadow p-4 rounded-xl space-y-2 text-gray-900 dark:text-gray-100">
+
 
 
 {/* 🚗 CAR CARD */}
-<div className="flex gap-3 items-center">
+{/* <div className="flex gap-3 items-center"> */}
+<div className="flex gap-4 items-center border-b pb-4">
 
   {request?.car?.carPhotoUrl && (
     <img
@@ -144,7 +149,7 @@ const RequestTracking = () => {
 
   <div className="flex-1">
     <p className="font-bold">
-      <Car className="w-4 h-4 inline-block mr-1 text-blue-500" />
+      {/* <Car className="w-4 h-4 inline-block mr-1 text-blue-500" /> */}
 
 {request?.car?.brand} {request?.car?.model}
 

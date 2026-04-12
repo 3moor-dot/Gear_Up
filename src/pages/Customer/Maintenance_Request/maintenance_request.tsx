@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdImage, MdLocationOn } from "react-icons/md";
@@ -9,7 +8,6 @@ import { FaChevronDown } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
-
 const MaintenanceRequest = () => {
     const { dark } = useTheme();
     const [currentStep, setCurrentStep] = useState(1);
@@ -17,6 +15,83 @@ const MaintenanceRequest = () => {
     const [loading, setLoading] = useState(false);
     const [carsLoading, setCarsLoading] = useState(true);
     const [cars, setCars] = useState<any[]>([]);
+
+    const [timeLeft, setTimeLeft] = useState(300); // 5 دقائق
+const [phase, setPhase] = useState<"waiting" | "expanding" | "cancelled">("waiting");
+
+const [acceptedMechanics, setAcceptedMechanics] = useState<any[]>([]);
+
+
+// const [acceptedMechanicName, setAcceptedMechanicName] = useState<string | null>(null);
+
+
+useEffect(() => {
+    if (currentStep !== 2) return;
+  
+    const timer = setInterval(() => {
+      // ⛔ لو فيه ميكانيكي خلاص نوقف كل حاجة
+      if (acceptedMechanics.length > 0) return;
+  
+      setTimeLeft((prev) => {
+        if (prev > 0) return prev - 1;
+  
+        // ⛔ خلص الوقت
+        if (phase === "waiting") {
+        //   Swal.fire({
+        //     title: "جاري توسيع دائرة البحث 🔍",
+        //     text: "لم يتم العثور على ميكانيكي",
+        //     icon: "info",
+        //   });
+        Swal.fire({
+            title: "جاري توسيع دائرة البحث 🔍",
+            text: "لم يتم العثور على ميكانيكي",
+            icon: "info",
+            background: dark ? "#0B1220" : "#ffffff",
+            color: dark ? "#ffffff" : "#1f2937",
+            confirmButtonColor: "#137FEC"
+          });
+  
+          setPhase("expanding");
+          return 300;
+        }
+  
+        if (phase === "expanding") {
+          // ⛔ مهم: نتأكد تاني قبل الإلغاء
+          if (acceptedMechanics.length === 0) {
+            // Swal.fire({
+            //   title: "تم إلغاء الطلب ❌",
+            //   text: "لم يتم العثور على ميكانيكي",
+            //   icon: "error",
+            // });
+            Swal.fire({
+                title: "تم إلغاء الطلب ❌",
+                text: "لم يتم العثور على ميكانيكي",
+                icon: "error",
+                background: dark ? "#0B1220" : "#ffffff",
+                color: dark ? "#ffffff" : "#1f2937",
+                confirmButtonColor: "#137FEC"
+              });
+  
+            setPhase("cancelled");
+          }
+  
+          return 0;
+        }
+  
+        return 0;
+      });
+    }, 1000);
+  
+    return () => clearInterval(timer);
+  }, [currentStep, phase, acceptedMechanics, dark]);
+
+
+//   useEffect(() => {
+//     if (acceptedMechanics.length > 0) {
+//       setTimeLeft(0);
+//     }
+//   }, [acceptedMechanics]);
+
 
     // --- بيانات الطلب ---
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
@@ -35,11 +110,7 @@ const MaintenanceRequest = () => {
     const selectedCar = cars.find(c => c.id === selectedCarId);
     const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-    const [acceptedMechanics, setAcceptedMechanics] = useState<any[]>([]);
-
-
-    const [acceptedMechanicName, setAcceptedMechanicName] = useState<string | null>(null);
-
+  
 
     const navigate = useNavigate();
 
@@ -58,7 +129,7 @@ const MaintenanceRequest = () => {
       
           // 👇 أهم شرط
           if (parsed.requestId === requestId) {
-            setAcceptedMechanicName(parsed.name);
+            // setAcceptedMechanicName(parsed.name);
           }
         };
       
@@ -135,7 +206,6 @@ setAcceptedMechanics(mechanics);
     
         return () => clearInterval(interval);
     }, [requestId, currentStep]);
-
 
 
     const [gettingLocation, setGettingLocation] = useState(false);
@@ -231,10 +301,6 @@ setAcceptedMechanics(mechanics);
     
             if (location) {
            
-                // formData.append("Location", JSON.stringify({
-                //     latitude: location.lat,
-                //     longitude: location.lng
-                //   }));
                 formData.append("Latitude", location.lat.toString());
 formData.append("Longitude", location.lng.toString());
             }
@@ -251,7 +317,7 @@ formData.append("Longitude", location.lng.toString());
                 const responseData = await response.json();
 
 localStorage.removeItem("accepted_mechanic");
-setAcceptedMechanicName(null);
+// setAcceptedMechanicName(null);
 
                 console.log("FULL RESPONSE:", responseData);
 
@@ -304,9 +370,15 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
             else {
                 Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
             }
-        } catch (error) {
+        } 
+        // catch (error) {
+        //     Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
+        // } 
+        catch (err) {
+            console.error(err);
             Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
-        } finally {
+        }
+        finally {
             setLoading(false);
         }
     };
@@ -574,7 +646,64 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
 ) 
 
 : (
-  <p className="text-gray-500">في انتظار قبول ميكانيكي...</p>
+
+<div className="text-right space-y-2">
+
+{/* {phase === "cancelled" ? (
+  <p className="text-red-500 font-bold text-lg">
+    تم إلغاء الطلب ❌
+  </p>
+) : ( */}
+
+{phase === "cancelled" ? (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="bg-white dark:bg-[#1F2937] border border-red-500/20 rounded-2xl shadow-2xl p-8 text-center max-w-md w-full">
+      
+      <p className="text-red-500 text-2xl font-black mb-2">
+        تم إلغاء الطلب ❌
+      </p>
+
+      <p className="text-gray-500 dark:text-gray-300 text-sm">
+        لم يتم العثور على ميكانيكي
+      </p>
+
+    </div>
+  </div>
+) : (
+
+  <>
+    <p className="text-gray-500">
+      في انتظار قبول ميكانيكي...
+    </p>
+
+        <div className="flex items-center justify-center min-h-[300px]">
+  <div className="relative flex flex-col items-center justify-center w-64 h-64 rounded-full bg-white dark:bg-[#1F2937] shadow-2xl border-4 border-blue-500/20">
+    
+    {/* دائرة خلفية خفيفة */}
+    <div className="absolute inset-0 rounded-full border-4 border-blue-500/10 animate-pulse"></div>
+
+    {/* العد التنازلي */}
+    <div className="text-center z-10">
+      <p className="text-6xl font-black text-blue-500">
+        {Math.floor(timeLeft / 60)}:
+        {(timeLeft % 60).toString().padStart(2, "0")}
+      </p>
+      <p className="text-sm text-gray-400 mt-2 font-semibold">
+        وقت الانتظار
+      </p>
+    </div>
+  </div>
+</div>
+
+    {phase === "expanding" && (
+      <p className="text-orange-500 text-xs font-bold">
+        جاري توسيع دائرة البحث...
+      </p>
+    )}
+  </>
+)}
+
+</div>
 )}
 
    </div>
@@ -582,18 +711,17 @@ console.log("REQUEST ID AFTER SET:", responseData.requestId || responseData.id);
 
 <div className="mt-[400px] pt-8 border-t border-gray-200 dark:border-gray-700 w-full" />
 
-{/* حاوية الزرار مع padding bottom كبير عشان الصفحة متخلصش فجأة */}
-<div className="flex justify-start mt-12 pb-60"> 
+
+{/* <div className="flex justify-start mt-12 pb-60"> 
   <button
     onClick={() => setCurrentStep(1)}
     className="bg-gray-500 hover:bg-gray-600 text-white px-20 py-4 rounded-2xl font-black shadow-2xl transition-all"
   >
     رجوع
   </button>
-</div>
+</div> */}
 
 </div>
-
                      
                     )}
                 </main>
