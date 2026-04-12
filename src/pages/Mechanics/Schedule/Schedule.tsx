@@ -1,11 +1,12 @@
- 
 import { useState, useEffect } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { MdClose } from "react-icons/md";
 
+// تم تحديث الـ Interface لإضافة تواريخ الإنشاء والتحديث
 interface Booking {
   id: string;
   customerName: string;
@@ -16,13 +17,14 @@ interface Booking {
   slotStart: string;
   slotEnd: string;
   status: string;
+  createdAt?: string; 
+  updatedAt?: string | null;
 }
 
 const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
 const Schedule = () => {
   const { dark } = useTheme();
-  // تم التعديل: جعل الاختيار الافتراضي هو "اليوم"
   const [selectedView, setSelectedView] = useState("day");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
@@ -32,6 +34,10 @@ const Schedule = () => {
   const [scheduleBookings, setScheduleBookings] = useState<Booking[]>([]);
   const [loadingToday, setLoadingToday] = useState(true);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
+
+  // State for Drawer & Actions
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // ======= Fetch Today =======
   useEffect(() => {
@@ -84,6 +90,7 @@ const Schedule = () => {
     fetchSchedule();
   }, [currentDate]);
 
+  // ======= Helper Functions =======
   const daysWithBookings = new Set(
     scheduleBookings.map((b) => new Date(b.date).getDate())
   );
@@ -130,29 +137,86 @@ const Schedule = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // تم التعديل: إضافة حالات Accepted و Rejected مع الألوان المناسبة
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Confirmed": return "bg-green-600/20 text-green-400";
-      case "Accepted":  return "bg-green-600/20 text-green-400"; // أخضر
-      case "Pending":   return "bg-yellow-600/20 text-yellow-400";
-      case "Cancelled": return "bg-red-600/20 text-red-400";
-      case "Rejected":  return "bg-red-600/20 text-red-400"; // أحمر
-      case "Completed": return "bg-blue-600/20 text-blue-400";
-      default:          return "bg-gray-600/20 text-gray-400";
+      case "Confirmed": return "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400";
+      case "Accepted":  return "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400";
+      case "Pending":   return "bg-amber-100 text-amber-700 dark:bg-amber-600/20 dark:text-amber-400";
+      case "Cancelled": return "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400";
+      case "Rejected":  return "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400";
+      case "Completed": return "bg-blue-100 text-blue-700 dark:bg-blue-600/20 dark:text-blue-400";
+      default:          return "bg-gray-100 text-gray-700 dark:bg-gray-600/20 dark:text-gray-400";
     }
   };
 
-  // تم التعديل: إضافة النصوص العربية لحالتي Accepted و Rejected
   const getStatusText = (status: string) => {
     switch (status) {
       case "Confirmed": return "مؤكد";
-      case "Accepted":  return "مقبول"; // نص عربي
+      case "Accepted":  return "مقبول";
       case "Pending":   return "في انتظار";
       case "Cancelled": return "ملغي";
-      case "Rejected":  return "مرفوض"; // نص عربي
+      case "Rejected":  return "مرفوض";
       case "Completed": return "مكتمل";
       default:          return status;
+    }
+  };
+
+  // ======= Action Handlers =======
+  const updateBookingStatus = (bookingId: string, newStatus: string) => {
+    const updateList = (list: Booking[]) => 
+      list.map(b => b.id === bookingId ? { ...b, status: newStatus } : b);
+    
+    setTodayAppointments(prev => updateList(prev));
+    setScheduleBookings(prev => updateList(prev));
+  };
+
+  const handleAccept = async (bookingId: string) => {
+    try {
+      setActionLoading(true);
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}/accept`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في قبول الحجز");
+      
+      updateBookingStatus(bookingId, "Confirmed");
+      setSelectedBooking(null);
+    } catch (err) {
+      console.error("خطأ في قبول الحجز:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async (bookingId: string) => {
+    try {
+      setActionLoading(true);
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في رفض الحجز");
+      
+      updateBookingStatus(bookingId, "Cancelled");
+      setSelectedBooking(null);
+    } catch (err) {
+      console.error("خطأ في رفض الحجز:", err);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -303,7 +367,8 @@ const Schedule = () => {
               {!loadingToday && !loadingSchedule && displayedAppointments.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className={`p-4 rounded-lg border transition hover:scale-[1.02] ${
+                  onClick={() => setSelectedBooking(appointment)}
+                  className={`p-4 rounded-lg border transition hover:scale-[1.02] cursor-pointer ${
                     !dark
                       ? "bg-gray-50 border-gray-200 hover:shadow-lg"
                       : "bg-[#131c2f] border-gray-800 hover:shadow-xl hover:shadow-blue-900/20"
@@ -337,6 +402,109 @@ const Schedule = () => {
 
         </div>
       </main>
+
+      {/* OVERLAY */}
+      {selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedBooking(null)} />
+      )}
+
+      {/* DRAWER */}
+      <div
+        dir="rtl"
+        className={`fixed top-0 left-0 h-full w-full sm:w-[420px] z-50 shadow-2xl transition-transform duration-300 overflow-y-auto
+          ${selectedBooking ? "translate-x-0" : "-translate-x-full"}
+          ${!dark ? "bg-white" : "bg-[#0d1629]"}
+        `}
+      >
+        {/* Drawer Header */}
+        <div className={`flex items-center justify-between p-5 border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+          <h2 className="text-lg font-bold">تفاصيل الموعد</h2>
+          <button
+            onClick={() => setSelectedBooking(null)}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition ${!dark ? "hover:bg-gray-100 text-gray-600" : "hover:bg-gray-800 text-gray-400"}`}
+          >
+            <MdClose size={20} />
+          </button>
+        </div>
+
+        {/* Drawer Content */}
+        {selectedBooking && (
+          <div className="p-5 space-y-5">
+
+            <div className="flex justify-center">
+              <span className={`px-4 py-1.5 rounded-lg text-sm font-bold ${getStatusColor(selectedBooking.status)}`}>
+                {getStatusText(selectedBooking.status)}
+              </span>
+            </div>
+
+            {/* Customer Info */}
+            <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>بيانات العميل</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                  {selectedBooking.customerName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{selectedBooking.customerName}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Booking Details - Updated */}
+            <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>تفاصيل الحجز</h3>
+              {[
+                { label: "السيارة", value: selectedBooking.carInfo, icon: "🚗" },
+                { label: "الخدمة", value: selectedBooking.subSpecializationName, icon: "🔧" },
+                { label: "التاريخ", value: new Date(selectedBooking.date).toLocaleDateString("ar-EG", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), icon: "📅" },
+                { label: "الوقت", value: `${selectedBooking.slotStart.slice(0, 5)} - ${selectedBooking.slotEnd.slice(0, 5)}`, icon: "⏰" },
+                { label: "الميكانيكي", value: selectedBooking.mechanicName, icon: "👨‍🔧" },
+              ].map(({ label, value, icon }) => (
+                <div key={label} className={`flex items-center justify-between py-2 border-b last:border-0 ${!dark ? "border-gray-200" : "border-gray-700"}`}>
+                  <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>{icon} {label}</span>
+                  <span className="text-sm font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Timestamps - Added */}
+            <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>سجل الوقت</h3>
+              {[
+                { label: "تاريخ الإنشاء", value: selectedBooking.createdAt ? new Date(selectedBooking.createdAt).toLocaleString("ar-EG") : "غير متوفر" },
+                { label: "آخر تحديث", value: selectedBooking.updatedAt ? new Date(selectedBooking.updatedAt).toLocaleString("ar-EG") : "—" },
+              ].map(({ label, value }) => (
+                <div key={label} className={`flex items-center justify-between py-2 border-b last:border-0 ${!dark ? "border-gray-200" : "border-gray-700"}`}>
+                  <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>{label}</span>
+                  <span className="text-sm font-medium">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions for Pending */}
+            {selectedBooking.status === "Pending" && (
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => handleAccept(selectedBooking.id)}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+                >
+                  {actionLoading ? "جاري..." : "✓ موافقة"}
+                </button>
+                <button
+                  onClick={() => handleReject(selectedBooking.id)}
+                  disabled={actionLoading}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
+                >
+                  {actionLoading ? "جاري..." : "✕ رفض"}
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };

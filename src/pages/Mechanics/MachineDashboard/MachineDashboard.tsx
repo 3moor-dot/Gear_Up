@@ -1,38 +1,151 @@
+import { useState, useEffect } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaStar } from "react-icons/fa";
 
+interface Booking {
+  id: string;
+  customerName: string;
+  carInfo: string;
+  subSpecializationName: string;
+  date: string;
+  slotStart: string;
+  slotEnd: string;
+  status: string;
+}
+
 const MachineDashboard = () => {
   const { dark } = useTheme();
+  
+  // State for Data
+  const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+  const [todayAppointments, setTodayAppointments] = useState<Booking[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingToday, setLoadingToday] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null); // ID of booking being processed
 
-  const stats = [
-    { title: "طلبات الحجز الجديدة", value: "4",   change: "+2 عن الأمس",      positive: true },
-    { title: "مواعيد اليوم",         value: "7",   change: "+1 عن الأمس",      positive: true },
-    { title: "متوسط التقييم",        value: "4.8", change: "0+ هذا الشهر",     positive: true },
-  ];
-
-  const bookings = [
-    { id: 1, client: "Alice Martin", car: "Toyota Camry", service: "Oil Change", date: "Oct 26, 2:00 PM", status: "pending" },
-    { id: 2, client: "Alice Martin", car: "Toyota Camry", service: "Oil Change", date: "Oct 26, 2:00 PM", status: "pending" },
-    { id: 3, client: "Alice Martin", car: "Toyota Camry", service: "Oil Change", date: "Oct 26, 2:00 PM", status: "pending" },
-  ];
-
-  const appointments = [
-    { id: 1, client: "مالك جونسون", time: "09:00 AM", service: "فرع طريق الملك عبدالله - الخدمة السنوية", status: "confirmed"   },
-    { id: 2, client: "مالك جونسون", time: "09:00 AM", service: "فرع طريق الملك عبدالله - الخدمة السنوية", status: "confirmed"   },
-    { id: 3, client: "مالك جونسون", time: "09:00 AM", service: "فرع طريق الملك عبدالله - الخدمة السنوية", status: "in-progress" },
-  ];
-
+  // Static Reviews Data
   const reviews = [
     { id: 1, client: "مالك جونسون", rating: 5, comment: "خدمة ممتازة! كان جون مهريًا، ومهنيًا، وجعلها جاهزة للاستلام الأسعار أعجب به أشد", time: "منذ ساعة" },
     { id: 2, client: "مالك جونسون", rating: 5, comment: "خدمة ممتازة! كان جون مهريًا، ومهنيًا، وجعلها جاهزة للاستلام الأسعار أعجب به أشد", time: "منذ ساعة" },
   ];
 
+  // --- Fetch Data ---
+  const token = sessionStorage.getItem("userToken");
+
+  // Fetch Pending Requests
+  const fetchPendingRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      const res = await fetch("https://gearupapp.runasp.net/api/bookings/mechanic/my", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to fetch requests");
+      const data: Booking[] = await res.json();
+      // Filter only Pending
+      const pending = data.filter(b => b.status === "Pending");
+      setPendingBookings(pending);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  // Fetch Today's Appointments
+  const fetchTodayAppointments = async () => {
+    try {
+      setLoadingToday(true);
+      const res = await fetch("https://gearupapp.runasp.net/api/bookings/mechanic/my/today", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to fetch today's appointments");
+      const data: Booking[] = await res.json();
+      data.sort((a, b) => a.slotStart.localeCompare(b.slotStart));
+      setTodayAppointments(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingToday(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingRequests();
+    fetchTodayAppointments();
+  }, []);
+
+  // --- Actions ---
+  const handleAccept = async (bookingId: string) => {
+    try {
+      setActionLoading(bookingId);
+      const res = await fetch(`https://gearupapp.runasp.net/api/bookings/${bookingId}/accept`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+      });
+      if (!res.ok) throw new Error("Failed to accept");
+      // Refresh both lists
+      await Promise.all([fetchPendingRequests(), fetchTodayAppointments()]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (bookingId: string) => {
+    try {
+      setActionLoading(bookingId);
+      const res = await fetch(`https://gearupapp.runasp.net/api/bookings/${bookingId}/reject`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+      });
+      if (!res.ok) throw new Error("Failed to reject");
+      await fetchPendingRequests(); // Just refresh pending list
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Dynamic Stats
+  const stats = [
+    { title: "طلبات الحجز الجديدة", value: loadingRequests ? "..." : pendingBookings.length.toString(), change: "طلبات قيد الانتظار", positive: true },
+    { title: "مواعيد اليوم", value: loadingToday ? "..." : todayAppointments.length.toString(), change: "موعد مجدول", positive: true },
+    { title: "متوسط التقييم", value: "4.8", change: "0+ هذا الشهر", positive: true },
+  ];
+
   const cardBase = `rounded-xl transition-all ${
     !dark ? "bg-white shadow-md" : "bg-[#0d1629]"
   }`;
+
+  // Helper for status badge (for appointments)
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Confirmed":
+      case "Accepted":
+        return "bg-green-600/20 text-green-400";
+      case "Pending":
+        return "bg-yellow-600/20 text-yellow-400";
+      case "In-Progress":
+        return "bg-blue-600/20 text-blue-400";
+      default:
+        return "bg-gray-600/20 text-gray-400";
+    }
+  };
+  
+  const getStatusText = (status: string) => {
+    switch(status) {
+      case "Confirmed": return "مؤكد";
+      case "Accepted": return "مقبول";
+      case "Pending": return "قيد الانتظار";
+      case "In-Progress": return "قيد التنفيذ";
+      default: return status;
+    }
+  };
 
   return (
     <div
@@ -71,61 +184,89 @@ const MachineDashboard = () => {
           ))}
         </div>
 
-        {/* BOOKINGS TABLE */}
+        {/* BOOKINGS TABLE (Pending Requests) */}
         <div className={cardBase}>
           <div className={`p-4 sm:p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
             <h2 className="text-lg sm:text-xl font-bold">طلبات الحجز الجديدة</h2>
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className={`text-right text-sm ${!dark ? "bg-gray-50" : "bg-[#131c2f]"}`}>
-                  <th className="p-4 font-medium">عميل</th>
-                  <th className="p-4 font-medium">عربة</th>
-                  <th className="p-4 font-medium">خدمة</th>
-                  <th className="p-4 font-medium">التاريخ والوقت</th>
-                  <th className="p-4 font-medium">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((b) => (
-                  <tr key={b.id} className={`border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
-                    <td className="p-4 font-medium">{b.client}</td>
-                    <td className="p-4 text-gray-400">{b.car}</td>
-                    <td className="p-4 text-gray-400">{b.service}</td>
-                    <td className="p-4 text-gray-400">{b.date}</td>
-                    <td className="p-4">
-                      <div className="flex gap-2">
-                        <button className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm transition">موافقة</button>
-                        <button className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm transition">رفض</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden p-3 space-y-3">
-            {bookings.map((b) => (
-              <div key={b.id} className={`p-4 rounded-xl border ${!dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="font-bold text-sm">{b.client}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{b.car} · {b.service}</p>
-                  </div>
-                  <p className="text-xs text-gray-400 text-left">{b.date}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition">موافقة</button>
-                  <button className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition">رفض</button>
-                </div>
+          {loadingRequests ? (
+            <div className="p-8 text-center text-gray-400">جاري التحميل...</div>
+          ) : pendingBookings.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">لا توجد طلبات جديدة</div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className={`text-right text-sm ${!dark ? "bg-gray-50" : "bg-[#131c2f]"}`}>
+                      <th className="p-4 font-medium">عميل</th>
+                      <th className="p-4 font-medium">عربة</th>
+                      <th className="p-4 font-medium">خدمة</th>
+                      <th className="p-4 font-medium">التاريخ والوقت</th>
+                      <th className="p-4 font-medium">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingBookings.map((b) => (
+                      <tr key={b.id} className={`border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+                        <td className="p-4 font-medium">{b.customerName}</td>
+                        <td className="p-4 text-gray-400">{b.carInfo}</td>
+                        <td className="p-4 text-gray-400">{b.subSpecializationName}</td>
+                        <td className="p-4 text-gray-400">{new Date(b.date).toLocaleDateString()} - {b.slotStart.slice(0,5)}</td>
+                        <td className="p-4">
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleAccept(b.id)}
+                              disabled={actionLoading === b.id}
+                              className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm transition disabled:opacity-50">
+                              {actionLoading === b.id ? "..." : "موافقة"}
+                            </button>
+                            <button 
+                              onClick={() => handleReject(b.id)}
+                              disabled={actionLoading === b.id}
+                              className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm transition disabled:opacity-50">
+                              رفض
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+
+              {/* Mobile cards */}
+              <div className="sm:hidden p-3 space-y-3">
+                {pendingBookings.map((b) => (
+                  <div key={b.id} className={`p-4 rounded-xl border ${!dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="font-bold text-sm">{b.customerName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{b.carInfo} · {b.subSpecializationName}</p>
+                      </div>
+                      <p className="text-xs text-gray-400 text-left">{new Date(b.date).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleAccept(b.id)}
+                        disabled={actionLoading === b.id}
+                        className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
+                        موافقة
+                      </button>
+                      <button 
+                        onClick={() => handleReject(b.id)}
+                        disabled={actionLoading === b.id}
+                        className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50">
+                        رفض
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* APPOINTMENTS & REVIEWS */}
@@ -134,29 +275,33 @@ const MachineDashboard = () => {
           {/* المواعيد */}
           <div className={cardBase}>
             <div className={`p-4 sm:p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
-              <h2 className="text-lg sm:text-xl font-bold">المواعيد القادمة</h2>
+              <h2 className="text-lg sm:text-xl font-bold">مواعيد اليوم</h2>
             </div>
             <div className="p-3 sm:p-6 space-y-3">
-              {appointments.map((apt) => (
-                <div key={apt.id} className={`p-3 sm:p-4 rounded-xl border ${
-                  !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
-                }`}>
-                  <div className="flex justify-between items-start mb-2 gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-sm">{apt.client}</h4>
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{apt.service}</p>
-                    </div>
-                    <span className="text-blue-400 font-semibold text-xs sm:text-sm flex-shrink-0">{apt.time}</span>
-                  </div>
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${
-                    apt.status === "confirmed"
-                      ? "bg-green-600/20 text-green-400"
-                      : "bg-yellow-600/20 text-yellow-400"
+              {loadingToday ? (
+                 <div className="text-center py-6 text-gray-400">جاري التحميل...</div>
+              ) : todayAppointments.length === 0 ? (
+                 <div className="text-center py-6 text-gray-400">لا توجد مواعيد لليوم</div>
+              ) : (
+                todayAppointments.map((apt) => (
+                  <div key={apt.id} className={`p-3 sm:p-4 rounded-xl border ${
+                    !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
                   }`}>
-                    {apt.status === "confirmed" ? "مؤكد" : "قيد التنفيذ"}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-sm">{apt.customerName}</h4>
+                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{apt.subSpecializationName}</p>
+                      </div>
+                      <span className="text-blue-400 font-semibold text-xs sm:text-sm flex-shrink-0">
+                        {apt.slotStart.slice(0, 5)} - {apt.slotEnd.slice(0, 5)}
+                      </span>
+                    </div>
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
+                      {getStatusText(apt.status)}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

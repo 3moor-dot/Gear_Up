@@ -1,11 +1,11 @@
  
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaSearch } from "react-icons/fa";
-
+import { MdMoreVert } from "react-icons/md";
 // Types
 interface Booking {
   id: string;
@@ -30,14 +30,14 @@ const Booking = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 8;
 
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
-
+const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   // Fetch all bookings
   useEffect(() => {
     const fetchBookings = async () => {
@@ -68,7 +68,7 @@ const Booking = () => {
 
   // تم إضافة حالات إضافية لضمان شمولية التعريب
   const statusMap: Record<string, { label: string; tabLabel: string }> = {
-    Pending: { label: "في انتظار الموافقة", tabLabel: "في انتظار" },
+    Pending: { label:  "انتظار", tabLabel:  "" },
     Confirmed: { label: "موافقة", tabLabel: "موافقة" },
     Accepted: { label: "موافقة", tabLabel: "موافقة" }, // حالة إضافية محتملة
     Cancelled: { label: "ملغي", tabLabel: "ملغي" },
@@ -97,8 +97,7 @@ const Booking = () => {
     const formattedDate = d.toLocaleDateString("ar-EG", { day: "numeric", month: "short" });
     return `${formattedDate}، ${slotStart.slice(0, 5)} - ${slotEnd.slice(0, 5)}`;
   };
-
-  const filteredBookings = allBookings
+   const filteredBookings = allBookings
     .filter((booking) => {
       const matchesTab = activeTab === "all" || booking.status === activeTab;
       const matchesSearch =
@@ -107,14 +106,19 @@ const Booking = () => {
         booking.subSpecializationName.includes(searchTerm);
       return matchesTab && matchesSearch;
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+    // الترتيب من المستقبل إلى الماضي (تنازلي) بناءً على تاريخ الموعد ووقت البداية
+    .sort((a, b) => {
+      const dateA = new Date(`${a.date}T${a.slotStart}`).getTime();
+      const dateB = new Date(`${b.date}T${b.slotStart}`).getTime();
+      return dateB - dateA; // الترتيب التنازلي: الأحدث (المستقبل) يظهر أولاً
+    });
+   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
   const paginatedBookings = filteredBookings.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    currentPage * itemsPerPage);
 
+   
+     
   // View Details - opens drawer
   const handleViewDetails = async (bookingId: string) => {
     setDrawerLoading(true);
@@ -204,51 +208,22 @@ const Booking = () => {
     );
   };
 
-  const getStatusButton = (status: string, bookingId: string) => {
-    switch (status) {
-      case "Pending":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => handleAccept(bookingId)} className="px-3 md:px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-              موافقة
-            </button>
-            <button onClick={() => handleReject(bookingId)} className="px-3 md:px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-              رفض
-            </button>
-            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-              عرض
-            </button>
-          </div>
-        );
-      case "Confirmed":
-      case "Accepted":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-block px-3 md:px-4 py-1.5 bg-green-600/20 text-green-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">موافقة</span>
-            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-              عرض
-            </button>
-          </div>
-        );
-      case "Cancelled":
-      case "Rejected":
-        return (
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-block px-3 md:px-4 py-1.5 bg-red-600/20 text-red-400 rounded-lg text-xs md:text-sm font-medium whitespace-nowrap">ملغي</span>
-            <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-              عرض
-            </button>
-          </div>
-        );
-      default:
-        return (
-          <button onClick={() => handleViewDetails(bookingId)} className="px-3 md:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm transition font-medium whitespace-nowrap">
-            عرض
-          </button>
-        );
-    }
-  };
-
+const getStatusButton = (status: string, bookingId: string) => {
+  return (
+    <ActionMenu
+      status={status}
+      bookingId={bookingId}
+      isOpen={openMenuId === bookingId}
+      onToggle={() =>
+        setOpenMenuId(openMenuId === bookingId ? null : bookingId)
+      }
+      onClose={() => setOpenMenuId(null)}
+      onView={handleViewDetails}
+      onAccept={handleAccept}
+      onReject={handleReject}
+    />
+  );
+};
   if (loading) {
     return (
       <div dir="rtl" className={`flex min-h-screen ${!dark ? "bg-gray-50" : "bg-[#0B1220]"}`}>
@@ -333,7 +308,7 @@ const Booking = () => {
 
         {/* TABLE - Desktop */}
         {filteredBookings.length > 0 && (
-          <div className={`hidden md:block rounded-xl overflow-hidden ${!dark ? "bg-white shadow-md" : "bg-[#0d1629]"}`}>
+          <div className={`hidden md:block rounded-xl overflow-hidden ${!dark ? "bg-white shadow-xl" : "bg-[#0d1629]"}`}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>
@@ -530,3 +505,89 @@ const Booking = () => {
 };
 
 export default Booking;
+const ActionMenu = ({
+  status,
+  bookingId,
+  onView,
+  onAccept,
+  onReject,
+}: any) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // ✅ يقفل لو ضغطتي بره
+  useEffect(() => {
+    const handleClickOutside = (e: any) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ✅ يقفل أي منيو تانية مفتوحة
+  useEffect(() => {
+    const closeAll = () => setOpen(false);
+    window.addEventListener("closeAllMenus", closeAll);
+    return () => window.removeEventListener("closeAllMenus", closeAll);
+  }, []);
+
+  const handleToggle = () => {
+    window.dispatchEvent(new Event("closeAllMenus")); // يقفل الباقي
+    setOpen((prev) => !prev);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={handleToggle}
+        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10"
+      >
+        <MdMoreVert size={18} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-2 w-40 bg-white dark:bg-[#1E293B] border rounded shadow z-50">
+
+          <button
+            onClick={() => {
+              onView(bookingId);
+              setOpen(false);
+            }}
+            className="block w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10"
+          >
+            عرض
+          </button>
+
+          {status === "Pending" && (
+            <>
+              <button
+                onClick={() => {
+                  onAccept(bookingId);
+                  setOpen(false);
+                }}
+                className="block w-full text-right px-4 py-2 text-green-600 hover:bg-gray-100 dark:hover:bg-white/10"
+              >
+                موافقة
+              </button>
+
+              <button
+                onClick={() => {
+                  onReject(bookingId);
+                  setOpen(false);
+                }}
+                className="block w-full text-right px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-white/10"
+              >
+                رفض
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
