@@ -368,7 +368,7 @@ const MaintenanceBookings = () => {
                           </td>
                           <td className="p-4">
                             <span
-                              className={`px-2.5 py-1 rounded-md text-xs font-normal ${booking.statusColor}`}
+                              className={`px-2.5 py-.5 rounded-md text-xs font-normal ${booking.statusColor}`}
                             >
                               {statusLabels[booking.status] || booking.status}
                             </span>
@@ -444,7 +444,7 @@ const MaintenanceBookings = () => {
                         </p>
                       </div>
                       <span
-                        className={`px-1.5 py-.5 rounded-md text-xs font-normal ${booking.statusColor}`}
+                        className={`px-2.5 py-1 rounded-md text-xs font-normal ${booking.statusColor}`}
                       >
                         {statusLabels[booking.status] || booking.status}
                       </span>
