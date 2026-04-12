@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { Car, Wrench,ClipboardCheck, Phone, ClipboardList, MapPin, AlertTriangle, Calendar, Settings } from "lucide-react";
+import { Car, Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle } from "lucide-react";
 
  const statusMap: any = {
    Accepted: "تم القبول",

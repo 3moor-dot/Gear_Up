@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaClipboardList,
@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaSignOutAlt,
   FaRegCommentDots,
+  FaTools
 } from "react-icons/fa";
 import { MdDashboard, MdMenu, MdClose } from "react-icons/md";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -28,7 +29,7 @@ const MachineSidebar: React.FC = () => {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   // جيب اسم المستخدم من الـ API
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = sessionStorage.getItem("userToken");
@@ -74,6 +75,7 @@ const MachineSidebar: React.FC = () => {
 
           <nav className="space-y-2 text-lg overflow-y-auto flex-1 pr-2 custom-scrollbar">
             <SidebarItem icon={<MdDashboard />} label="لوحة التحكم" dark={dark} to="/mechanics/machinedashboard" closeSidebar={() => setIsOpen(false)} />
+            <SidebarItem icon={<FaTools />} label="طلبات الصيانة" dark={dark} to="/mechanics/request/mrequest_history" closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaCalendarAlt />} label="جدول المواعيد" dark={dark} to="/mechanics/schedule" closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaClipboardList />} label="الحجوزات" dark={dark} to="/mechanics/booking" closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaRegCommentDots />} label="المراجعات" dark={dark} to="/mechanics/reviewing" closeSidebar={() => setIsOpen(false)} />

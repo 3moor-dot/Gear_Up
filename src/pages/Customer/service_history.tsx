@@ -1,124 +1,219 @@
+
 import Sidebar from "../../components/Customer/customer_sidebar";
 import Header from "../../components/Customer/customer_header";
-import { MdSearch, MdFilterList, MdFileDownload, MdTrendingUp, MdEvent, MdAccessTime } from "react-icons/md";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const ServiceHistory = () => {
-  // بيانات الجدول التجريبية
-  const historyData = Array(9).fill({
-    date: "Oct 26, 2:00 PM",
-    type: "Oil Change",
-    mechanic: "Alice Martin",
-    notes: "تم استبدال وسادات الفرامل...",
-    cost: "250 EGP"
-  });
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const token = sessionStorage.getItem("userToken");
+
+  const statusMap = {
+    Submitted: "تم الإرسال",
+    Dispatching: "جاري التوزيع",
+    Accepted: "تم القبول",
+    OnTheWay: "في الطريق",
+    Arrived: "وصل",
+    InProgress: "قيد التنفيذ",
+    Completed: "مكتمل",
+    Cancelled: "ملغي",
+  };
+  
+  const statusColorMap = {
+    Submitted: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+    Dispatching: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+    Accepted: "bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100",
+    OnTheWay: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    Arrived: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+    InProgress: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    Completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    Cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  };
+  
+  const serviceTypeMap = {
+    Diagnosis: "تشخيص",
+    Tires: "إطارات",
+    BodyRepair: "إصلاح هيكل",
+    OilChange: "تغيير زيت",
+  };
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/requests/history",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setHistoryData(res.data?.requests || []);
+        setCurrentPage(1);
+      } catch (err) {
+        setHistoryData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchHistory();
+  }, [token]);
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentItems = historyData.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(historyData.length / itemsPerPage);
 
   return (
-    <div className="flex min-h-screen dark:bg-primary_BGD" dir="rtl">
+    <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
+
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col">
         <Header />
 
-        <main className="p-4 md:p-8 space-y-6">
-          {/* العنوان واختيار السيارة */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="text-right">
-              <h2 className="text-2xl font-bold dark:text-white text-gray-800">تاريخ الخدمة</h2>
-              <p className="text-gray-400 text-sm">تتبع أعمال الصيانة والإصلاحات الخاصة بسيارتك <span className="text-blue-500 font-bold">تويوتا RAV4 موديل 2022.</span></p>
-            </div>
-            <div className="bg-[#137FEC] text-white px-4 py-2 rounded-lg flex items-center gap-3 text-sm shadow-md">
-               <span className="bg-white/20 p-1 rounded">🚗</span>
-               <span>2022 Toyota RAV4</span>
-               <span className="text-xs">▼</span>
-            </div>
-          </div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
 
-          {/* بطاقات الملخص الإحصائي */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* إجمالي الإنفاق */}
-            <div className="bg-[#137FEC1A] dark:bg-[#137FEC0D] p-6 rounded-[25px] shadow-sm border border-gray-100 dark:border-gray-800">
-               <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs text-gray-400 font-bold">إجمالي الإنفاق (منذ بداية العام)</span>
-                  <div className="p-2 bg-green-100 text-green-600 rounded-lg text-xl"><MdTrendingUp /></div>
-               </div>
-               <div className="text-right">
-                  <h3 className="text-2xl font-black dark:text-white">1,245.00 EGP</h3>
-                  <p className="text-green-500 text-[10px] mt-1 font-bold">↑ 12% مقارنة بالعام الماضي</p>
-               </div>
-            </div>
 
-            {/* الخدمة الأخيرة */}
-            <div className="bg-[#137FEC1A] dark:bg-[#137FEC0D] p-6 rounded-[25px] shadow-sm border border-gray-100 dark:border-gray-800">
-               <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs text-gray-400 font-bold">الخدمة الأخيرة</span>
-                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg text-xl"><MdEvent /></div>
-               </div>
-               <div className="text-right">
-                  <h3 className="text-2xl font-black dark:text-white">25 أكتوبر 2023</h3>
-                  <p className="text-gray-400 text-[10px] mt-1 font-bold">استبدال وسادة الفرامل</p>
-               </div>
-            </div>
 
-            {/* القادمة */}
-            <div className="bg-[#137FEC1A] dark:bg-[#137FEC0D] p-6 rounded-[25px] shadow-sm border border-gray-100 dark:border-gray-800">
-               <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs text-gray-400 font-bold">القادمة</span>
-                  <div className="p-2 bg-yellow-100 text-yellow-600 rounded-lg text-xl"><MdAccessTime /></div>
-               </div>
-               <div className="text-right">
-                  <h3 className="text-2xl font-black dark:text-white">تغيير الزيت</h3>
-                  <p className="text-yellow-500 text-[10px] mt-1 font-bold">الموعد سوف يكون غداً</p>
-               </div>
-            </div>
-          </div>
+{/* Title Section */}
+<div className="text-right">
+  <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
+    عرض طلبات الصيانة
+  </h2>
 
-          {/* أدوات البحث والفلترة */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-             <div className="relative w-full md:w-96">
-                <input 
-                  type="text" 
-                  placeholder="سجل البحث..." 
-                  className="w-full bg-white dark:bg-[#137FEC0D] border border-gray-200 dark:border-gray-800 rounded-xl py-2 px-10 text-right text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-                <MdSearch className="absolute right-3 top-2.5 text-gray-400 text-xl" />
-             </div>
-             <div className="flex gap-3 w-full md:w-auto">
-                <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#137FEC] text-white px-6 py-2 rounded-xl text-sm font-bold">
-                   <MdFilterList /> فلتر
-                </button>
-                <button className="flex-1 md:flex-none flex items-center justify-center gap-2 border border-[#137FEC] text-[#137FEC] px-6 py-2 rounded-xl text-sm font-bold">
-                   <MdFileDownload /> يصدر
-                </button>
-             </div>
-          </div>
+  <p className="text-xs md:text-sm text-slate-400 mt-1">
+    متابعة جميع طلبات الصيانة الخاصة بسيارتك
+  </p>
+</div>
 
-          {/* جدول الخدمة */}
-          <div className="bg-white dark:bg-[#137FEC0D] rounded-[30px] shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-             <div className="overflow-x-auto">
-                <table className="w-full text-right text-sm">
-                   <thead>
-                      <tr className="bg-[#137FEC1A] dark:bg-white/5 dark:text-white text-black font-bold">
-                         <th className="p-4">تاريخ الخدمة</th>
-                         <th className="p-4">نوع الخدمة</th>
-                         <th className="p-4">ميكانيكي</th>
-                         <th className="p-4">ملحوظات</th>
-                         <th className="p-4">التكلفة</th>
+          {/* TABLE CARD */}
+          <div className="rounded-xl overflow-hidden shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-right text-sm">
+                <thead>
+                  <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+                  <th className="p-3"> المشكلة</th>
+                    <th className="p-3">التاريخ</th>
+                    <th className="p-3">السيارة</th>
+                    <th className="p-3">الخدمة</th>
+                    <th className="p-3">الحالة</th>
+                    <th className="p-3">الميكانيكي</th>
+                  </tr>
+                </thead>
+
+                <tbody className="text-gray-700 dark:text-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan="6" className="text-center p-6">
+                        جاري التحميل...
+                      </td>
+                    </tr>
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center p-6">
+                        لا يوجد بيانات
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((row) => (
+
+                <tr
+                  key={row.requestId}
+                  onClick={() => navigate(`/customer/maintenance_request/request_tracking/${row.requestId}`)}
+                  className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                >
+
+                        <td className="p-3">{row.issueDescription}</td>
+
+                        <td className="p-3">
+                          {row.createdAt
+                            ? new Date(row.createdAt).toLocaleDateString()
+                            : "-"}
+                        </td>
+
+                        <td className="p-3">
+                          {row.car?.brand} {row.car?.model}
+                        </td>
+
+                        <td className="p-3">{serviceTypeMap[row.serviceType] || "—"}</td>
+
+                        {/* <td className="p-3">
+                          <span className="px-2 py-1 rounded text-xs bg-gray-200 dark:bg-gray-700">
+                           
+                            <span
+  className={`px-2 py-1 rounded text-xs ${
+    statusColorMap[row.status] ||
+    "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+  }`}
+>
+  {statusMap[row.status] || "—"}
+</span>
+                          </span>
+                        </td> */}
+                        <td className="p-3">
+  <span
+    className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+      statusColorMap[row.status] ||
+      "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+    }`}
+  >
+    {statusMap[row.status] || "—"}
+  </span>
+</td>
+
+
+                        <td className="p-3 flex items-center gap-2">
+                          <img
+                            src={row.assignedMechanic?.profilePhotoUrl}
+                            className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                          />
+                          <span>
+                            {row.assignedMechanic?.firstName}{" "}
+                            {row.assignedMechanic?.lastName}
+                          </span>
+                        </td>
                       </tr>
-                   </thead>
-                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {historyData.map((row, i) => (
-                        <tr key={i} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                           <td className="p-4 font-bold dark:text-white">{row.date}</td>
-                           <td className="p-4 text-gray-500">{row.type}</td>
-                           <td className="p-4 text-gray-500">{row.mechanic}</td>
-                           <td className="p-4 text-gray-500">{row.notes}</td>
-                           <td className="p-4 font-black dark:text-white">{row.cost}</td>
-                        </tr>
-                      ))}
-                   </tbody>
-                </table>
-             </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* PAGINATION */}
+          <div className="flex justify-center items-center gap-3 text-gray-700 dark:text-gray-200">
+            <button
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800"
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+            >
+              السابق
+            </button>
+
+            <span>
+              {currentPage} / {totalPages || 1}
+            </span>
+
+            <button
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800"
+              onClick={() =>
+                setCurrentPage(p => Math.min(p + 1, totalPages || 1))
+              }
+            >
+              التالي
+            </button>
+          </div>
+
         </main>
       </div>
     </div>

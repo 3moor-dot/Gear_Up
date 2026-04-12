@@ -218,7 +218,10 @@ const MaintenanceReminders = () => {
     <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           <div className="mb-10 flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h3 className="text-2xl md:text-3xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h3>
+              {/* <h3 className="text-2xl md:text-3xl font-black mb-2 tracking-tight">تذكيرات الصيانة</h3> */}
+              <h3 className="text-2xl md:text-3xl font-black mb-2 tracking-tight text-slate-900 dark:text-white">
+  تذكيرات الصيانة
+</h3>
               <p className="font-medium text-base italic" style={{ color: dark ? 'rgba(255,255,255,0.5)' : 'rgba(15,19,35,0.5)' }}>إدارة تذكيرات سيارتك ومتابعة مواعيدها</p>
             </div>
             <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-blue-700 transition flex items-center gap-2">

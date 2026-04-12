@@ -46,6 +46,7 @@ import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import MRequestTracking from "./pages/Mechanics/Request/Mrequest_tracking";
+import Mrequest_history from "./pages/Mechanics/Request/Mrequest_history";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 const App: React.FC = () => {
@@ -124,6 +125,7 @@ const App: React.FC = () => {
           <Route path="/mechanics/mprofile" element={<Mprofile />} />
           <Route path="/mechanics/machineprofile" element={<Mechine_profile  />} />
           <Route path="/mechanics/request/mrequest_tracking/:requestId" element={<MRequestTracking />} />
+          <Route path="/mechanics/request/mrequest_history" element={<Mrequest_history />} />
 
           <Route path="/notification" element={<Notification />} />
           {/* ADMIN PAGES */}

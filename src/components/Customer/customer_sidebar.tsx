@@ -52,8 +52,9 @@ const Sidebar = () => {
     { name: 'لوحة التحكم', icon: <MdDashboard />, path: '/customer/dashboard' },
     { name: 'تذكير',        icon: <MdNotifications />, path: '/customer/reminders' },
     { name: 'تاريخ الخدمة', icon: <MdHistory />,       path: '/customer/servicehistory' },
-    { name: 'حجز صيانة',   icon: <MdBuild />,          path: '/customer/maintenancebookings' },
     { name: 'طلب صيانة',   icon: <MdAccessTime />,     path: '/customer/maintenancerequest' },
+    { name: 'حجز صيانة',   icon: <MdBuild />,          path: '/customer/maintenancebookings' },
+
     { name: 'المساعد الذكي', icon: <MdSmartToy />,     path: '/customer/chatbot' },
   ];
 
