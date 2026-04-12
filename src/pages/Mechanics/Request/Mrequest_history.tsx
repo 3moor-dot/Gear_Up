@@ -76,7 +76,7 @@ const statusMap: Record<string, string> = {
           );
   
           setRequests(res.data.requests);
-        } catch (err) {
+        } catch {
           toast.error("فشل تحميل الطلبات");
         } finally {
           setLoading(false);
