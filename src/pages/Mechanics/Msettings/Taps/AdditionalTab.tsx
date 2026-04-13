@@ -5,6 +5,7 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaLocationArrow } from "react-icons/fa";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
+
 // --- مكون الخريطة المصغر ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
@@ -22,21 +23,6 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
 
   return (
     <div className={`rounded-xl overflow-hidden border ${dark ? "border-gray-700" : "border-gray-300"}`} style={{ height: "250px", width: "100%" }}>
-      {/* <GoogleMap
-        mapContainerStyle={{ width: "100%", height: "100%" }}
-        center={center}
-        zoom={latitude ? 17 : 12} // 17 بيخلي الخريطة قريبة جداً فالدبوس يبان بوضوح
-        onClick={(e) => {
-          if (isEditing && e.latLng) {
-            setLocation(e.latLng.lat(), e.latLng.lng());
-          }
-        }}
-        options={{
-            draggable: isEditing,
-            clickableIcons: isEditing,
-            scrollwheel: true,
-        }}
-      > */}
 
 <GoogleMap
   mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -53,7 +39,6 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
     scrollwheel: true,
   }}
 >
-
 
         {/* الدبوس (الـ Marker) */}
         {latitude && longitude && (

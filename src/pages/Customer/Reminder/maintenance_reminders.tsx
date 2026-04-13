@@ -233,7 +233,7 @@ const MaintenanceReminders = () => {
             <div className="lg:col-span-3 space-y-6 order-2 lg:mt-[83px]">
               <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
                 <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
-                   <FaHistory className="text-blue-500" /> تاريخ مكتمل <FaCheck className="text-green-600 ml-2" />
+                   <FaHistory className="text-blue-500" /> المهام المكتملة <FaCheck className="text-green-600 ml-2" />
                 </h3>
               
                 <div className={`space-y-4 pr-2 ${filteredCompleted.length > 6 ? "max-h-[350px] overflow-y-auto scrollbar-hide" : ""}`}>   
@@ -272,7 +272,7 @@ const MaintenanceReminders = () => {
             
             <div className="lg:col-span-9 space-y-6 order-1">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
-                <h6 className="text-2xl font-black text-slate-800 dark:text-white">المهام القادمة ({filteredActive.length})</h6>
+              <h6 className="text-2xl font-black text-slate-800 dark:text-white">المهام ({filteredActive.length})</h6>
                 <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner">
                   <div className="flex bg-white dark:bg-slate-700 p-0.5 rounded-xl">
                     {["all", "Active", "Paused"].map((f) => (

@@ -497,8 +497,8 @@ const newNotification = {
             </button>
           </div>
 
-<div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
-
+{/* <div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1"> */}
+<div className="relative max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
 
       {notifications.length > 0 ? notifications.map((n, i) => (
   <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
@@ -516,17 +516,27 @@ const newNotification = {
 
 
 {(n.carName || n.carId) && (
-  <div className="text-[11px] font-bold mb-1 flex items-center gap-1 dark:text-slate-200">
+  <div className="mb-1">
     
-    {n.plateNumber && (
-      <span className="text-[10px] opacity-70">
-        {n.plateNumber}
-      </span>
-    )}
+    {/* اسم العربية */}
+    <div className="text-[11px] font-bold flex items-center gap-1 dark:text-slate-200">
+      {n.plateNumber && (
+        <span className="text-[10px] opacity-70">
+          {n.plateNumber}
+        </span>
+      )}
 
-    <span>
-      {n.carName || getCarName(n.carId)}
-    </span>
+      <span>
+        {n.carName || getCarName(n.carId)}
+      </span>
+    </div>
+
+    {/* 👇 الجملة الجديدة */}
+    {!n.isRequest && (
+      <div className="text-[10px] text-blue-500 font-bold mt-1">
+        تنبيه صيانة
+      </div>
+    )}
 
   </div>
 )}
@@ -622,9 +632,107 @@ const newNotification = {
 )}
 
       {/* لو مش ريكوست (تذكير عادي) اعرض الرسالة العادية */}
-      {!n.isRequest && n.message && (
+      {/* {!n.isRequest && n.message && (
         <p className="text-[11px] opacity-60 mb-2">{n.message}</p>
-      )}
+      )} */}
+      {!n.isRequest && n.reminderId && (
+  <div className="flex gap-2 mt-2">
+
+    {/* زر إتمام */}
+    <button
+      onClick={() => completeReminder(n.reminderId, i)}
+      className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
+    >
+      إتمام
+    </button>
+
+    {/* زر تأجيل */}
+    <button
+      onClick={() =>
+        setActiveSnoozeIndex(activeSnoozeIndex === i ? null : i)
+      }
+      className="flex-1 text-[11px] py-1 rounded bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition font-bold"
+    >
+      تأجيل
+    </button>
+
+  </div>
+)}
+
+
+{/* {activeSnoozeIndex === i && (
+  <div 
+    className={`fixed z-[999999] w-40 rounded-xl shadow-2xl p-2 border ${
+      dark ? "bg-slate-800 border-white/20 text-white" : "bg-white border-gray-200 text-gray-800"
+    }`}
+    style={{ 
+      right: 'auto',
+      /* قللنا الـ translateY شوية لـ -102% بدلاً من -110% عشان متبقاش طايرة بزيادة وتختفي 
+      transform: 'translateY(-102%)' 
+    }}
+  >
+    {/* تأكدي إن الـ Header ده موجود عشان بيدي مساحة (Spacing) فوق أول خيار *
+    <div className="text-[10px] font-bold mb-2 pb-1 border-b border-gray-500/20 opacity-50 text-center">
+      اختر مدة التأجيل
+    </div>
+    
+    <div className="flex flex-col">
+      {snoozeOptions.map((opt, idx) => (
+        <div key={idx}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              snoozeReminder(n.reminderId, opt.value, i);
+            }}
+            className="block w-full text-[12px] py-2 px-3 rounded-lg text-right hover:bg-blue-600 hover:text-white transition-all font-medium"
+          >
+            {opt.label}
+          </button>
+          
+          {/* الخط الفاصل *
+          {idx < snoozeOptions.length - 1 && (
+            <div className={`h-[1px] mx-1 my-0.5 ${dark ? "bg-white/10" : "bg-gray-100"}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)} */}
+{activeSnoozeIndex === i && (
+  <div 
+    className={`fixed z-[999999] w-32 rounded-lg shadow-2xl p-1.5 border ${
+      dark ? "bg-slate-800 border-white/20 text-white" : "bg-white border-gray-200 text-gray-800"
+    }`}
+    style={{ 
+      right: 'auto',
+      transform: 'translateY(-100%)' 
+    }}
+  >
+    <div className="text-[9px] font-bold mb-1 pb-1 border-b border-gray-500/10 opacity-60 text-center">
+      مدة التأجيل
+    </div>
+    
+    <div className="flex flex-col">
+      {snoozeOptions.map((opt, idx) => (
+        <div key={idx}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              snoozeReminder(n.reminderId, opt.value, i);
+            }}
+            className="block w-full text-[11px] py-1.5 px-2 rounded-md text-right hover:bg-blue-600 hover:text-white transition-all font-medium"
+          >
+            {opt.label}
+          </button>
+          
+          {idx < snoozeOptions.length - 1 && (
+            <div className={`h-[0.5px] mx-1 my-0 ${dark ? "bg-white/5" : "bg-gray-50"}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
 
       <span className="text-[8px] mt-2 opacity-30 block font-mono">{n.time}</span>
