@@ -45,8 +45,8 @@ import Schedule from "./pages/Mechanics/Schedule/Schedule";
 import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
-import MRequestTracking from "./pages/Mechanics/Request/Mrequest_tracking";
-import Mrequest_history from "./pages/Mechanics/Request/Mrequest_history";
+import MRequestTracking from "./pages/Mechanics/request/Mrequest_tracking";
+import Mrequest_history from "./pages/Mechanics/request/Mrequest_history";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 const App: React.FC = () => {
