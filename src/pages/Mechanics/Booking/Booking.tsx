@@ -68,7 +68,7 @@ const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // تم إضافة حالات إضافية لضمان شمولية التعريب
   const statusMap: Record<string, { label: string; tabLabel: string }> = {
-    Pending: { label:  "انتظار", tabLabel:  "" },
+    Pending: { label:  "انتظار", tabLabel:  "انتظار" },
     Confirmed: { label: "موافقة", tabLabel: "موافقة" },
     Accepted: { label: "موافقة", tabLabel: "موافقة" }, // حالة إضافية محتملة
     Cancelled: { label: "ملغي", tabLabel: "ملغي" },

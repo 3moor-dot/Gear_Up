@@ -30,9 +30,11 @@ interface CarOption {
   name: string;
 }
 
-interface SubSpecializationOption {
+interface PricedServiceOption {
   id: string;
   name: string;
+  price: number;
+  subSpecializationId: string;
 }
 
 interface AddBookingModalProps {
@@ -50,7 +52,7 @@ const AddBookingModal = ({
 }: AddBookingModalProps) => {
   const [mechanicId, setMechanicId] = useState("");
   const [carId, setCarId] = useState("");
-  const [subSpecializationId, setSubSpecializationId] = useState("");
+  const [mechanicServiceId, setMechanicServiceId] = useState("");
   const [date, setDate] = useState("");
   const [slotStart, setSlotStart] = useState("");
   const [slotEnd, setSlotEnd] = useState("");
@@ -58,11 +60,11 @@ const AddBookingModal = ({
 
   const [cars, setCars] = useState<CarOption[]>([]);
   const [mechanics, setMechanics] = useState<MechanicOption[]>([]);
+  const [pricedServices, setPricedServices] = useState<PricedServiceOption[]>([]);
+
   const [loadingCars, setLoadingCars] = useState(false);
   const [loadingMechanics, setLoadingMechanics] = useState(false);
-  const [subSpecializations, setSubSpecializations] = useState<SubSpecializationOption[]>([]);
-const [loadingSubSpec, setLoadingSubSpec] = useState(false);
-
+  const [loadingServices, setLoadingServices] = useState(false);
 
   const inputStyle =
     "w-full bg-[#DDEEFF] dark:bg-[#137FEC22] text-gray-800 dark:text-white rounded-2xl px-5 py-3.5 outline-none appearance-none transition-all border border-[#BFDBFE] dark:border-white/10 focus:border-[#137FEC] dark:focus:border-[#60A5FA] hover:bg-[#cfe7ff] dark:hover:bg-[#137FEC33]";
@@ -74,61 +76,57 @@ const [loadingSubSpec, setLoadingSubSpec] = useState(false);
     return new Date().toISOString().split("T")[0];
   }, []);
 
- const getToken = () => sessionStorage.getItem("userToken");
+  const getToken = () => sessionStorage.getItem("userToken");
 
-
-const getAuthHeaders = () => {
-  const token = getToken();
-  if (!token) return { Accept: "*/*" };
-
-  return {
-    Authorization: `Bearer ${token}`,
-    Accept: "*/*",
-  };
-};
-
- const fetchCars = async () => {
-  try {
+  const getAuthHeaders = () => {
     const token = getToken();
+    if (!token) return { Accept: "*/*" };
 
-    if (!token) {
-      console.warn("No token found, skip fetchCars");
+    return {
+      Authorization: `Bearer ${token}`,
+      Accept: "*/*",
+    };
+  };
+
+  const fetchCars = async () => {
+    try {
+      const token = getToken();
+
+      if (!token) {
+        setCars([]);
+        return;
+      }
+
+      setLoadingCars(true);
+
+      const response = await axios.get(`${API_BASE_URL}/customers/cars`, {
+        headers: getAuthHeaders(),
+      });
+
+      const carsData: CarApiItem[] = response?.data?.cars ?? [];
+
+      const mappedCars: CarOption[] = carsData.map((car) => ({
+        id: car.id,
+        name: `${car.brand} ${car.model} - ${car.year}`,
+      }));
+
+      setCars(mappedCars);
+    } catch (error: any) {
+      console.error(
+        "Fetch cars error:",
+        error?.response?.status,
+        error?.response?.data || error
+      );
       setCars([]);
-      return;
+    } finally {
+      setLoadingCars(false);
     }
+  };
 
-    setLoadingCars(true);
-
-    const response = await axios.get(`${API_BASE_URL}/customers/cars`, {
-      headers:  getAuthHeaders(),
-    });
-
-    console.log("cars response =", response.data);
-
-    const carsData: CarApiItem[] = response?.data?.cars ?? [];
-
-    const mappedCars: CarOption[] = carsData.map((car) => ({
-      id: car.id,
-      name: `${car.brand} ${car.model} - ${car.year}`,
-    }));
-
-    console.log("mapped cars =", mappedCars);
-
-    setCars(mappedCars);
-  } catch (error: any) {
-    console.error(
-      "Fetch cars error:",
-      error?.response?.status,
-      error?.response?.data || error
-    );
-    setCars([]);
-  } finally {
-    setLoadingCars(false);
-  }
-};
   const fetchMechanics = async () => {
     try {
       setLoadingMechanics(true);
+
       const response = await axios.get(`${API_BASE_URL}/mechanics`, {
         headers: {
           Accept: "*/*",
@@ -156,47 +154,76 @@ const getAuthHeaders = () => {
       setLoadingMechanics(false);
     }
   };
- 
-const fetchSubSpecializations = async () => {
-  try {
-    setLoadingSubSpec(true);
 
-    const response = await axios.get(
-      `${API_BASE_URL}/specializations/sub-specializations`,
-      {
-        headers: getAuthHeaders(),
+  const fetchMechanicServices = async (selectedMechanicId: string) => {
+    try {
+      if (!selectedMechanicId) {
+        setPricedServices([]);
+        setMechanicServiceId("");
+        return;
       }
-    );
 
-    setSubSpecializations(response.data);
-  } catch (error: any) {
-    console.error(
-      "Fetch sub-specializations error:",
-      error?.response?.status,
-      error?.response?.data || error
-    );
-    setSubSpecializations([]);
-  } finally {
-    setLoadingSubSpec(false);
-  }
-};
-  
+      setLoadingServices(true);
+      setPricedServices([]);
+      setMechanicServiceId("");
+
+      const response = await axios.get(
+        `${API_BASE_URL}/specializations/mechanic/${selectedMechanicId}/priced-services`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      const servicesData = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+        ? response.data.data
+        : [];
+
+      const mappedServices: PricedServiceOption[] = servicesData.map(
+        (item: any) => ({
+          id: item.id,
+          name: item.subSpecializationName,
+          price: Number(item.price ?? 0),
+          subSpecializationId: item.subSpecializationId,
+        })
+      );
+
+      setPricedServices(mappedServices);
+    } catch (error: any) {
+      console.error(
+        "Fetch mechanic services error:",
+        error?.response?.status,
+        error?.response?.data || error
+      );
+      setPricedServices([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
-    console.log("modal opened");
-    console.log("token =", getToken());
-
     fetchCars();
     fetchMechanics();
-     fetchSubSpecializations();
+
+    setMechanicId("");
+    setCarId("");
+    setMechanicServiceId("");
+    setPricedServices([]);
+    setDate("");
+    setSlotStart("");
+    setSlotEnd("");
   }, [isOpen]);
 
   if (!isOpen) return null;
+
   const resetForm = () => {
     setMechanicId("");
     setCarId("");
-    setSubSpecializationId("");
+    setMechanicServiceId("");
+    setPricedServices([]);
     setDate("");
     setSlotStart("");
     setSlotEnd("");
@@ -213,26 +240,32 @@ const fetchSubSpecializations = async () => {
   };
 
   const handleSubmit = async () => {
-    if (!mechanicId || !carId || !subSpecializationId || !date || !slotStart || !slotEnd) {
-      // alert("من فضلك املي كل البيانات المطلوبة.");
-       Swal.fire({
-    icon: "warning",
-    title: "تنبيه",
-    text: "من فضلك املي كل البيانات المطلوبة.",
-    confirmButtonColor: "#f59e0b",
-    confirmButtonText: "حسنًا",
-  });
+    if (
+      !mechanicId ||
+      !carId ||
+      !mechanicServiceId ||
+      !date ||
+      !slotStart ||
+      !slotEnd
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "من فضلك املي كل البيانات المطلوبة.",
+        confirmButtonColor: "#f59e0b",
+        confirmButtonText: "حسنًا",
+      });
       return;
     }
 
     if (slotEnd <= slotStart) {
       Swal.fire({
-    icon: "warning",
-    title: "تنبيه",
-    text: "وقت النهاية لازم يكون بعد وقت البداية.",
-    confirmButtonColor: "#f59e0b",
-    confirmButtonText: "حسنًا",
-  });
+        icon: "warning",
+        title: "تنبيه",
+        text: "وقت النهاية لازم يكون بعد وقت البداية.",
+        confirmButtonColor: "#f59e0b",
+        confirmButtonText: "حسنًا",
+      });
       return;
     }
 
@@ -240,64 +273,50 @@ const fetchSubSpecializations = async () => {
       const token = getToken();
 
       if (!token) {
-          Swal.fire({
-    icon: "warning",
-    title: "تنبيه",
-    text: "انتهت الجلسة. الرجاء تسجيل الدخول مرة أخرى.",
-    confirmButtonColor: "#f59e0b",
-    confirmButtonText: "حسنًا",
-  });
+        Swal.fire({
+          icon: "warning",
+          title: "تنبيه",
+          text: "انتهت الجلسة. الرجاء تسجيل الدخول مرة أخرى.",
+          confirmButtonColor: "#f59e0b",
+          confirmButtonText: "حسنًا",
+        });
         return;
       }
 
       setLoading(true);
-console.log("payload =", {
-    mechanicId,
-    carId,
-    subSpecializationId,
-    date,
-    slotStart: toApiTimeFormat(slotStart),
-    slotEnd: toApiTimeFormat(slotEnd),
-});
-      await axios.post(
-        `${API_BASE_URL}/bookings`,
-        {
-          mechanicId,
-          carId,
-          subSpecializationId,
-          date,
-          slotStart: toApiTimeFormat(slotStart),
-          slotEnd: toApiTimeFormat(slotEnd),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "*/*",
-          },
-        }
-      );
-    console.log("payload =", {
-    mechanicId,
-    carId,
-    subSpecializationId,
-    date,
-    slotStart: toApiTimeFormat(slotStart),
-    slotEnd: toApiTimeFormat(slotEnd),
-});
-Swal.fire({
-  icon: "success",
-  title: "تم بنجاح",
-  text: "تم إضافة الحجز بنجاح!",
-  confirmButtonText: "حسنًا",
-  confirmButtonColor: "#137FEC",
-});
 
-setTimeout(async () => {
-  await onSuccess?.();
-  resetForm();
-  onClose();
-}, 500);
+      const payload = {
+        mechanicId,
+        carId,
+        mechanicServiceId,
+        date,
+        slotStart: toApiTimeFormat(slotStart),
+        slotEnd: toApiTimeFormat(slotEnd),
+      };
+
+      console.log("booking payload =", payload);
+
+      await axios.post(`${API_BASE_URL}/bookings`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "تم بنجاح",
+        text: "تم إضافة الحجز بنجاح!",
+        confirmButtonText: "حسنًا",
+        confirmButtonColor: "#137FEC",
+      });
+
+      setTimeout(async () => {
+        await onSuccess?.();
+        resetForm();
+        onClose();
+      }, 500);
     } catch (error: any) {
       console.error(
         "Create booking error:",
@@ -309,15 +328,22 @@ setTimeout(async () => {
       const message =
         apiErrors?.mechanicId?.[0] ||
         apiErrors?.carId?.[0] ||
-        apiErrors?.subSpecializationId?.[0] ||
+        apiErrors?.mechanicServiceId?.[0] ||
         apiErrors?.date?.[0] ||
         apiErrors?.slotStart?.[0] ||
         apiErrors?.slotEnd?.[0] ||
+        error?.response?.data?.error ||
         error?.response?.data?.title ||
         error?.response?.data?.message ||
         "حدث خطأ أثناء إنشاء الحجز.";
 
-      alert(message);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: message,
+        confirmButtonColor: "#dc2626",
+        confirmButtonText: "حسنًا",
+      });
     } finally {
       setLoading(false);
     }
@@ -356,19 +382,31 @@ setTimeout(async () => {
                 <div className="relative">
                   <select
                     value={mechanicId}
-                    onChange={(e) => setMechanicId(e.target.value)}
+                    onChange={(e) => {
+                      const selectedMechanicId = e.target.value;
+                      setMechanicId(selectedMechanicId);
+                      fetchMechanicServices(selectedMechanicId);
+                    }}
                     className={`${inputStyle} pr-12`}
                     dir="rtl"
                   >
                     <option value="" hidden>
-                      {loadingMechanics ? "جاري تحميل الميكانيكيين..." : "اختر الميكانيكي..."}
+                      {loadingMechanics
+                        ? "جاري تحميل الميكانيكيين..."
+                        : "اختر الميكانيكي..."}
                     </option>
+
                     {mechanics.map((mechanic) => (
-                      <option key={mechanic.id} value={mechanic.id} className="bg-white text-black">
+                      <option
+                        key={mechanic.id}
+                        value={mechanic.id}
+                        className="bg-white text-black"
+                      >
                         {mechanic.name}
                       </option>
                     ))}
                   </select>
+
                   <MdPerson className="absolute right-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
                   <MdKeyboardArrowDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-2xl pointer-events-none" />
                 </div>
@@ -378,20 +416,37 @@ setTimeout(async () => {
                 <label className={labelStyle}>نوع الخدمة</label>
                 <div className="relative">
                   <select
-                    value={subSpecializationId}
-                    onChange={(e) => setSubSpecializationId(e.target.value)}
+                    value={mechanicServiceId}
+                    onChange={(e) => setMechanicServiceId(e.target.value)}
                     className={`${inputStyle} pr-12`}
                     dir="rtl"
+                    disabled={
+                      !mechanicId ||
+                      loadingServices ||
+                      pricedServices.length === 0
+                    }
                   >
-                              <option value="" hidden>
-                 {loadingSubSpec ? "جاري تحميل الخدمات..." : "اختر الخدمة..."}
-                 </option>
-                    {subSpecializations.map((service) => (
-                      <option key={service.id} value={service.id} className="bg-white text-black">
-                        {service.name}
+                    <option value="" disabled>
+                      {!mechanicId
+                        ? "اختاري الميكانيكي أولًا..."
+                        : loadingServices
+                        ? "جاري تحميل خدمات الميكانيكي..."
+                        : pricedServices.length === 0
+                        ? "لا توجد خدمات لهذا الميكانيكي"
+                        : "اختر الخدمة..."}
+                    </option>
+
+                    {pricedServices.map((service) => (
+                      <option
+                        key={service.id}
+                        value={service.id}
+                        className="bg-white text-black"
+                      >
+                        {service.name} - {service.price} EGP
                       </option>
                     ))}
                   </select>
+
                   <MdBuild className="absolute right-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
                   <MdKeyboardArrowDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-2xl pointer-events-none" />
                 </div>
@@ -402,30 +457,31 @@ setTimeout(async () => {
               <label className={labelStyle}>اختيار السيارة</label>
               <div className="relative">
                 <select
-  value={carId}
-  onChange={(e) => setCarId(e.target.value)}
-  className={`${inputStyle} pr-12`}
-  dir="rtl"
-  disabled={loadingCars || cars.length === 0}
->
-  <option value="" disabled>
-    {loadingCars
-      ? "جاري تحميل السيارات..."
-      : cars.length === 0
-      ? "لا توجد سيارات"
-      : "اختر السيارة..."}
-  </option>
+                  value={carId}
+                  onChange={(e) => setCarId(e.target.value)}
+                  className={`${inputStyle} pr-12`}
+                  dir="rtl"
+                  disabled={loadingCars || cars.length === 0}
+                >
+                  <option value="" disabled>
+                    {loadingCars
+                      ? "جاري تحميل السيارات..."
+                      : cars.length === 0
+                      ? "لا توجد سيارات"
+                      : "اختر السيارة..."}
+                  </option>
 
-  {cars.map((car) => (
-    <option
-      key={car.id}
-      value={car.id}
-      className="bg-white text-black"
-    >
-      {car.name}
-    </option>
-  ))}
-</select>
+                  {cars.map((car) => (
+                    <option
+                      key={car.id}
+                      value={car.id}
+                      className="bg-white text-black"
+                    >
+                      {car.name}
+                    </option>
+                  ))}
+                </select>
+
                 <MdDirectionsCar className="absolute right-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
                 <MdKeyboardArrowDown className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-2xl pointer-events-none" />
               </div>
@@ -477,7 +533,10 @@ setTimeout(async () => {
             </div>
 
             <div className="pt-4">
-              <div className="flex flex-col sm:flex-row gap-4 sm:justify-center" dir="rtl">
+              <div
+                className="flex flex-col sm:flex-row gap-4 sm:justify-center"
+                dir="rtl"
+              >
                 <button
                   type="button"
                   onClick={closeModal}
