@@ -43,21 +43,13 @@ useEffect(() => {
 
 
 
-
-let userName = null;
-
 try {
   const token = sessionStorage.getItem("userToken");
 
   if (token) {
     const parts = token.split(".");
     if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1]));
 
-      userName =
-        payload?.[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-        ];
     }
   }
 } catch (error) {
@@ -212,9 +204,6 @@ connection.keepAliveIntervalInMilliseconds = 15000;
 connection.on("ReceiveServiceRequest", (data: any) => {
   console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
 
-  const formattedDate = data.scheduledDateTime
-    ? new Date(data.scheduledDateTime).toLocaleString("ar-EG")
-    : `${data.scheduledDate || ""} ${data.scheduledTime || ""}`;
 
   setNotifications((oldNotifications) => {
 
