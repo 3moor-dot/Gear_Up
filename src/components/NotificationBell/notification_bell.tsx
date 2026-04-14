@@ -212,9 +212,6 @@ connection.keepAliveIntervalInMilliseconds = 15000;
 connection.on("ReceiveServiceRequest", (data: any) => {
   console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
 
-  const formattedDate = data.scheduledDateTime
-    ? new Date(data.scheduledDateTime).toLocaleString("ar-EG")
-    : `${data.scheduledDate || ""} ${data.scheduledTime || ""}`;
 
   setNotifications((oldNotifications) => {
 
