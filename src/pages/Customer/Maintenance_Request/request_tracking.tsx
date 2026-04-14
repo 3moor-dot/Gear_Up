@@ -52,29 +52,11 @@ const RequestTracking = () => {
   const token = sessionStorage.getItem("userToken");
   const currentIndex = statusOrder.indexOf(request?.status);
   const [openImg, setOpenImg] = useState(false);
-  const fetchRequest = async () => {
-
-    try {
-      const res = await axios.get(
-        `https://gearupapp.runasp.net/api/requests/${requestId}/status`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-     console.log("REQUEST DATA:", res.data);
-      setRequest(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("فشل تحميل بيانات الطلب");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!requestId) return;
   
-    let lastStatus = null;
+    let lastStatus: null = null;
   
     const load = async () => {
       try {
