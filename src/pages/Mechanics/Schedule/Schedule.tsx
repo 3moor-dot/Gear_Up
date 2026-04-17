@@ -6,7 +6,6 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
 
-// تم تحديث الـ Interface لإضافة تواريخ الإنشاء والتحديث
 interface Booking {
   id: string;
   customerName: string;
@@ -17,7 +16,7 @@ interface Booking {
   slotStart: string;
   slotEnd: string;
   status: string;
-  createdAt?: string; 
+  createdAt?: string;
   updatedAt?: string | null;
 }
 
@@ -29,13 +28,11 @@ const Schedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
 
-  // API State
   const [todayAppointments, setTodayAppointments] = useState<Booking[]>([]);
   const [scheduleBookings, setScheduleBookings] = useState<Booking[]>([]);
   const [loadingToday, setLoadingToday] = useState(true);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  // State for Drawer & Actions
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -151,7 +148,7 @@ const Schedule = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "Confirmed": return "مؤكد";
+      // case "Confirmed": return "مؤكد";
       case "Accepted":  return "مقبول";
       case "Pending":   return "في انتظار";
       case "Cancelled": return "ملغي";
@@ -163,9 +160,9 @@ const Schedule = () => {
 
   // ======= Action Handlers =======
   const updateBookingStatus = (bookingId: string, newStatus: string) => {
-    const updateList = (list: Booking[]) => 
+    const updateList = (list: Booking[]) =>
       list.map(b => b.id === bookingId ? { ...b, status: newStatus } : b);
-    
+
     setTodayAppointments(prev => updateList(prev));
     setScheduleBookings(prev => updateList(prev));
   };
@@ -185,9 +182,11 @@ const Schedule = () => {
         }
       );
       if (!response.ok) throw new Error("فشل في قبول الحجز");
-      
+
       updateBookingStatus(bookingId, "Confirmed");
-      setSelectedBooking(null);
+      setSelectedBooking((prev) =>
+        prev && prev.id === bookingId ? { ...prev, status: "Accepted" } : prev
+      );
     } catch (err) {
       console.error("خطأ في قبول الحجز:", err);
     } finally {
@@ -210,11 +209,39 @@ const Schedule = () => {
         }
       );
       if (!response.ok) throw new Error("فشل في رفض الحجز");
-      
+
       updateBookingStatus(bookingId, "Cancelled");
       setSelectedBooking(null);
     } catch (err) {
       console.error("خطأ في رفض الحجز:", err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ✅ دالة إكمال الحجز - الجديدة
+  const handleComplete = async (bookingId: string) => {
+    try {
+      setActionLoading(true);
+      const token = sessionStorage.getItem("userToken");
+      const response = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${bookingId}/complete`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) throw new Error("فشل في إكمال الحجز");
+
+      updateBookingStatus(bookingId, "Completed");
+      setSelectedBooking((prev) =>
+        prev && prev.id === bookingId ? { ...prev, status: "Completed" } : prev
+      );
+    } catch (err) {
+      console.error("خطأ في إكمال الحجز:", err);
     } finally {
       setActionLoading(false);
     }
@@ -255,7 +282,6 @@ const Schedule = () => {
           {/* Calendar Section */}
           <div className="lg:col-span-2 space-y-4">
 
-            {/* View Selector & Month Navigation */}
             <div className={`rounded-xl p-4 ${!dark ? "bg-white shadow-lg" : "bg-[#0d1629] shadow-2xl shadow-blue-900/20"}`}>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex gap-2">
@@ -287,7 +313,6 @@ const Schedule = () => {
               </div>
             </div>
 
-            {/* Calendar Grid */}
             <div className={`rounded-xl p-6 relative ${!dark ? "bg-white shadow-xl border border-gray-100" : "bg-gradient-to-br from-[#0d1629] to-[#0a1120] shadow-2xl shadow-blue-900/30 border border-blue-900/20"}`}>
 
               {loadingSchedule && (
@@ -450,7 +475,7 @@ const Schedule = () => {
               </div>
             </div>
 
-            {/* Booking Details - Updated */}
+            {/* Booking Details */}
             <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
               <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>تفاصيل الحجز</h3>
               {[
@@ -467,7 +492,7 @@ const Schedule = () => {
               ))}
             </div>
 
-            {/* Timestamps - Added */}
+            {/* Timestamps */}
             <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
               <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>سجل الوقت</h3>
               {[
@@ -481,7 +506,7 @@ const Schedule = () => {
               ))}
             </div>
 
-            {/* Actions for Pending */}
+            {/* ✅ أزرار الإجراءات حسب الحالة */}
             {selectedBooking.status === "Pending" && (
               <div className="flex gap-3 pt-2">
                 <button
@@ -497,6 +522,37 @@ const Schedule = () => {
                   className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition disabled:opacity-50"
                 >
                   {actionLoading ? "جاري..." : "✕ رفض"}
+                </button>
+              </div>
+            )}
+
+            {/* ✅ زر إكمال الحجز - يظهر فقط لما الحالة Confirmed أو Accepted */}
+            {( selectedBooking.status === "Accepted") && (
+              <div className="pt-2">
+                <button
+                  onClick={() => handleComplete(selectedBooking.id)}
+                  disabled={actionLoading}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {actionLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      إكمال الحجز
+                    </>
+                  )}
                 </button>
               </div>
             )}

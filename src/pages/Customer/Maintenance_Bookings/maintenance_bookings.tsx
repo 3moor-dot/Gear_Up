@@ -1,10 +1,11 @@
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
-import { MdAdd, MdMoreVert } from "react-icons/md";
+import { MdAdd, MdMoreVert, MdClose, MdStar } from "react-icons/md";
 import AddBookingModal from "./add_booking_modal";
 import { useState, useEffect, useRef } from "react";
 import RescheduleModal from "./reschedule_modal";
 import CancelBookingModal from "./cancel_booking_modal";
+import Swal from "sweetalert2";
 
 const API_URL = "https://gearupapp.runasp.net/api/bookings/my";
 
@@ -41,6 +42,35 @@ const statusLabels: Record<string, string> = {
   Completed: "مكتمل",
 };
 
+// ✅ كومبوننت النجوم التفاعلية
+const StarRating = ({ rating, onRate }: { rating: number; onRate: (val: number) => void }) => {
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div className="flex gap-1.5 dir-ltr" dir="ltr">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onRate(star)}
+          className="transition-transform hover:scale-125 active:scale-90"
+        >
+          <MdStar
+            size={36}
+            className={`transition-colors duration-200 ${
+              star <= (hovered || rating)
+                ? "text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]"
+                : "text-gray-300 dark:text-gray-600"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const ActionMenu = ({
   status,
   booking,
@@ -49,6 +79,7 @@ const ActionMenu = ({
   onClose,
   onReschedule,
   onCancel,
+  onRate,
 }: any) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +131,16 @@ const ActionMenu = ({
                 إلغاء الحجز
               </button>
             </>
+          ) : status === "Completed" ? (
+            <button
+              onClick={() => {
+                onRate(booking);
+                onClose();
+              }}
+              className="block w-full text-right px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-medium"
+            >
+              ⭐ تقييم الخدمة
+            </button>
           ) : (
             <span className="block w-full text-right px-4 py-2.5 text-sm text-gray-400">
               لا توجد إجراءات
@@ -125,6 +166,14 @@ const MaintenanceBookings = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  // ✅ حالة التقييم
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
+  const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
+  const [stars, setStars] = useState(0);
+  const [comment, setComment] = useState("");
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [ratingSuccess, setRatingSuccess] = useState(false);
 
   const token = sessionStorage.getItem("userToken");
 
@@ -191,14 +240,99 @@ const MaintenanceBookings = () => {
     fetchBookings();
   }, []);
 
-  // ================= التعديل هنا =================
+  // ✅ فتح سلايد التقييم
+ const openRatingDrawer = (booking: Booking) => {
+  console.log("booking from row:", booking);
+  console.log("selected booking id:", booking.id);
+
+  setRatingBooking(booking);
+  setStars(0);
+  setComment("");
+  setRatingSuccess(false);
+  setIsRatingOpen(true);
+};
+  // ✅ إرسال التقييم
+const handleSubmitRating = async () => {
+  if (!ratingBooking || stars === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "تنبيه",
+      text: "من فضلك اختاري تقييم أولًا.",
+      confirmButtonColor: "#f59e0b",
+      confirmButtonText: "حسنًا",
+    });
+    return;
+  }
+
+  try {
+    setRatingLoading(true);
+
+    const res = await fetch(
+      `https://gearupapp.runasp.net/api/bookings/${ratingBooking.id}/rating`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ stars, comment }),
+      }
+    );
+
+    const responseText = await res.text();
+
+    if (!res.ok) {
+      let message = "فشل إرسال التقييم، حاول مرة تانية لاحقًا.";
+
+      if (responseText?.includes("already")) {
+        message = "تم إرسال تقييم لهذا الحجز من قبل.";
+      } else if (responseText?.includes("Unauthorized")) {
+        message = "انتهت الجلسة، سجلي دخول مرة تانية.";
+      } else if (responseText?.includes("BookingRatings")) {
+        message = "حصلت مشكلة من السيرفر أثناء حفظ التقييم.";
+      }
+
+      throw new Error(message);
+    }
+
+    setRatingSuccess(true);
+
+    Swal.fire({
+      icon: "success",
+      title: "تم بنجاح",
+      text: "تم إرسال التقييم بنجاح.",
+      confirmButtonColor: "#22c55e",
+      confirmButtonText: "حسنًا",
+    });
+
+    setTimeout(() => {
+      setIsRatingOpen(false);
+      setRatingBooking(null);
+    }, 1500);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "حدث خطأ أثناء إرسال التقييم";
+
+    Swal.fire({
+      icon: "error",
+      title: "فشل الإرسال",
+      text: message,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "حسنًا",
+    });
+  } finally {
+    setRatingLoading(false);
+  }
+};
+
   const filteredBookings = bookings
     .filter((booking) => {
       const statusMatch =
         selectedStatus === "الكل" ||
         statusLabels[booking.status] === selectedStatus;
 
-      const bookingDate = new Date(`${booking.date.split('T')[0]}T${booking.slotStart.slice(0, 5)}`);
+      const bookingDate = new Date(`${booking.date.split("T")[0]}T${booking.slotStart.slice(0, 5)}`);
       const now = new Date();
 
       let timeMatch = true;
@@ -220,18 +354,12 @@ const MaintenanceBookings = () => {
       return statusMatch && timeMatch;
     })
     .sort((a, b) => {
-      // الترتيب من المستقبل إلى الماضي (تنازلي)
-      const dateAString = a.date.split('T')[0];
-      const dateBString = b.date.split('T')[0];
-      
-      // دمج التاريخ مع الوقت
+      const dateAString = a.date.split("T")[0];
+      const dateBString = b.date.split("T")[0];
       const fullDateA = new Date(`${dateAString}T${a.slotStart.slice(0, 5)}`).getTime();
       const fullDateB = new Date(`${dateBString}T${b.slotStart.slice(0, 5)}`).getTime();
-
-      // ترتيب تنازلي: الأكبر (المستقبل) يظهر أولاً
       return fullDateB - fullDateA;
     });
-  // ===============================================
 
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
   const paginatedBookings = filteredBookings.slice(
@@ -392,6 +520,7 @@ const MaintenanceBookings = () => {
                                 setSelectedBooking(b);
                                 setIsCancelModalOpen(true);
                               }}
+                              onRate={(b: Booking) => openRatingDrawer(b)}
                             />
                           </td>
                         </tr>
@@ -461,6 +590,7 @@ const MaintenanceBookings = () => {
                       </div>
                     </div>
 
+                    {/* أزرار الموبايل */}
                     {booking.status === "Pending" && (
                       <div className="flex gap-2 pt-3 border-t dark:border-gray-800">
                         <button
@@ -480,6 +610,19 @@ const MaintenanceBookings = () => {
                           className="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
                         >
                           إلغاء الحجز
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ✅ زر التقييم في الموبايل */}
+                    {booking.status === "Completed" && (
+                      <div className="pt-3 border-t dark:border-gray-800">
+                        <button
+                          onClick={() => openRatingDrawer(booking)}
+                          className="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 py-2.5 rounded-lg text-sm font-bold hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <MdStar size={18} />
+                          تقييم الخدمة
                         </button>
                       </div>
                     )}
@@ -510,6 +653,163 @@ const MaintenanceBookings = () => {
             </>
           )}
         </main>
+      </div>
+
+      {/* ✅ Overlay التقييم */}
+      {isRatingOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+          onClick={() => !ratingLoading && setIsRatingOpen(false)}
+        />
+      )}
+
+      {/* ✅ سلايد التقييم من اليسار */}
+      <div
+        dir="rtl"
+        className={`fixed top-0 left-0 h-full w-full sm:w-[440px] z-50 shadow-2xl transition-transform duration-300 ease-out overflow-y-auto
+          ${isRatingOpen ? "translate-x-0" : "-translate-x-full"}
+          bg-white dark:bg-[#0d1629]
+        `}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b dark:border-gray-800">
+          <h2 className="text-xl font-bold dark:text-white text-gray-800">
+            تقييم الخدمة
+          </h2>
+          <button
+            onClick={() => !ratingLoading && setIsRatingOpen(false)}
+            disabled={ratingLoading}
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors dark:text-gray-400 text-gray-600 disabled:opacity-50"
+          >
+            <MdClose size={22} />
+          </button>
+        </div>
+
+        {ratingBooking && (
+          <div className="p-6 space-y-6">
+
+            {/* ✅ حالة النجاح */}
+            {ratingSuccess ? (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold dark:text-white text-gray-800">
+                  شكراً لتقييمك!
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  تم إرسال تقييمك بنجاح، نقدر رأيك كثيراً
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* أيقونة التقييم */}
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <MdStar size={32} className="text-amber-400" />
+                  </div>
+                </div>
+
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  كيف كانت تجربتك مع الخدمة؟
+                </p>
+
+                {/* تفاصيل الحجز */}
+                <div className="rounded-xl p-5 space-y-4 bg-gray-50 dark:bg-[#131c2f] border dark:border-gray-800">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+                      {ratingBooking.mechanicName.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-800 dark:text-white text-sm truncate">
+                        {ratingBooking.mechanicName}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        ميكانيكي
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 pt-2 border-t dark:border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">🔧 الخدمة</span>
+                      <span className="text-sm font-medium dark:text-white text-gray-800">
+                        {ratingBooking.subSpecializationName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">📅 التاريخ</span>
+                      <span className="text-sm font-medium dark:text-white text-gray-800">
+                        {formatDisplayDate(ratingBooking.date)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">⏰ التوقيت</span>
+                      <span className="text-sm font-medium dark:text-white text-gray-800">
+                        {ratingBooking.time}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* النجوم */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 block">
+                    التقييم <span className="text-red-500">*</span>
+                  </label>
+                  <StarRating rating={stars} onRate={setStars} />
+                  {stars > 0 && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                      {stars === 1 && "سيء"}
+                      {stars === 2 && "مقبول"}
+                      {stars === 3 && "جيد"}
+                      {stars === 4 && "جيد جداً"}
+                      {stars === 5 && "ممتاز"}
+                    </p>
+                  )}
+                </div>
+
+                {/* التعليق */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 block">
+                    التعليق
+                  </label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="اكتب تعليقك هنا (اختياري)..."
+                    rows={4}
+                    className="w-full bg-gray-50 dark:bg-[#131c2f] text-gray-800 dark:text-white border dark:border-gray-700 rounded-xl py-3 px-4 outline-none text-sm resize-none focus:ring-2 focus:ring-amber-400 transition-all placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+                </div>
+
+                {/* زر الإرسال */}
+                <button
+                  onClick={handleSubmitRating}
+                  disabled={stars === 0 || ratingLoading}
+                  className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded-xl text-sm font-bold transition-all disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 disabled:shadow-none"
+                >
+                  {ratingLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <MdStar size={18} />
+                      إرسال التقييم
+                    </>
+                  )}
+                </button>
+
+                {stars === 0 && (
+                  <p className="text-xs text-red-500 text-center -mt-3">
+                    يجب اختيار تقييم واحد على الأقل
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modals */}
