@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaLocationArrow } from "react-icons/fa";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
-
 
 // --- مكون الخريطة المصغر ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
@@ -72,7 +70,8 @@ const AdditionalTab = () => {
   const [isEditing, setIsEditing] = useState(false);
 
 
-  const token = sessionStorage.getItem("userToken");
+  // const token = sessionStorage.getItem("userToken");
+  const token = sessionStorage.getItem("userToken") || "";
   console.log("TOKEN =>", token);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -117,13 +116,16 @@ const AdditionalTab = () => {
   };
 
   const setLocationState = (lat: number, lng: number) => {
+    console.log("SET LOCATION =>", lat, lng);
+  
     setData(prev => ({
       ...prev,
       latitude: lat,
       longitude: lng,
-      location: `تم تحديد الموقع بنجاح`
+      location: "تم تحديد الموقع بنجاح"
     }));
   };
+
 
   const update = (field: keyof AdditionalData, value: any) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -139,158 +141,150 @@ const AdditionalTab = () => {
   };
 
 
-  // const handleSave = async () => {
-  //   setIsSaving(true);
-  //   setError("");
+//   const handleSave = async () => {
+//     setIsSaving(true);
+//     setError("");
+//     setSuccess("");
   
-  //   try {
-  //     localStorage.setItem("mechanic_data", JSON.stringify(data));
-  
-  //     const headers = {
-  //       Authorization: `Bearer ${token}`,
-  //       "Content-Type": "application/json",
-  //     };
-  
-  //     // 1) الموقع
-  //     await axios.put(
-  //       "http://gearupapp.runasp.net/api/mechanics/my/location",
-  //       {
-  //         location: data.location,
-  //         latitude: data.latitude,
-  //         longitude: data.longitude,
-  //       },
-  //       { headers }
-  //     );
-  
-  //     // 2) التخصص + الخبرة
-  //     await axios.put(
-  //       "http://gearupapp.runasp.net/api/mechanics/my/profile/complete",
-  //       {
-  //         mainSpecialty: data.mainSpecialty,
-  //         subSpecialty: data.subSpecialty,
-  //         experience: data.experience,
-  //       },
-  //       { headers }
-  //     );
-  
-  //     // 3) الزيارة الميدانية
-  //     await axios.put(
-  //       "http://gearupapp.runasp.net/api/mechanics/my/field-visit",
-  //       {
-  //         fieldVisit: data.fieldVisit,
-  //       },
-  //       { headers }
-  //     );
-  
-  //     // 4) ساعات العمل
-  //     await axios.put(
-  //       "http://gearupapp.runasp.net/api/mechanics/my/working-hours",
-  //       {
-  //         workingHoursFrom: data.workingHoursFrom,
-  //         workingHoursTo: data.workingHoursTo,
-  //       },
-  //       { headers }
-  //     );
-  
-  //     setSuccess("تم حفظ البيانات بنجاح ✅");
-  //     setIsEditing(false);
-  
-  //     setTimeout(() => window.location.reload(), 1000);
-  //   }
-  //    catch (err) {
-  //     setError("تعذر الحفظ");
-  //   }
-  //    finally {
-  //     setIsSaving(false);
-  //   }
-  // };
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError("");
-    setSuccess("");
-  
-    try {
-      localStorage.setItem("mechanic_data", JSON.stringify(data));
-      const headers = { 
-        Authorization: `Bearer ${token}`, 
-        "Content-Type": "application/json" 
-      };
+//     try {
 
-      // 1. تحويل الوقت لنظام 24 ساعة عشان السيرفر ميعترضش
-      // const formatTo24h = (timeStr: string) => {
-      //   if (!timeStr) return "08:00:00";
-        // // التأكد إن التنسيق HH:mm:ss
-        // const parts = timeStr.split(':');
-        // let hours = parseInt(parts[0]);
-        // let minutes = parts[1] || "00";
-        
-        
-        // لو المستخدم اختار وقت بالليل (زي 01:00) والسيرفر فاكره صباحاً،
-        // المنطق ده بيصلح المقارنة لو النهاية أقل من البداية
-        // return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
-      // };
+//       localStorage.setItem("mechanic_data", JSON.stringify(data));
+//       const headers = { 
+//         Authorization: `Bearer ${token}`, 
+//         "Content-Type": "application/json" 
+//       };
 
-      // const startTime = formatTo24h(data.workingHoursFrom);
-      // const endTime = formatTo24h(data.workingHoursTo);
+  
+//        localStorage.setItem("mechanic_data", JSON.stringify(data));
+//         if (!data.latitude || !data.longitude) {
+//         // if (data.latitude == null || data.longitude == null){
+//         setError("لازم تحددي الموقع الأول ❗");
+//         setIsSaving(false);
+//         return;
+//       }
 
-      // 2. خريطة التخصصات
-      // const specMap: { [key: string]: number } = {
-      //   "ميكانيكا عامة": 0,
-      //   "كهرباء سيارات": 1,
-      //   "ضبط زوايا": 2,
-      //   "التروس / السرعات": 3
-      // };
 
-      // const mainSpecToSend = data.mainSpecialty.length > 0 ? specMap[data.mainSpecialty[0]] : 0;
 
-      const requests = [
-        // Request 0: الموقع
-        axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", { 
-          location: "Cairo", 
-          latitude: data.latitude || 30.0, 
-          longitude: data.longitude || 31.0 
-        }, { headers }),
+//       await axios.post(
+//   "https://gearupapp.runasp.net/api/mechanics/complete-profile",
+//   {
+//     CustomerLatitude: data.latitude,
+//     CustomerLongitude: data.longitude,
+//     MainSpecialty: data.mainSpecialty,
+//     SubSpecialty: data.subSpecialty,
+//     FieldVisit: data.fieldVisit,
+//     WorkingHoursFrom: data.workingHoursFrom,
+//     WorkingHoursTo: data.workingHoursTo,
+//     Experience: data.experience,
+//   },
+//   {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       "Content-Type": "application/json",
+//     },
+//   }
+// );
+
+
+
+     
+//       const requests = [
+//         // Request 0: الموقع
+//         axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", { 
+//           location: "Cairo", 
+//           latitude: data.latitude || 30.0, 
+//           longitude: data.longitude || 31.0 
+//         }, { headers }),
   
-        // Request 1: التخصص
-        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", { 
-        //   mainSpecialty: mainSpecToSend, 
-        //   subSpecialty: data.subSpecialty || "General", 
-        //   experience: parseInt(data.experience.toString().replace(/\D/g, '')) || 1 
-        // }, { headers }),
-  
-        // // Request 2: الزيارة
-        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", { 
-        //   fieldVisit: data.fieldVisit 
-        // }, { headers }),
-  
-        // // Request 3: الساعات (المشكلة هنا)
-        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", { 
-        //   workingHoursFrom: startTime, 
-        //   workingHoursTo: endTime
-        // }, { headers })
-      ];
-  
-      // const results = await Promise.allSettled(requests);
-      
-      // let failedRequests = results.filter(r => r.status === 'rejected');
-  
-      if (failedRequests.length === 0) {
-        setSuccess("تم الحفظ بنجاح ✅");
-        setIsEditing(false);
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        // لو لسه فيه حاجة بايظة، اطبعي لي الخطأ بالظبط
-        failedRequests.forEach((res: any) => {
-          console.error("Critical Error Details:", res.reason?.response?.data);
-        });
-        setError("لسه فيه مشكلة في " + failedRequests.length + " طلبات. شوفي الـ Console");
-      }
-    } catch (err: any) {
-      setError("خطأ في الاتصال بالسيرفر");
-    } finally {
-      setIsSaving(false);
+       
+//       if (failedRequests.length === 0) {
+//         setSuccess("تم الحفظ بنجاح ✅");
+//         setIsEditing(false);
+//         setTimeout(() => window.location.reload(), 1500);
+//       } else {
+//         // لو لسه فيه حاجة بايظة، اطبعي لي الخطأ بالظبط
+//         failedRequests.forEach((res: any) => {
+//           console.error("Critical Error Details:", res.reason?.response?.data);
+//         });
+//         setError("لسه فيه مشكلة في " + failedRequests.length + " طلبات. شوفي الـ Console");
+//       }
+//     } catch (err: any) {
+//       setError("خطأ في الاتصال بالسيرفر");
+//     } finally {
+
+//       await new Promise((r) => setTimeout(r, 800));
+//       setSuccess("تم حفظ البيانات بنجاح ✅");
+//       setIsEditing(false);
+//       setTimeout(() => window.location.reload(), 1000);
+//     } 
+    
+//     catch (err: any) {
+//       console.log("FULL ERROR =>", err);
+//       console.log("RESPONSE =>", err.response);
+//       console.log("DATA =>", err.response?.data);
+//       console.log("STATUS =>", err.response?.status);
+    
+//       setError("تعذر الحفظ");
+//     }
+//     finally {
+//       setIsSaving(false);
+//     }
+//   };
+const handleSave = async () => {
+  setIsSaving(true);
+  setError("");
+  setSuccess("");
+
+  try {
+    if (!data.latitude || !data.longitude) {
+      setError("لازم تحددي الموقع الأول ❗");
+      return;
     }
-  };
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+
+    // 1) complete profile
+    await axios.post(
+      "https://gearupapp.runasp.net/api/mechanics/complete-profile",
+      {
+        CustomerLatitude: data.latitude,
+        CustomerLongitude: data.longitude,
+        MainSpecialty: data.mainSpecialty,
+        SubSpecialty: data.subSpecialty,
+        FieldVisit: data.fieldVisit,
+        WorkingHoursFrom: data.workingHoursFrom,
+        WorkingHoursTo: data.workingHoursTo,
+        Experience: data.experience,
+      },
+      { headers }
+    );
+
+    // 2) update location
+    await axios.put(
+      "https://gearupapp.runasp.net/api/mechanics/my/location",
+      {
+        location: "Cairo",
+        latitude: data.latitude,
+        longitude: data.longitude,
+      },
+      { headers }
+    );
+
+    setSuccess("تم الحفظ بنجاح ✅");
+    setIsEditing(false);
+
+    setTimeout(() => window.location.reload(), 1000);
+  } catch (err: any) {
+    console.log("ERROR =>", err?.response?.data || err);
+
+    setError("تعذر الحفظ، راجع الـ console");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none transition-all ${

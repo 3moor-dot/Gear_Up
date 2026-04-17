@@ -74,7 +74,7 @@ const RequestTracking = () => {
           lastStatus = newData.status;
           setRequest(newData);
         }
-      } catch (err) {
+      } catch  {
         toast.error("فشل تحميل بيانات الطلب");
       } finally {
         setLoading(false);
