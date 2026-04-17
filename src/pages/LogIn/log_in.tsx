@@ -97,7 +97,7 @@ const Login = () => {
           }
         });
       }
-    } catch (err) {
+    } catch  {
       Swal.fire({
         icon: "error",
         title: "خطأ في الاتصال",

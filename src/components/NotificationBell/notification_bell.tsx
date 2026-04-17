@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect , useCallback  } from "react";
 import { FaBell, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
@@ -48,12 +48,28 @@ useEffect(() => {
 // let userName = null;
 
 
+// try {
+//   const token = sessionStorage.getItem("userToken");
+
+//   if (token) {
+//     const parts = token.split(".");
+//     if (parts.length === 3) {
+      
+//     }
+//   }
+// } 
+// catch (error) {
+//   console.error("JWT parse error:", error);
+// }
 try {
   const token = sessionStorage.getItem("userToken");
 
   if (token) {
     const parts = token.split(".");
+
     if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      console.log("JWT payload:", payload);
     }
   }
 } catch (error) {
@@ -63,10 +79,14 @@ try {
 
 console.log("ROLE:", role);
 
-  const getStorageKey = () => {
+  // const getStorageKey = () => {
+  //   if (!token) return "guest_notifications";
+  //   return `notifications_${token.slice(-10)}`;
+  // };
+  const getStorageKey = useCallback(() => {
     if (!token) return "guest_notifications";
     return `notifications_${token.slice(-10)}`;
-  };
+  }, [token]);
 
   const [notifications, setNotifications] = useState<any[]>(() => {
     const saved = localStorage.getItem(getStorageKey());
@@ -106,18 +126,30 @@ console.log("ROLE:", role);
   };
 
 
+  // useEffect(() => {
+  //   const handleStorageChange = () => {
+  //     const saved = localStorage.getItem(getStorageKey());
+  //     if (saved) {
+  //       setNotifications(JSON.parse(saved));
+  //       triggerShake(); // <--- ضيفي السطر ده هنا عشان الجرس يتهز أول ما الإشعار يوصل
+  //     }
+  //   };
+  
+  //   window.addEventListener("storage", handleStorageChange);
+  //   return () => window.removeEventListener("storage", handleStorageChange);
+  // }, []);
   useEffect(() => {
     const handleStorageChange = () => {
       const saved = localStorage.getItem(getStorageKey());
       if (saved) {
         setNotifications(JSON.parse(saved));
-        triggerShake(); // <--- ضيفي السطر ده هنا عشان الجرس يتهز أول ما الإشعار يوصل
+        triggerShake();
       }
     };
   
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [getStorageKey]);
   
   const snoozeReminder = async (reminderId: number, snoozeType: number, index: number) => {
     try {
@@ -431,15 +463,31 @@ const newNotification = {
 
 
 
-  const fetchCars = async () => {
+  // const fetchCars = async () => {
+  //   if (!token) return;
+  //   try {
+  //     const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
+  //     setCars(res.data.cars || []);
+  //   } catch (error) { console.error(error); }
+  // };
+  const fetchCars = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(
+        "https://gearupapp.runasp.net/api/customers/cars",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setCars(res.data.cars || []);
-    } catch (error) { console.error(error); }
-  };
+    } catch (error) {
+      console.error(error);
+    }
+  }, [token]);
 
-  useEffect(() => { fetchCars(); }, [token]);
+
+  // useEffect(() => { fetchCars(); }, [token]);
+  useEffect(() => {
+    fetchCars();
+  }, [fetchCars]);
 
   const getCarName = (carId: string) => {
     const car = cars.find(c => c.id === carId);
