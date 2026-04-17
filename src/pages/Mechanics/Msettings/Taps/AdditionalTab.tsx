@@ -138,61 +138,160 @@ const AdditionalTab = () => {
     }));
   };
 
+
+  // const handleSave = async () => {
+  //   setIsSaving(true);
+  //   setError("");
+  
+  //   try {
+  //     localStorage.setItem("mechanic_data", JSON.stringify(data));
+  
+  //     const headers = {
+  //       Authorization: `Bearer ${token}`,
+  //       "Content-Type": "application/json",
+  //     };
+  
+  //     // 1) الموقع
+  //     await axios.put(
+  //       "http://gearupapp.runasp.net/api/mechanics/my/location",
+  //       {
+  //         location: data.location,
+  //         latitude: data.latitude,
+  //         longitude: data.longitude,
+  //       },
+  //       { headers }
+  //     );
+  
+  //     // 2) التخصص + الخبرة
+  //     await axios.put(
+  //       "http://gearupapp.runasp.net/api/mechanics/my/profile/complete",
+  //       {
+  //         mainSpecialty: data.mainSpecialty,
+  //         subSpecialty: data.subSpecialty,
+  //         experience: data.experience,
+  //       },
+  //       { headers }
+  //     );
+  
+  //     // 3) الزيارة الميدانية
+  //     await axios.put(
+  //       "http://gearupapp.runasp.net/api/mechanics/my/field-visit",
+  //       {
+  //         fieldVisit: data.fieldVisit,
+  //       },
+  //       { headers }
+  //     );
+  
+  //     // 4) ساعات العمل
+  //     await axios.put(
+  //       "http://gearupapp.runasp.net/api/mechanics/my/working-hours",
+  //       {
+  //         workingHoursFrom: data.workingHoursFrom,
+  //         workingHoursTo: data.workingHoursTo,
+  //       },
+  //       { headers }
+  //     );
+  
+  //     setSuccess("تم حفظ البيانات بنجاح ✅");
+  //     setIsEditing(false);
+  
+  //     setTimeout(() => window.location.reload(), 1000);
+  //   }
+  //    catch (err) {
+  //     setError("تعذر الحفظ");
+  //   }
+  //    finally {
+  //     setIsSaving(false);
+  //   }
+  // };
   const handleSave = async () => {
     setIsSaving(true);
+    setError("");
+    setSuccess("");
+  
     try {
-       localStorage.setItem("mechanic_data", JSON.stringify(data));
-      // await axios.post(
-      //   "https://gearupapp.runasp.net/api/mechanic/profile",
-      //   data,
-      //   {
-      //     headers: { Authorization: `Bearer ${token}` }
-      //   }
-      // );
+      localStorage.setItem("mechanic_data", JSON.stringify(data));
+      const headers = { 
+        Authorization: `Bearer ${token}`, 
+        "Content-Type": "application/json" 
+      };
 
-      // await axios.post(
-      //   "https://gearupapp.runasp.net/api/mechanic/profile",
-      //   data,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //       "Content-Type": "application/json"
-      //     }
-      //   }
-      // );
-      await axios.post(
-        "http://gearupapp.runasp.net/api/mechanics/complete-profile",
-        {
-          location: data.location,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          mainSpecialty: data.mainSpecialty,
-          subSpecialty: data.subSpecialty,
-          fieldVisit: data.fieldVisit,
-          workingHoursFrom: data.workingHoursFrom,
-          workingHoursTo: data.workingHoursTo,
-          experience: data.experience
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
+      // 1. تحويل الوقت لنظام 24 ساعة عشان السيرفر ميعترضش
+      // const formatTo24h = (timeStr: string) => {
+      //   if (!timeStr) return "08:00:00";
+        // // التأكد إن التنسيق HH:mm:ss
+        // const parts = timeStr.split(':');
+        // let hours = parseInt(parts[0]);
+        // let minutes = parts[1] || "00";
+        
+        
+        // لو المستخدم اختار وقت بالليل (زي 01:00) والسيرفر فاكره صباحاً،
+        // المنطق ده بيصلح المقارنة لو النهاية أقل من البداية
+        // return `${hours.toString().padStart(2, '0')}:${minutes}:00`;
+      // };
 
+      // const startTime = formatTo24h(data.workingHoursFrom);
+      // const endTime = formatTo24h(data.workingHoursTo);
 
+      // 2. خريطة التخصصات
+      // const specMap: { [key: string]: number } = {
+      //   "ميكانيكا عامة": 0,
+      //   "كهرباء سيارات": 1,
+      //   "ضبط زوايا": 2,
+      //   "التروس / السرعات": 3
+      // };
 
-      await new Promise((r) => setTimeout(r, 800));
-      setSuccess("تم حفظ البيانات بنجاح ✅");
-      setIsEditing(false);
-      setTimeout(() => window.location.reload(), 1000);
-    } catch {
-      setError("تعذر الحفظ");
+      // const mainSpecToSend = data.mainSpecialty.length > 0 ? specMap[data.mainSpecialty[0]] : 0;
+
+      const requests = [
+        // Request 0: الموقع
+        axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", { 
+          location: "Cairo", 
+          latitude: data.latitude || 30.0, 
+          longitude: data.longitude || 31.0 
+        }, { headers }),
+  
+        // Request 1: التخصص
+        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", { 
+        //   mainSpecialty: mainSpecToSend, 
+        //   subSpecialty: data.subSpecialty || "General", 
+        //   experience: parseInt(data.experience.toString().replace(/\D/g, '')) || 1 
+        // }, { headers }),
+  
+        // // Request 2: الزيارة
+        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", { 
+        //   fieldVisit: data.fieldVisit 
+        // }, { headers }),
+  
+        // // Request 3: الساعات (المشكلة هنا)
+        // axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", { 
+        //   workingHoursFrom: startTime, 
+        //   workingHoursTo: endTime
+        // }, { headers })
+      ];
+  
+      // const results = await Promise.allSettled(requests);
+      
+      // let failedRequests = results.filter(r => r.status === 'rejected');
+  
+      if (failedRequests.length === 0) {
+        setSuccess("تم الحفظ بنجاح ✅");
+        setIsEditing(false);
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        // لو لسه فيه حاجة بايظة، اطبعي لي الخطأ بالظبط
+        failedRequests.forEach((res: any) => {
+          console.error("Critical Error Details:", res.reason?.response?.data);
+        });
+        setError("لسه فيه مشكلة في " + failedRequests.length + " طلبات. شوفي الـ Console");
+      }
+    } catch (err: any) {
+      setError("خطأ في الاتصال بالسيرفر");
     } finally {
       setIsSaving(false);
     }
   };
+
 
   const inputClass = `w-full px-4 py-3 rounded-xl border outline-none transition-all ${
     !dark ? "bg-gray-50 border-gray-300" : "bg-[#131c2f] border-gray-700 text-white"
@@ -289,8 +388,8 @@ const AdditionalTab = () => {
         <input type="text" value={data.experience} onChange={(e) => update("experience", e.target.value)} readOnly={!isEditing} placeholder="مثال: 5 سنوات" className={inputClass} />
       </div>
 
-      {/* الزيارة الميدانية وساعات العمل (نفس كودك القديم مع تحسين بسيط) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* الزيارة الميدانية وساعات العمل يط) */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className={`block text-sm mb-2 ${!dark ? "text-gray-600" : "text-gray-400"}`}>إمكانية الزيارة الميدانية</label>
             <select value={data.fieldVisit ? "true" : "false"} onChange={(e) => update("fieldVisit", e.target.value === "true")} disabled={!isEditing} className={inputClass}>
@@ -305,7 +404,7 @@ const AdditionalTab = () => {
                 <input type="time" value={data.workingHoursTo} onChange={(e) => update("workingHoursTo", e.target.value)} readOnly={!isEditing} className={inputClass} />
             </div>
           </div>
-      </div>
+      </div>  */}
     </div>
   );
 };

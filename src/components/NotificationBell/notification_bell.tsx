@@ -49,7 +49,6 @@ try {
   if (token) {
     const parts = token.split(".");
     if (parts.length === 3) {
-
     }
   }
 } catch (error) {
@@ -96,7 +95,7 @@ console.log("ROLE:", role);
       // --- الإضافة هنا: نبعت إشارة إن فيه تذكير اكتمل ---
       window.dispatchEvent(new Event("reminderCompleted")); 
       
-    } catch (error) {
+    } catch  {
       toast.error("فشل تسجيل الإتمام");
     }
   };
@@ -147,7 +146,7 @@ console.log("ROLE:", role);
   
       toast.success("تم قبول الطلب ✅");
       removeNotificationFromList(index);
-    } catch (error) {
+    } catch  {
       toast.error("فشل قبول الطلب ❌");
     }
   };
@@ -162,7 +161,7 @@ console.log("ROLE:", role);
   
       toast.success("تم رفض الطلب ❌");
       removeNotificationFromList(index);
-    } catch (error) {
+    } catch  {
       toast.error("فشل رفض الطلب ❌");
     }
   };
