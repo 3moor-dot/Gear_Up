@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -7,7 +8,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- مكون الخريطة المصغر ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyDjiprEoUGZU_uofuYeW5qEkOa1HEEvE5w", 
+    googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0", 
   });
 
   if (loadError) return <div className="text-red-500 text-sm">خطأ في تحميل الخريطة</div>;
@@ -63,7 +64,7 @@ interface AdditionalData {
   experience: string;
 }
 
-const specialties = ["ميكانيكا عامة", "كهرباء سيارات", "ضبط زوايا", "التروس / السرعات"];
+// const specialties = ["ميكانيكا عامة", "كهرباء سيارات", "ضبط زوايا", "التروس / السرعات"];
 
 const AdditionalTab = () => {
   const { dark } = useTheme();
@@ -127,109 +128,21 @@ const AdditionalTab = () => {
   };
 
 
-  const update = (field: keyof AdditionalData, value: any) => {
-    setData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleSpecialty = (item: string) => {
-    setData((prev) => ({
-      ...prev,
-      mainSpecialty: prev.mainSpecialty.includes(item)
-        ? prev.mainSpecialty.filter((s) => s !== item)
-        : [...prev.mainSpecialty, item],
-    }));
-  };
-
-
-//   const handleSave = async () => {
-//     setIsSaving(true);
-//     setError("");
-//     setSuccess("");
-  
-//     try {
-
-//       localStorage.setItem("mechanic_data", JSON.stringify(data));
-//       const headers = { 
-//         Authorization: `Bearer ${token}`, 
-//         "Content-Type": "application/json" 
-//       };
+  // const update = (field: keyof AdditionalData, value: any) => {
+  //   setData((prev) => ({ ...prev, [field]: value }));
+  // };
 
   
-//        localStorage.setItem("mechanic_data", JSON.stringify(data));
-//         if (!data.latitude || !data.longitude) {
-//         // if (data.latitude == null || data.longitude == null){
-//         setError("لازم تحددي الموقع الأول ❗");
-//         setIsSaving(false);
-//         return;
-//       }
+  // const toggleSpecialty = (item: string) => {
+  //   setData((prev) => ({
+  //     ...prev,
+  //     mainSpecialty: prev.mainSpecialty.includes(item)
+  //       ? prev.mainSpecialty.filter((s) => s !== item)
+  //       : [...prev.mainSpecialty, item],
+  //   }));
+  // };
 
 
-
-//       await axios.post(
-//   "https://gearupapp.runasp.net/api/mechanics/complete-profile",
-//   {
-//     CustomerLatitude: data.latitude,
-//     CustomerLongitude: data.longitude,
-//     MainSpecialty: data.mainSpecialty,
-//     SubSpecialty: data.subSpecialty,
-//     FieldVisit: data.fieldVisit,
-//     WorkingHoursFrom: data.workingHoursFrom,
-//     WorkingHoursTo: data.workingHoursTo,
-//     Experience: data.experience,
-//   },
-//   {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       "Content-Type": "application/json",
-//     },
-//   }
-// );
-
-
-
-     
-//       const requests = [
-//         // Request 0: الموقع
-//         axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", { 
-//           location: "Cairo", 
-//           latitude: data.latitude || 30.0, 
-//           longitude: data.longitude || 31.0 
-//         }, { headers }),
-  
-       
-//       if (failedRequests.length === 0) {
-//         setSuccess("تم الحفظ بنجاح ✅");
-//         setIsEditing(false);
-//         setTimeout(() => window.location.reload(), 1500);
-//       } else {
-//         // لو لسه فيه حاجة بايظة، اطبعي لي الخطأ بالظبط
-//         failedRequests.forEach((res: any) => {
-//           console.error("Critical Error Details:", res.reason?.response?.data);
-//         });
-//         setError("لسه فيه مشكلة في " + failedRequests.length + " طلبات. شوفي الـ Console");
-//       }
-//     } catch (err: any) {
-//       setError("خطأ في الاتصال بالسيرفر");
-//     } finally {
-
-//       await new Promise((r) => setTimeout(r, 800));
-//       setSuccess("تم حفظ البيانات بنجاح ✅");
-//       setIsEditing(false);
-//       setTimeout(() => window.location.reload(), 1000);
-//     } 
-    
-//     catch (err: any) {
-//       console.log("FULL ERROR =>", err);
-//       console.log("RESPONSE =>", err.response);
-//       console.log("DATA =>", err.response?.data);
-//       console.log("STATUS =>", err.response?.status);
-    
-//       setError("تعذر الحفظ");
-//     }
-//     finally {
-//       setIsSaving(false);
-//     }
-//   };
 const handleSave = async () => {
   setIsSaving(true);
   setError("");
@@ -247,26 +160,25 @@ const handleSave = async () => {
     };
 
     // 1) complete profile
-    await axios.post(
-      "https://gearupapp.runasp.net/api/mechanics/complete-profile",
-      {
-        CustomerLatitude: data.latitude,
-        CustomerLongitude: data.longitude,
-        MainSpecialty: data.mainSpecialty,
-        SubSpecialty: data.subSpecialty,
-        FieldVisit: data.fieldVisit,
-        WorkingHoursFrom: data.workingHoursFrom,
-        WorkingHoursTo: data.workingHoursTo,
-        Experience: data.experience,
-      },
-      { headers }
-    );
+    // await axios.post(
+    //   "https://gearupapp.runasp.net/api/mechanics/complete-profile",
+    //   {
+    //     CustomerLatitude: data.latitude,
+    //     CustomerLongitude: data.longitude,
+    //     MainSpecialty: data.mainSpecialty,
+    //     SubSpecialty: data.subSpecialty,
+    //     FieldVisit: data.fieldVisit,
+    //     WorkingHoursFrom: data.workingHoursFrom,
+    //     WorkingHoursTo: data.workingHoursTo,
+    //     Experience: data.experience,
+    //   },
+    //   { headers }
+    // );
 
     // 2) update location
     await axios.put(
       "https://gearupapp.runasp.net/api/mechanics/my/location",
       {
-        location: "Cairo",
         latitude: data.latitude,
         longitude: data.longitude,
       },
@@ -287,9 +199,9 @@ const handleSave = async () => {
 };
 
 
-  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none transition-all ${
-    !dark ? "bg-gray-50 border-gray-300" : "bg-[#131c2f] border-gray-700 text-white"
-  } ${isEditing ? "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" : "cursor-not-allowed"}`;
+  // const inputClass = `w-full px-4 py-3 rounded-xl border outline-none transition-all ${
+  //   !dark ? "bg-gray-50 border-gray-300" : "bg-[#131c2f] border-gray-700 text-white"
+  // } ${isEditing ? "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" : "cursor-not-allowed"}`;
 
   return (
     <div className={`rounded-2xl border p-6 space-y-6 ${!dark ? "bg-white border-gray-200 shadow-md" : "bg-[#0d1629] border-blue-900/30"}`}>
@@ -349,7 +261,7 @@ const handleSave = async () => {
       </div>
 
       {/* التخصص الرئيسي */}
-      <div>
+      {/* <div>
         <label className={`block text-sm mb-3 ${!dark ? "text-gray-600" : "text-gray-400"}`}>التخصص الرئيسي</label>
         <div className="flex flex-wrap gap-3">
           {specialties.map((item) => {
@@ -368,19 +280,23 @@ const handleSave = async () => {
             );
           })}
         </div>
-      </div>
+      </div> */}
+
+
 
       {/* التخصص الفرعي */}
-      <div>
+      {/* <div>
         <label className={`block text-sm mb-2 ${!dark ? "text-gray-600" : "text-gray-400"}`}>التخصص الفرعي</label>
         <input type="text" value={data.subSpecialty} onChange={(e) => update("subSpecialty", e.target.value)} readOnly={!isEditing} placeholder="التخصص الفرعي" className={inputClass} />
-      </div>
+      </div> */}
+
+
 
       {/* سنوات الخبرة */}
-      <div>
+      {/* <div>
         <label className={`block text-sm mb-2 ${!dark ? "text-gray-600" : "text-gray-400"}`}>سنوات الخبرة</label>
         <input type="text" value={data.experience} onChange={(e) => update("experience", e.target.value)} readOnly={!isEditing} placeholder="مثال: 5 سنوات" className={inputClass} />
-      </div>
+      </div> */}
 
       {/* الزيارة الميدانية وساعات العمل يط) */}
       {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

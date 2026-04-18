@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdImage, MdLocationOn } from "react-icons/md";
@@ -214,7 +215,7 @@ setAcceptedMechanics(mechanics);
     const sectionTitleStyle = "text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
 
     const { isLoaded } = useLoadScript({
-        googleMapsApiKey: "AIzaSyB6Cs-wIkTOJVWrGF6tQg26nvxXwnySROM",
+        googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
     });
 
     const isStepOneValid =
