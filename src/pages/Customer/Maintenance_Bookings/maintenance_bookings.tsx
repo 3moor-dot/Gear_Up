@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { MdAdd, MdMoreVert, MdClose, MdStar } from "react-icons/md";
@@ -32,6 +33,12 @@ interface Booking extends BookingResponse {
   statusColor: string;
   actions: boolean;
 }
+interface PrefillData {
+  mechanics?: { id: string }[];
+  service?: string;
+  carId?: string;
+  autoOpen?: boolean;
+}
 
 const statusLabels: Record<string, string> = {
   Pending: "قيد الانتظار",
@@ -59,11 +66,10 @@ const StarRating = ({ rating, onRate }: { rating: number; onRate: (val: number) 
         >
           <MdStar
             size={36}
-            className={`transition-colors duration-200 ${
-              star <= (hovered || rating)
-                ? "text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]"
-                : "text-gray-300 dark:text-gray-600"
-            }`}
+            className={`transition-colors duration-200 ${star <= (hovered || rating)
+              ? "text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]"
+              : "text-gray-300 dark:text-gray-600"
+              }`}
           />
         </button>
       ))}
@@ -82,7 +88,6 @@ const ActionMenu = ({
   onRate,
 }: any) => {
   const menuRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -153,13 +158,17 @@ const ActionMenu = ({
 };
 
 const MaintenanceBookings = () => {
+  const location = useLocation() as { state?: { prefillData?: PrefillData } };
+  const prefillData = location.state?.prefillData;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [, setSelectedMechanic] = useState("");
+  const [, setSelectedService] = useState("");
+  const [, setSelectedCar] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("الكل");
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("الكل");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -235,96 +244,121 @@ const MaintenanceBookings = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (!prefillData) return;
 
+    setSelectedMechanic(prefillData.mechanics?.[0]?.id ?? "");
+    setSelectedService(prefillData.service ?? "");
+    setSelectedCar(prefillData.carId ?? "");
+  }, [prefillData]);
   useEffect(() => {
     fetchBookings();
   }, []);
+  useEffect(() => {
+  const data = location.state?.prefillData;
+  if (!data) return;
 
-  // ✅ فتح سلايد التقييم
- const openRatingDrawer = (booking: Booking) => {
-  console.log("booking from row:", booking);
-  console.log("selected booking id:", booking.id);
-
-  setRatingBooking(booking);
-  setStars(0);
-  setComment("");
-  setRatingSuccess(false);
-  setIsRatingOpen(true);
-};
-  // ✅ إرسال التقييم
-const handleSubmitRating = async () => {
-  if (!ratingBooking || stars === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "تنبيه",
-      text: "من فضلك اختاري تقييم أولًا.",
-      confirmButtonColor: "#f59e0b",
-      confirmButtonText: "حسنًا",
-    });
-    return;
+  if (data.mechanics?.[0]?.id) {
+    setSelectedMechanic(data.mechanics[0].id);
   }
 
-  try {
-    setRatingLoading(true);
+  if (data.service) {
+    setSelectedService(data.service);
+  }
 
-    const res = await fetch(
-      `https://gearupapp.runasp.net/api/bookings/${ratingBooking.id}/rating`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ stars, comment }),
-      }
-    );
+  if (data.carId) {
+    setSelectedCar(data.carId);
+  }
 
-    const responseText = await res.text();
+  if (data.autoOpen) {
+    setIsModalOpen(true);
+  }
+}, [location.state]);
+  // ✅ فتح سلايد التقييم
+  const openRatingDrawer = (booking: Booking) => {
+    console.log("booking from row:", booking);
+    console.log("selected booking id:", booking.id);
 
-    if (!res.ok) {
-      let message = "فشل إرسال التقييم، حاول مرة تانية لاحقًا.";
-
-      if (responseText?.includes("already")) {
-        message = "تم إرسال تقييم لهذا الحجز من قبل.";
-      } else if (responseText?.includes("Unauthorized")) {
-        message = "انتهت الجلسة، سجلي دخول مرة تانية.";
-      } else if (responseText?.includes("BookingRatings")) {
-        message = "حصلت مشكلة من السيرفر أثناء حفظ التقييم.";
-      }
-
-      throw new Error(message);
+    setRatingBooking(booking);
+    setStars(0);
+    setComment("");
+    setRatingSuccess(false);
+    setIsRatingOpen(true);
+  };
+  // ✅ إرسال التقييم
+  const handleSubmitRating = async () => {
+    if (!ratingBooking || stars === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "تنبيه",
+        text: "من فضلك اختاري تقييم أولًا.",
+        confirmButtonColor: "#f59e0b",
+        confirmButtonText: "حسنًا",
+      });
+      return;
     }
 
-    setRatingSuccess(true);
+    try {
+      setRatingLoading(true);
 
-    Swal.fire({
-      icon: "success",
-      title: "تم بنجاح",
-      text: "تم إرسال التقييم بنجاح.",
-      confirmButtonColor: "#22c55e",
-      confirmButtonText: "حسنًا",
-    });
+      const res = await fetch(
+        `https://gearupapp.runasp.net/api/bookings/${ratingBooking.id}/rating`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ stars, comment }),
+        }
+      );
 
-    setTimeout(() => {
-      setIsRatingOpen(false);
-      setRatingBooking(null);
-    }, 1500);
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "حدث خطأ أثناء إرسال التقييم";
+      const responseText = await res.text();
 
-    Swal.fire({
-      icon: "error",
-      title: "فشل الإرسال",
-      text: message,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "حسنًا",
-    });
-  } finally {
-    setRatingLoading(false);
-  }
-};
+      if (!res.ok) {
+        let message = "فشل إرسال التقييم، حاول مرة تانية لاحقًا.";
+
+        if (responseText?.includes("already")) {
+          message = "تم إرسال تقييم لهذا الحجز من قبل.";
+        } else if (responseText?.includes("Unauthorized")) {
+          message = "انتهت الجلسة، سجلي دخول مرة تانية.";
+        } else if (responseText?.includes("BookingRatings")) {
+          message = "حصلت مشكلة من السيرفر أثناء حفظ التقييم.";
+        }
+
+        throw new Error(message);
+      }
+
+      setRatingSuccess(true);
+
+      Swal.fire({
+        icon: "success",
+        title: "تم بنجاح",
+        text: "تم إرسال التقييم بنجاح.",
+        confirmButtonColor: "#22c55e",
+        confirmButtonText: "حسنًا",
+      });
+
+      setTimeout(() => {
+        setIsRatingOpen(false);
+        setRatingBooking(null);
+      }, 1500);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "حدث خطأ أثناء إرسال التقييم";
+
+      Swal.fire({
+        icon: "error",
+        title: "فشل الإرسال",
+        text: message,
+        confirmButtonColor: "#ef4444",
+        confirmButtonText: "حسنًا",
+      });
+    } finally {
+      setRatingLoading(false);
+    }
+  };
 
   const filteredBookings = bookings
     .filter((booking) => {
@@ -542,11 +576,10 @@ const handleSubmitRating = async () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                            currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#1E293B] dark:text-gray-300 dark:hover:bg-[#334155]"
-                          }`}
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition ${currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#1E293B] dark:text-gray-300 dark:hover:bg-[#334155]"
+                            }`}
                         >
                           {page}
                         </button>
@@ -637,11 +670,10 @@ const handleSubmitRating = async () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
-                            currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "bg-white text-gray-700 border border-gray-200 dark:bg-[#1E293B] dark:text-gray-300 dark:border-gray-700"
-                          }`}
+                          className={`w-10 h-10 rounded-lg text-sm font-medium transition ${currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-gray-700 border border-gray-200 dark:bg-[#1E293B] dark:text-gray-300 dark:border-gray-700"
+                            }`}
                         >
                           {page}
                         </button>

@@ -55,6 +55,10 @@ interface Message {
   technicians?: Technician[];
   requires_mechanic?: boolean; // ← أضفها هنا
   requires_feedback?: boolean;
+  is_emergency?: boolean;
+  required_service?: string;
+  recommended_mechanics?: any[];
+  car_id?: string;
 }
 
 interface ParsedReply {
@@ -72,6 +76,10 @@ interface ParsedReply {
   suggested_date?: string;
   suggested_end_date?: string;
   notification_time?: string;
+  is_emergency?: boolean;
+  required_service?: string;
+  recommended_mechanics?: any[];
+  car_id?: string;
 }
 
 interface CarItem {
@@ -365,20 +373,20 @@ const MessageBubble = ({
   msg,
   onCreateReminder,
   onFollowUpClick,
-  selectedCarId, 
+  selectedCarId,
   previousUserMessage,
-  
+
 }: {
   msg: Message;
   onCreateReminder: (reminder: ReminderData) => void;
   onFollowUpClick: (question: string) => void;
   selectedCarId: string | null; // 👈 جديد
-   previousUserMessage?: string;
+  previousUserMessage?: string;
 }) => {
   const isUser = msg.role === "user";
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState<"helpful" | "not_helpful" | null>(null); // ← أضف هذا
-    const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const sendFeedback = async (value: 1 | 0) => {
     const token = sessionStorage.getItem("userToken");
@@ -464,7 +472,27 @@ const MessageBubble = ({
                   🚨 SOS اطلب فني فورًا
                 </button>
               )}
-              
+            {!isUser &&
+              msg.requires_mechanic === true &&
+              msg.is_emergency === false && (
+                <button
+                  onClick={() =>
+                    navigate("/customer/maintenancebookings", {
+                      state: {
+                        prefillData: {
+                          mechanics: msg.recommended_mechanics,
+                          service: msg.required_service,
+                          carId: msg.car_id,
+                          autoOpen: true,
+                        }
+                      }
+                    })
+                  }
+                  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+                >
+                  🛠️ احجز صيانة
+                </button>
+              )}
 
             {!isUser && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -523,47 +551,45 @@ const MessageBubble = ({
             )}
 
             {!isUser && msg.requires_feedback && (
-  <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-3">
-    <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 text-right">
-      هل كانت هذه النصيحة مفيدة لك؟ قيّم ردي:
-    </p>
-    <div className="flex gap-2 justify-end">
-      <button
-        type="button"
-        onClick={() => handleFeedback("helpful")}
-        disabled={!!feedback}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-          feedback === "helpful"
-            ? "bg-green-500 text-white border-green-500"
-            : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 disabled:opacity-50"
-        }`}
-      >
-        <span>👍</span>
-        <span>مفيدة</span>
-      </button>
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 text-right">
+                  هل كانت هذه النصيحة مفيدة لك؟ قيّم ردي:
+                </p>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleFeedback("helpful")}
+                    disabled={!!feedback}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${feedback === "helpful"
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 disabled:opacity-50"
+                      }`}
+                  >
+                    <span>👍</span>
+                    <span>مفيدة</span>
+                  </button>
 
-      <button
-        type="button"
-        onClick={() => handleFeedback("not_helpful")}
-        disabled={!!feedback}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-          feedback === "not_helpful"
-            ? "bg-red-500 text-white border-red-500"
-            : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 disabled:opacity-50"
-        }`}
-      >
-        <span>👎</span>
-        <span>غير مفيدة</span>
-      </button>
-    </div>
+                  <button
+                    type="button"
+                    onClick={() => handleFeedback("not_helpful")}
+                    disabled={!!feedback}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${feedback === "not_helpful"
+                      ? "bg-red-500 text-white border-red-500"
+                      : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-100 disabled:opacity-50"
+                      }`}
+                  >
+                    <span>👎</span>
+                    <span>غير مفيدة</span>
+                  </button>
+                </div>
 
-    {feedbackSent && (
-      <p className="text-xs text-green-500 mt-2 text-right">
-        ✅ شكراً على تقييمك!
-      </p>
-    )}
-  </div>
-)}
+                {feedbackSent && (
+                  <p className="text-xs text-green-500 mt-2 text-right">
+                    ✅ شكراً على تقييمك!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <span className="text-[11px] text-gray-400 mt-1 px-2">{msg.time}</span>
@@ -772,7 +798,7 @@ const ChatbotPage = () => {
         text: msgText || "تم إرسال صورة",
         time: getTime(),
         imagePreview: curPrev || undefined,
-        
+
       },
     ]);
 
@@ -857,7 +883,13 @@ const ChatbotPage = () => {
           reminder: formatted.reminder,
           followUpQuestions: formatted.followUpQuestions,
           technicians: technicians,
-          requires_mechanic: String(parsedReply?.requires_mechanic) === "true",// <-- هنا
+
+          requires_mechanic: parsedReply?.requires_mechanic === true,
+          is_emergency: parsedReply?.is_emergency === true, // 👈 جديد
+          required_service: (parsedReply as any)?.required_service,
+          recommended_mechanics: (parsedReply as any)?.recommended_mechanics,
+          car_id: (parsedReply as any)?.car_id,
+
           requires_feedback: formatted.requiresFeedback,
         },
       ]);
@@ -960,25 +992,25 @@ const ChatbotPage = () => {
 
                 <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 md:px-6 py-5 space-y-4 bg-[linear-gradient(to_bottom,_rgba(19,127,236,0.03),_transparent)]">
                   {messages.map((msg, index) => {
-  const previousUserMessage =
-    msg.role === "bot"
-      ? messages
-          .slice(0, index)
-          .reverse()
-          .find((m) => m.role === "user")?.text
-      : undefined;
+                    const previousUserMessage =
+                      msg.role === "bot"
+                        ? messages
+                          .slice(0, index)
+                          .reverse()
+                          .find((m) => m.role === "user")?.text
+                        : undefined;
 
-  return (
-    <MessageBubble
-      key={msg.id}
-      msg={msg}
-      onCreateReminder={handleCreateReminder}
-      onFollowUpClick={handleFollowUpClick}
-      selectedCarId={selectedCarId}
-      previousUserMessage={previousUserMessage}
-    />
-  );
-})}
+                    return (
+                      <MessageBubble
+                        key={msg.id}
+                        msg={msg}
+                        onCreateReminder={handleCreateReminder}
+                        onFollowUpClick={handleFollowUpClick}
+                        selectedCarId={selectedCarId}
+                        previousUserMessage={previousUserMessage}
+                      />
+                    );
+                  })}
                   {isTyping && <TypingIndicator />}
                   <div ref={messagesEndRef} />
                 </div>
