@@ -1,199 +1,73 @@
-import React, { useState } from "react";
-import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
+import { useState } from "react";
 import NotificationBell from "../../components/NotificationBell/notification_bell";
-import { useTheme } from "../../contexts/ThemeContext";
 import ThemeToggle from "../../components/ThemeToggle/theme_toggle";
+import { useTheme } from "../../contexts/ThemeContext";
+import AdminSidebar from "../../components/AdminSidebar/AdminSidebar";
+import Personaladmintab from "./Personaladmintab";
+import Securityadmintab from  "./Securityadmintab";
 
-const AdminProfile: React.FC = () => {
+const tabs = [
+  { id: "personal",   label: "البيانات الشخصية" },
+
+  { id: "security",   label: "الأمان"            },
+];
+
+const Mprofile = () => {
   const { dark } = useTheme();
-
-  const [firstName, setFirstName] = useState("Jordan");
-  const [lastName, setLastName] = useState("Admin");
-  const [email, setEmail] = useState("alex.johnson@example.com");
-  const [avatar, setAvatar] = useState<string>("/avatar-path.png");
+  const [activeTab, setActiveTab] = useState("personal");
 
   return (
-    <div dir="rtl" className="flex flex-col lg:flex-row min-h-screen">
+    <div
+      dir="rtl"
+      className={`flex min-h-screen transition-colors duration-500 ${
+        !dark ? "bg-gray-50 text-[#1E3A5F]" : "bg-[#0B1220] text-white"
+      }`}
+    >
       <AdminSidebar />
 
-      <main
-        className={`flex-1 p-6 md:p-10 transition-colors duration-500 ${
-          dark ? "bg-primary_BGD text-white" : "bg-white text-gray-900"
-        }`}
-      >
-        {/* TOP BAR */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-          <h2 className="text-xl md:text-2xl font-bold">
-            لوحة القيادة / الحساب الشخصي
-          </h2>
+      <main className="flex-1 flex flex-col min-w-0 p-3 sm:p-5 md:p-6 lg:p-8 space-y-4 md:space-y-6 overflow-x-hidden">
 
-          <div className="flex items-center gap-4">
-            {/* <NotificationBell onClick={() => console.log("Notifications clicked")} />
+        {/* HEADER */}
+        <div className="flex items-center justify-between mt-14 lg:mt-0 gap-3">
+          <h1 className={`text-2xl sm:text-2xl md:text-3xl lg:text-3xl font-bold ${!dark ? "text-black" : "text-white"}`}>
+            ملفك الشخصي
+          </h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationBell size={28} />
             <ThemeToggle />
-          </div> */}
-          <div onClick={() => console.log("Notifications clicked")} className="cursor-pointer">
-    <NotificationBell />
-  </div>
-  <ThemeToggle />
-</div>
+          </div>
         </div>
 
-        {/* SAVE BUTTON */}
-        <div className="flex justify-end mb-6">
-          <button
-            className={`
-              px-6 py-2 rounded-xl text-sm md:text-base transition-all duration-200
-              hover:scale-105 hover:shadow-md active:scale-95
-              ${
-                dark
-                  ? "bg-[#137FEC] text-white hover:bg-[#1A6FD4]"
-                  : "bg-[#137FEC80] text-[#0F132380] font-bold"
-              }
-            `}
-          >
-            حفظ التغييرات
-          </button>
-        </div>
-
-        {/* CONTENT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-2">
-          {/* PROFILE CARD */}
-          <div
-            className={`rounded-2xl p-6 md:p-8 text-center transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
-              dark ? "bg-[#137FEC1A]" : "bg-[#EAF4FF]"
-            }`}
-          >
-            <div className="relative w-24 h-24 mx-auto mb-4">
-              <img
-                src={avatar}
-                alt="profile"
-                className="w-full h-full rounded-full object-cover"
-              />
-
-              <label
-                htmlFor="avatarUpload"
-                className="absolute bottom-0 right-0 bg-[#137FEC] w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-white transition hover:bg-[#1A6FD4]"
+        {/* TABS — scroll أفقي على موبايل */}
+        <div className="overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex gap-2 min-w-max sm:flex-wrap sm:min-w-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-shrink-0 px-5 sm:px-6 py-2.5 sm:py-2.5 rounded-xl text-sm sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/40"
+                    : !dark
+                    ? "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                    : "bg-[#0d1629] text-gray-300 hover:bg-[#131c2f] border border-gray-800"
+                }`}
               >
-                ✎
-              </label>
-            </div>
-
-            <input
-              type="file"
-              id="avatarUpload"
-              hidden
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setAvatar(URL.createObjectURL(file));
-              }}
-            />
-
-            <h4 className="font-bold text-lg md:text-xl">
-              {firstName} {lastName}
-            </h4>
-
-            <p className={`text-sm mb-2 ${dark ? "text-white/50" : "text-gray-600"}`}>
-              Member since Jan 2023
-            </p>
-
-            <span className="inline-block text-xs md:text-sm px-4 py-1 rounded-full mb-6 bg-[#0BDA6533] text-[#0BDA65]">
-              مفعل
-            </span>
-
-            <button
-              className={`
-                w-full py-2 rounded-xl transition-all duration-200 hover:scale-105
-                ${
-                  dark
-                    ? "bg-[#1E2A44] hover:bg-[#2A3A5B] text-white"
-                    : "bg-[#0F13231A] hover:bg-[#0F132340] text-[#0F132380] font-bold"
-                }
-              `}
-            >
-              تغيير كلمة المرور
-            </button>
-          </div>
-
-          {/* PERSONAL DATA */}
-          <div
-            className={`lg:col-span-2 rounded-2xl p-6 md:p-8 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl ${
-              dark ? "bg-[#137FEC1A]" : "bg-[#EAF4FF]"
-            }`}
-          >
-            <h3
-              className={`font-bold mb-6 text-lg md:text-xl ${
-                dark ? "text-white" : "text-[#0F132380]"
-              }`}
-            >
-              البيانات الشخصية
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-              <Input
-                label="الاسم الأول"
-                value={firstName}
-                onChange={setFirstName}
-                dark={dark}
-              />
-              <Input
-                label="الاسم الآخر"
-                value={lastName}
-                onChange={setLastName}
-                dark={dark}
-              />
-            </div>
-
-            <div className="mt-4 md:mt-6">
-              <Input
-                label="البريد الإلكتروني"
-                value={email}
-                onChange={setEmail}
-                dark={dark}
-              />
-            </div>
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* TAB CONTENT */}
+        <div className="w-full max-w-4xl">
+          {activeTab === "personal"   && <Personaladmintab />}
+          {activeTab === "security"   && <Securityadmintab />}
+        </div>
+
       </main>
     </div>
   );
 };
 
-export default AdminProfile;
-
-/* ------------ INPUT COMPONENT ------------ */
-
-type InputProps = {
-  label: string;
-  value: string;
-  onChange: (val: string) => void;
-  dark: boolean;
-};
-
-const Input: React.FC<InputProps> = ({ label, value, onChange, dark }) => (
-  <div>
-    <label
-      className={`block mb-2 text-sm md:text-base font-medium ${
-        dark ? "text-white" : "text-[#0F132380]"
-      }`}
-    >
-      {label}
-    </label>
-
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={`
-        w-full rounded-xl px-4 py-2 outline-none transition-all duration-200
-        bg-[#137FEC1A] border border-[#137FEC33]
-        ${
-          dark
-            ? "text-white/50 font-normal"
-            : "text-[#0F132380] font-bold"
-        }
-        focus:border-[#137FEC]
-        focus:ring-2 focus:ring-[#137FEC33]
-      `}
-    />
-  </div>
-);
+export default Mprofile;

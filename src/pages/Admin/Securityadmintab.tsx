@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTheme } from "../../../../contexts/ThemeContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { FaSave, FaSpinner, FaLock } from "react-icons/fa";
 import { MdVisibility, MdVisibilityOff, MdCheckCircleOutline, MdErrorOutline } from "react-icons/md";
 
@@ -49,7 +49,7 @@ const PasswordField = ({
   );
 };
 
-const SecuritySettings = () => {
+const Securityadmintab = () => {
   const { dark } = useTheme();
 
   const [passwords, setPasswords] = useState({
@@ -203,4 +203,4 @@ const SecuritySettings = () => {
   );
 };
 
-export default SecuritySettings;
+export default Securityadmintab;

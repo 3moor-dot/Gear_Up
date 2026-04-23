@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import ThemeToggle from "../ThemeToggle/theme_toggle"; 
 import NotificationBtn from "../NotificationBell/notification_bell";
 
-// تعريف شكل البيانات لتجنب أخطاء TypeScript
 interface UserData {
   firstName: string;
   lastName: string;
@@ -12,15 +12,14 @@ interface UserData {
 
 const Header = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. محاولة جلب البيانات من sessionStorage أولاً (سرعة الاستجابة)
     const savedData = sessionStorage.getItem("userData");
     if (savedData) {
       setUserData(JSON.parse(savedData));
     }
 
-    // 2. تحديث البيانات من السيرفر للتأكد من أنها الأحدث
     const fetchHeaderProfile = async () => {
       const token = sessionStorage.getItem("userToken");
       if (!token) return;
@@ -34,7 +33,6 @@ const Header = () => {
         if (response.ok) {
           const data = await response.json();
           setUserData(data);
-          // تحديث الكاش لضمان التزامن بين السايدبار والهيدر
           sessionStorage.setItem("userData", JSON.stringify(data));
         }
       } catch (error) {
@@ -48,7 +46,6 @@ const Header = () => {
   return (
     <header className="w-full dark:bg-primary_BGD py-4 px-8 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 transition-colors duration-500" dir="rtl">
       
-      {/* القسم الأوسط: شريط البحث */}
       <div className="flex-1 max-w-2xl mx-12">
         <div className="relative">
           <input
@@ -60,20 +57,19 @@ const Header = () => {
         </div>
       </div>
 
-      {/* القسم الأيسر: التنبيهات، الوضع الليلي، والبروفايل المصغر */}
       <div className="flex items-center gap-6">
-        
-        {/* زر التنبيهات */}
         <NotificationBtn />
-
-        {/* زر تبديل الوضع (Dark/Light) */}
         <div className="flex items-center">
-            <ThemeToggle />
+          <ThemeToggle />
         </div>
 
-        {/* صورة البروفايل المصغرة الديناميكية */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-2 border-[#E5F1FD] dark:border-gray-700 overflow-hidden shadow-sm bg-gray-100 flex items-center justify-center">
+        {/* صورة البروفايل — قابلة للنقر */}
+        <button
+          onClick={() => navigate('/customer/profilesettings')}
+          className="flex items-center gap-3 group"
+          title="الملف الشخصي"
+        >
+          <div className="w-12 h-12 rounded-full border-2 border-[#E5F1FD] dark:border-gray-700 overflow-hidden shadow-sm bg-gray-100 flex items-center justify-center transition-all group-hover:border-[#137FEC] group-hover:shadow-md group-hover:scale-105">
             {userData?.profilePhotoUrl ? (
               <img 
                 src={userData.profilePhotoUrl} 
@@ -81,13 +77,12 @@ const Header = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              // حالة عدم وجود صورة: إظهار أول حرف من الاسم
               <div className="text-[#137FEC] font-bold text-lg">
                 {userData?.firstName?.[0] || "U"}
               </div>
             )}
           </div>
-        </div>
+        </button>
 
       </div>
     </header>

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { FaSave, FaSpinner, FaLock } from "react-icons/fa";
+import { FaEdit, FaSave, FaSpinner, FaLock } from "react-icons/fa";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
-import Swal from "sweetalert2"; // استيراد SweetAlert2
+import Swal from "sweetalert2"; 
+
 const PasswordField = ({
-  label, name, value, show, onToggle, onChange, dark,
+  label, name, value, show, onToggle, onChange,  isEditing,
 }: {
   label: string;
   name: string;
@@ -13,46 +14,48 @@ const PasswordField = ({
   onToggle: () => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   dark: boolean;
-}) => (
-  <div>
-    <label className={`block text-xs sm:text-sm mb-1.5 font-extrabold text-[#137FEC]`}>
-      {label}
-    </label>
-    <div className="relative">
-      <input
-        type={show ? "text" : "password"}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder="••••••••"
-        required
-        className={`w-full px-4 pl-12 py-3 rounded-2xl border outline-none transition-all font-semibold text-right ${
-          !dark
-            ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900"
-            : "bg-gray-800 border-gray-600 ring-2 ring-blue-900/40 text-white"
-        } focus:border-blue-500`}
-      />
-      {/* تغيير التموضع من right-3 إلى left-3 */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
-      >
-        {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
-      </button>
+  isEditing: boolean;
+}) => {
+  const activeClass = `w-full px-4 pl-12 py-3 rounded-2xl border outline-none transition-all font-semibold text-right bg-white dark:bg-gray-800 border-blue-400 ring-2 ring-blue-100 dark:ring-blue-900/40 text-gray-900 dark:text-white focus:border-blue-500`;
+  
+  const inactiveClass = `w-full px-4 pl-12 py-3 rounded-2xl border outline-none transition-all font-semibold text-right bg-gray-50 dark:bg-[#131c2f] border-gray-200 text-gray-700 dark:text-gray-300 cursor-not-allowed select-none`;
+
+  return (
+    <div>
+      <label className={`block text-xs sm:text-sm mb-1.5 font-extrabold text-[#137FEC]`}>
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type={show ? "text" : "password"}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder="••••••••"
+          readOnly={!isEditing}
+          required={isEditing}
+          className={isEditing ? activeClass : inactiveClass}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
+        >
+          {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SecuritySettings = () => {
   const { dark } = useTheme();
-
+  const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -61,7 +64,6 @@ const SecuritySettings = () => {
   const token    = sessionStorage.getItem("userToken");
   const BASE_URL = "https://gearupapp.runasp.net/api/auth/change-password";
 
-  // دالة موحدة لإظهار التنبيهات بتصميم متناسق مع GearUp AI
   const showAlert = (icon: 'success' | 'error' | 'warning', title: string, text?: string) => {
     Swal.fire({
       icon,
@@ -79,6 +81,12 @@ const SecuritySettings = () => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
 
   const handleChangePassword = async (e: React.FormEvent) => {
+    if (!isEditing) {
+      e.preventDefault();
+      setIsEditing(true);
+      return;
+    }
+
     e.preventDefault();
 
     if (passwords.newPassword !== passwords.confirmPassword) {
@@ -105,7 +113,7 @@ const SecuritySettings = () => {
       if (res.ok) {
         showAlert('success', 'تم التغيير!', 'تم تحديث كلمة المرور بنجاح.');
         setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        // تحديث الصفحة بعد نجاح العملية بـ 2 ثانية
+        setIsEditing(false);
         setTimeout(() => window.location.reload(), 2000);
       } else {
         showAlert('error', 'فشل التغيير', data.message || "تأكد من صحة كلمة المرور الحالية");
@@ -144,17 +152,19 @@ const SecuritySettings = () => {
           disabled={loading}
           className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#137FEC] hover:bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-bold transition disabled:opacity-50 active:scale-95"
         >
-          {loading
-            ? <><FaSpinner className="animate-spin" /><span>جاري الحفظ...</span></>
-            : <><FaSave /><span>حفظ التغييرات</span></>
-          }
+          {loading ? (
+            <><FaSpinner className="animate-spin" /><span>جاري الحفظ...</span></>
+          ) : isEditing ? (
+            <><FaSave /><span>حفظ التغييرات</span></>
+          ) : (
+            <><FaEdit /><span>تعديل البيانات</span></>
+          )}
         </button>
       </div>
 
       {/* Fields */}
       <div className="p-4 sm:p-6 md:p-8">
         <form id="password-form" onSubmit={handleChangePassword} className="space-y-4 sm:space-y-5">
-
           <PasswordField
             label="كلمة المرور الحالية"
             name="currentPassword"
@@ -163,6 +173,7 @@ const SecuritySettings = () => {
             onToggle={() => setShowCurrent(!showCurrent)}
             onChange={handleInputChange}
             dark={dark}
+            isEditing={isEditing}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -174,6 +185,7 @@ const SecuritySettings = () => {
               onToggle={() => setShowNew(!showNew)}
               onChange={handleInputChange}
               dark={dark}
+              isEditing={isEditing}
             />
             <PasswordField
               label="تأكيد كلمة المرور"
@@ -183,6 +195,7 @@ const SecuritySettings = () => {
               onToggle={() => setShowConfirm(!showConfirm)}
               onChange={handleInputChange}
               dark={dark}
+              isEditing={isEditing}
             />
           </div>
 

@@ -27,18 +27,21 @@ const ProfileSettings = () => {
   };
 
   return (
-    <div className="flex min-h-screen dark:bg-primary_BGD bg-gray-50" dir="rtl">
+    <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
         <Header />
-        <main className="p-3 sm:p-6 md:p-8 mt-12 lg:mt-0 w-full max-w-5xl mx-auto pb-20">
-
+        
+        {/* أضفت كلاس no-scrollbar هنا لإخفاء شريط التمرير */}
+        <main className="flex-1 h-full overflow-y-auto no-scrollbar p-3 sm:p-6 md:p-8 mt-12 lg:mt-0 w-full max-w-5xl mx-auto pb-20 scroll-smooth">
+          
           {/* العنوان */}
           <div className="bg-[#137FECFA] dark:bg-[#137FEC1A] text-white px-5 py-3 rounded-2xl mb-5 shadow-md">
             <h1 className="text-lg sm:text-2xl font-black text-center">ملفك الشخصي</h1>
           </div>
 
-          {/* Tabs — على موبايل تبقى أصغر وتتسع */}
+          {/* Tabs */}
           <div className="flex bg-[#137FEC1A] dark:bg-[#137FEC0D] p-1.5 rounded-2xl mb-6 gap-1 shadow-sm">
             {tabs.map((tab) => (
               <button
@@ -68,6 +71,18 @@ const ProfileSettings = () => {
 
         </main>
       </div>
+
+      {/* هذا الـ Style Tag يقوم بإخفاء الـ Scrollbar */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        /* (IE and Edge) */
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
