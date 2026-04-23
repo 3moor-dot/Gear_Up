@@ -171,7 +171,7 @@ const Sidebar = () => {
                   }`}
               >
                 <MdSettings className="text-xl" />
-                <span>الإعدادات</span>
+                <span>الملف الشخصي</span>
               </Link>
               
               <button
