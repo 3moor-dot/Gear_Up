@@ -30,7 +30,7 @@ import UserProfile from "./pages/Admin/UserProfile/UserProfile";
 import MechanicProfile from "./pages/Admin/MechanicProfile/MechanicProfile";
 import CustomerDashBoard from "./pages/Customer/Control_Panel/control_panel";
 import MaintenanceReminders from "./pages/Customer/Reminder/maintenance_reminders";
-import ServiceHistory from "./pages/Customer/service_history";
+import ServiceHistory from "./pages/Customer/Service_History/service_history";
 import ProfileSettings from "./pages/Customer/Profile_Settings/profile_settings";
 import MaintenanceRequest from "./pages/Customer/Maintenance_Request/maintenance_request";
 import RequestTracking from "./pages/Customer/Maintenance_Request/request_tracking";

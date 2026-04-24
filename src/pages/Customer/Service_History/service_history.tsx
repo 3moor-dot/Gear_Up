@@ -1,6 +1,6 @@
 
-import Sidebar from "../../components/Customer/customer_sidebar";
-import Header from "../../components/Customer/customer_header";
+import Sidebar from "../../../components/Customer/customer_sidebar";
+import Header from "../../../components/Customer/customer_header";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
