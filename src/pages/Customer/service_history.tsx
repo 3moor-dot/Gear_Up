@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 
-
 type ServiceRequest = {
   requestId: string;
   issueDescription: string;

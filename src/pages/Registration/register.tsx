@@ -163,7 +163,18 @@ const Register: React.FC = () => {
       });
 
       setTimeout(() => {
-        window.location.href = "/login";
+        // window.location.href = "/login";
+        if (roleNumber === 2) {
+          // ميكانيكي → روح رفع الترخيص
+          const userId = data?.id; // مهم جدًا لازم يرجع من الـ API
+        
+          localStorage.setItem("pendingMechanicId", userId);
+        
+          window.location.href = "/upload-license";
+        } else {
+          // عميل → login عادي
+          window.location.href = "/login";
+        }
       }, 3000);
 
     } catch (err: any) {

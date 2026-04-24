@@ -12,7 +12,6 @@ import {
   FaTrash, FaCheck, FaPause, FaPlay, FaWrench, FaClock, FaSync, FaHistory, FaCalendarAlt,
 } from "react-icons/fa";
 
-
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   if (!isOpen) return null;
   return (
@@ -96,6 +95,7 @@ const MaintenanceReminders = () => {
     try {
       const res = await axios.get(`https://gearupapp.runasp.net/api/Reminder/car/${carObj.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setReminders(Array.isArray(res.data) ? res.data : []);
+      
     } catch { 
       console.error("فشل جلب التذكيرات"); 
     }
@@ -232,7 +232,9 @@ const MaintenanceReminders = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-3 space-y-6 order-2 lg:mt-[83px]">
               <div className="bg-white dark:bg-[#137FEC33] p-6 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-600">
-                <h3 className="font-bold text-xl mb-6 flex items-center gap-2">
+                {/* <h3 className="font-bold text-xl mb-6 flex items-center gap-2"> */}
+                <h3 className="font-bold text-xl mb-6 flex items-center gap-2 text-slate-800 dark:text-white">
+
                    <FaHistory className="text-blue-500" /> المهام المكتملة <FaCheck className="text-green-600 ml-2" />
                 </h3>
               

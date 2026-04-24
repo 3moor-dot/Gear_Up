@@ -176,6 +176,64 @@ const CreateReminderModal = ({
     return true;
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) return;
+
+  //   setLoading(true);
+
+  //   const carObj = cars.find(
+  //     (c) => `${c.year} ${c.brand} ${c.model}` === selectedCar
+  //   );
+
+  //   if (!carObj?.id) {
+  //     toast.error("تعذر تحديد السيارة المختارة.");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   const startDateObj = new Date(formData.startDate);
+  //   const fixedDate = new Date(
+  //     startDateObj.getTime() + 12 * 60 * 60 * 1000
+  //   ).toISOString();
+
+  //   const payload = {
+  //     carId: carObj.id,
+  //     name: formData.name.trim(),
+  //     description: formData.description || "",
+  //     startDate: fixedDate,
+  //     endDate: formData.endDate
+  //       ? new Date(
+  //           new Date(formData.endDate).getTime() + 12 * 60 * 60 * 1000
+  //         ).toISOString()
+  //       : null,
+  //     preferredNotificationTime: formData.preferredNotificationTime,
+  //     frequencyType: frequencyType === "4" ? 5 : Number(frequencyType),
+  //     intervalValue: frequencyType === "4" ? Number(formData.intervalValue) : 0,
+  //     intervalUnit: frequencyType === "4" ? Number(formData.intervalUnit) : 0,
+  //   };
+
+  //   try {
+  //     const token = sessionStorage.getItem("userToken");
+
+  //     await axios.post("https://gearupapp.runasp.net/api/Reminder", payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     toast.success("تم إنشاء التذكير بنجاح");
+  //     onSuccess();
+  //     onClose();
+  //   } catch (error: any) {
+  //     toast.error(
+  //       "فشل الحفظ: " + (error.response?.data?.error || "تأكد من البيانات المطلوبة")
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -192,22 +250,32 @@ const CreateReminderModal = ({
       return;
     }
 
-    const startDateObj = new Date(formData.startDate);
-    const fixedDate = new Date(
-      startDateObj.getTime() + 12 * 60 * 60 * 1000
-    ).toISOString();
+    // 1. دمج التاريخ والوقت مع بعض بشكل صحيح
+    // مثال: "2023-10-25" + "09:00" = "2023-10-25T09:00:00"
+    const startCombined = `${formData.startDate}T${formData.preferredNotificationTime}:00`;
+    
+    // 2. تحويله لكائن Date محلي (Local Time في مصر)
+    const localStartDate = new Date(startCombined);
+    
+    // 3. تحويله تلقائياً لـ ISO (UTC) بشكل صحيح
+    // لو التوقيت 9 صبحاً مصر، هيتحول لـ 7 صبحاً UTC بشكل دقيق
+    const finalStartDate = localStartDate.toISOString();
+
+
+    // نفس المنطق لتاريخ الانتهاء (لو موجود)
+    let finalEndDate = null;
+    if (formData.endDate) {
+      const endCombined = `${formData.endDate}T${formData.preferredNotificationTime}:00`;
+      finalEndDate = new Date(endCombined).toISOString();
+    }
 
     const payload = {
       carId: carObj.id,
       name: formData.name.trim(),
       description: formData.description || "",
-      startDate: fixedDate,
-      endDate: formData.endDate
-        ? new Date(
-            new Date(formData.endDate).getTime() + 12 * 60 * 60 * 1000
-          ).toISOString()
-        : null,
-      preferredNotificationTime: formData.preferredNotificationTime,
+      startDate: finalStartDate, // <-- التاريخ والوقت متدمجين بشكل صحيح
+      endDate: finalEndDate,
+      preferredNotificationTime: formData.preferredNotificationTime, // ابقاه زي هو عشان السيرفر يعرف الوقت المفضل
       frequencyType: frequencyType === "4" ? 5 : Number(frequencyType),
       intervalValue: frequencyType === "4" ? Number(formData.intervalValue) : 0,
       intervalUnit: frequencyType === "4" ? Number(formData.intervalUnit) : 0,

@@ -103,7 +103,7 @@ const MachineSidebar: React.FC = () => {
                 className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm transition-all
                   ${dark ? "bg-[#1E2A44] text-white hover:bg-[#2A3A5B]" : "bg-[#DCEEFF] text-[#1E3A5F] hover:bg-[#CFE6FF]"}`}
               >
-                <FaCog /> الإعدادات
+                <FaCog /> الملف الشخصي
               </button>
               <button
                 onClick={() => {
