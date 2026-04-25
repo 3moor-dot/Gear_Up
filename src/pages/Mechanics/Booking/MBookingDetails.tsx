@@ -49,7 +49,7 @@ const MBookingDetails = () => {
           <h1 className="text-xl sm:text-2xl font-bold">الحجوزات</h1>
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
-            <NotificationBell size={20} />
+            <NotificationBell size={25} />
           </div>
         </div>
 

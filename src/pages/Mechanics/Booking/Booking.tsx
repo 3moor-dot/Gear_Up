@@ -338,7 +338,7 @@ const Booking = () => {
             الحجوزات
           </h1>
           <div className="flex items-center gap-3 md:gap-4 self-end sm:self-auto">
-            <NotificationBell size={20} />
+            <NotificationBell size={25} />
             <ThemeToggle />
           </div>
         </div>

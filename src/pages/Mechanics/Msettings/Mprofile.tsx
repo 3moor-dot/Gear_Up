@@ -36,7 +36,7 @@ const Mprofile = () => {
             ملفك الشخصي
           </h1>
           <div className="flex items-center gap-2 sm:gap-3">
-            <NotificationBell size={28} />
+            <NotificationBell size={25} />
             <ThemeToggle />
           </div>
         </div>

@@ -114,7 +114,7 @@ const Mechine_profile: React.FC = () => {
           </h2>
           <div className="flex items-center gap-4">
             <button onClick={() => console.log("Notifications clicked")}>
-              <NotificationBell />
+              <NotificationBell size={25}/>
             </button>
             <ThemeToggle />
           </div>

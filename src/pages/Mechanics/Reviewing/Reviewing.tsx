@@ -100,7 +100,7 @@ const Reviewing = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-14 lg:mt-0">
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">المراجعات</h1>
           <div className="flex items-center gap-3 self-end sm:self-auto bg-gray-50 dark:bg-white/5 p-2 rounded-2xl sm:bg-transparent sm:dark:bg-transparent">
-            <NotificationBell size={20} />
+            <NotificationBell size={25} />
             <ThemeToggle />
           </div>
         </div>

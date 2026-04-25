@@ -1,96 +1,180 @@
-
-import { useState, useEffect , useCallback  } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaBell, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
 import axios from "axios";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
-const NotificationBell = ({ size = 25 }) => {
+type NotificationItem = {
+  title?: string;
+  message?: string;
+  description?: string;
 
+  time?: string;
+
+  reminderId?: number | string;
+  carId?: string;
+  carName?: string;
+  plateNumber?: string;
+
+  isRequest?: boolean;
+  isBooking?: boolean;
+  isSelected?: boolean;
+
+  requestId?: string;
+  hasTracking?: boolean;
+  requestDetail?: string;
+  scheduledDateTime?: string;
+  status?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  } | null;
+
+  bookingId?: string;
+  customerName?: string;
+  mechanicName?: string;
+  date?: string;
+  slotStart?: string;
+  slotEnd?: string;
+};
+
+type NotificationBellProps = {
+  size?: number;
+};
+
+const BOOKING_TITLE_MAP: Record<string, string> = {
+  "New Booking Request": "طلب حجز جديد 📋",
+  "Booking Accepted": "تم قبول الحجز ✅",
+  "Booking Rejected": "تم رفض الحجز ❌",
+  "Booking Cancelled": "تم إلغاء الحجز 🚫",
+  "Booking Rescheduled": "تم تغيير موعد الحجز 📅",
+  "Booking Completed": "تم إكمال الحجز 🎉",
+  "Booking Status Updated": "تم تحديث حالة الحجز 🔄",
+
+  "طلب حجز جديد": "طلب حجز جديد 📋",
+  "تم قبول الحجز": "تم قبول الحجز ✅",
+  "تم رفض الحجز": "تم رفض الحجز ❌",
+  "تم إلغاء الحجز": "تم إلغاء الحجز 🚫",
+  "تم تغيير موعد الحجز": "تم تغيير موعد الحجز 📅",
+  "تم إكمال الحجز": "تم إكمال الحجز 🎉",
+  "تم تحديث حالة الحجز": "تم تحديث حالة الحجز 🔄",
+};
+
+const BOOKING_TITLES = Object.keys(BOOKING_TITLE_MAP);
+
+const getStorageKeyByToken = (token: string | null) => {
+  if (!token) return "guest_notifications";
+  return `notifications_${token.slice(-10)}`;
+};
+
+const getCurrentTime = () =>
+  new Date().toLocaleTimeString("ar-EG", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const normalizeBookingTitle = (title?: string) => {
+  const safeTitle = title || "";
+
+  const directMatch = BOOKING_TITLE_MAP[safeTitle];
+  if (directMatch) return directMatch;
+
+  const partialMatch = Object.entries(BOOKING_TITLE_MAP).find(([key]) =>
+    safeTitle.includes(key)
+  );
+
+  return partialMatch ? partialMatch[1] : safeTitle;
+};
+
+const isBookingNotification = (n: NotificationItem) => {
+  const title = n.title || "";
+
+  return Boolean(
+    n.isBooking ||
+      n.bookingId ||
+      BOOKING_TITLES.some((bookingTitle) => title.includes(bookingTitle))
+  );
+};
+
+const isRequestNotification = (n: NotificationItem) => {
+  return Boolean(n.isRequest && !isBookingNotification(n));
+};
+
+const isReminderNotification = (n: NotificationItem) => {
+  return Boolean(
+    !isBookingNotification(n) &&
+      !isRequestNotification(n) &&
+      n.reminderId
+  );
+};
+
+// تصليح النوتيفيكيشن القديمة اللي متخزنة في localStorage
+const migrateNotifications = (notifications: NotificationItem[]) => {
+  return notifications.map((n) => {
+    const isBooking = isBookingNotification(n);
+
+    if (isBooking) {
+      return {
+        ...n,
+        title: normalizeBookingTitle(n.title),
+        isBooking: true,
+        isRequest: false,
+
+        // مهم جدًا عشان البوكينج مايتعاملش كـ Reminder
+        reminderId: undefined,
+        carId: undefined,
+        carName: undefined,
+        plateNumber: undefined,
+      };
+    }
+
+    return n;
+  });
+};
+
+const readNotificationsFromStorage = (storageKey: string): NotificationItem[] => {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+
+    const migrated = migrateNotifications(parsed);
+    localStorage.setItem(storageKey, JSON.stringify(migrated));
+
+    return migrated;
+  } catch (error) {
+    console.error("Failed to parse notifications:", error);
+    localStorage.removeItem(storageKey);
+    return [];
+  }
+};
+
+const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
   const { dark } = useTheme();
   const navigate = useNavigate();
-  const [isShaking, setIsShaking] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [cars, setCars] = useState<any[]>([]);
-  const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(null);
 
   const token = sessionStorage.getItem("userToken");
 
   const [role, setRole] = useState<string | null>(null);
+  const [isShaking, setIsShaking] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [cars, setCars] = useState<any[]>([]);
+  const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(
+    null
+  );
 
-useEffect(() => {
-  try {
-    const token = sessionStorage.getItem("userToken");
-    if (token) {
-      const parts = token.split(".");
-      if (parts.length === 3) {
-        const payload = JSON.parse(atob(parts[1]));
-
-        const r =
-          payload[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-          ];
-
-        setRole(r);
-      }
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}, []);
-
-
-
-
-
-// let userName = null;
-
-
-// try {
-//   const token = sessionStorage.getItem("userToken");
-
-//   if (token) {
-//     const parts = token.split(".");
-//     if (parts.length === 3) {
-      
-//     }
-//   }
-// } 
-// catch (error) {
-//   console.error("JWT parse error:", error);
-// }
-try {
-  const token = sessionStorage.getItem("userToken");
-
-  if (token) {
-    const parts = token.split(".");
-
-    if (parts.length === 3) {
-      const payload = JSON.parse(atob(parts[1]));
-      console.log("JWT payload:", payload);
-    }
-  }
-} catch (error) {
-  console.error("JWT parse error:", error);
-}
-
-
-console.log("ROLE:", role);
-
-  // const getStorageKey = () => {
-  //   if (!token) return "guest_notifications";
-  //   return `notifications_${token.slice(-10)}`;
-  // };
   const getStorageKey = useCallback(() => {
-    if (!token) return "guest_notifications";
-    return `notifications_${token.slice(-10)}`;
+    return getStorageKeyByToken(token);
   }, [token]);
 
-  const [notifications, setNotifications] = useState<any[]>(() => {
-    const saved = localStorage.getItem(getStorageKey());
-    return saved ? JSON.parse(saved) : [];
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
+    const initialToken = sessionStorage.getItem("userToken");
+    const storageKey = getStorageKeyByToken(initialToken);
+    return readNotificationsFromStorage(storageKey);
   });
 
   const triggerShake = () => {
@@ -98,96 +182,131 @@ console.log("ROLE:", role);
     setTimeout(() => setIsShaking(false), 2500);
   };
 
+  const saveNotifications = useCallback(
+    (items: NotificationItem[]) => {
+      const migrated = migrateNotifications(items);
+      localStorage.setItem(getStorageKey(), JSON.stringify(migrated));
+      return migrated;
+    },
+    [getStorageKey]
+  );
+
+  const prependNotification = useCallback(
+    (notification: NotificationItem) => {
+      setNotifications((prev) => {
+        const updated = saveNotifications([notification, ...prev]);
+        return updated;
+      });
+
+      triggerShake();
+    },
+    [saveNotifications]
+  );
+
   const removeNotificationFromList = (indexToRemove: number) => {
     setNotifications((prev) => {
       const updated = prev.filter((_, i) => i !== indexToRemove);
-      localStorage.setItem(getStorageKey(), JSON.stringify(updated));
-      return updated;
+      return saveNotifications(updated);
     });
+
     setActiveSnoozeIndex(null);
   };
 
-  const completeReminder = async (reminderId: number, index: number) => {
+  useEffect(() => {
+    try {
+      if (!token) return;
+
+      const parts = token.split(".");
+      if (parts.length !== 3) return;
+
+      const payload = JSON.parse(atob(parts[1]));
+      const userRole =
+        payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+      setRole(userRole);
+    } catch (error) {
+      console.error("Role parse error:", error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const storageKey = getStorageKey();
+    const storedNotifications = readNotificationsFromStorage(storageKey);
+    setNotifications(storedNotifications);
+  }, [getStorageKey]);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storageKey = getStorageKey();
+      const storedNotifications = readNotificationsFromStorage(storageKey);
+      setNotifications(storedNotifications);
+      triggerShake();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [getStorageKey]);
+
+  const completeReminder = async (
+    reminderId: number | string,
+    index: number
+  ) => {
     try {
       await axios.post(
         `https://gearupapp.runasp.net/api/Reminder/${reminderId}/complete`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       toast.success("تم تسجيل الإتمام بنجاح");
       removeNotificationFromList(index);
-  
-      // --- الإضافة هنا: نبعت إشارة إن فيه تذكير اكتمل ---
-      window.dispatchEvent(new Event("reminderCompleted")); 
-      
-    } catch  {
+      window.dispatchEvent(new Event("reminderCompleted"));
+    } catch (error) {
+      console.error("Complete Reminder Error:", error);
       toast.error("فشل تسجيل الإتمام");
     }
   };
 
-
-  // useEffect(() => {
-  //   const handleStorageChange = () => {
-  //     const saved = localStorage.getItem(getStorageKey());
-  //     if (saved) {
-  //       setNotifications(JSON.parse(saved));
-  //       triggerShake(); // <--- ضيفي السطر ده هنا عشان الجرس يتهز أول ما الإشعار يوصل
-  //     }
-  //   };
-  
-  //   window.addEventListener("storage", handleStorageChange);
-  //   return () => window.removeEventListener("storage", handleStorageChange);
-  // }, []);
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem(getStorageKey());
-      if (saved) {
-        setNotifications(JSON.parse(saved));
-        triggerShake();
-      }
-    };
-  
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [getStorageKey]);
-  
-  const snoozeReminder = async (reminderId: number, snoozeType: number, index: number) => {
+  const snoozeReminder = async (
+    reminderId: number | string,
+    snoozeType: number,
+    index: number
+  ) => {
     try {
       await axios.post(
         `https://gearupapp.runasp.net/api/Reminder/${reminderId}/snooze`,
-        { snoozeType: snoozeType },
+        { snoozeType },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       toast.success("تم تأجيل التذكير");
       removeNotificationFromList(index);
-  
-      // --- السطر اللي ناقص هنا ---
-      window.dispatchEvent(new Event("reminderSnoozed")); // بنبعت إشارة إن فيه تأجيل حصل
-        
+      window.dispatchEvent(new Event("reminderSnoozed"));
     } catch (error) {
       console.error("Snooze Error:", error);
       toast.error("فشل تأجيل التذكير");
     }
   };
 
-
   const handleAccept = async (requestId: string, index: number) => {
-    console.log("ACCEPT CLICK requestId:", requestId);
     try {
       await axios.post(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/accept`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       toast.success("تم قبول الطلب ✅");
       removeNotificationFromList(index);
-    } catch  {
+    } catch (error) {
+      console.error("Accept Error:", error);
       toast.error("فشل قبول الطلب ❌");
     }
   };
-  
+
   const handleReject = async (requestId: string, index: number) => {
     try {
       await axios.post(
@@ -195,313 +314,324 @@ console.log("ROLE:", role);
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       toast.success("تم رفض الطلب ❌");
       removeNotificationFromList(index);
-    } catch  {
+    } catch (error) {
+      console.error("Reject Error:", error);
       toast.error("فشل رفض الطلب ❌");
     }
   };
 
-
+  // SignalR
   useEffect(() => {
     if (!token) return;
-  
+
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("https://gearupapp.runasp.net/hubs/notifications", {
         accessTokenFactory: () => token,
-    
       })
       .withAutomaticReconnect()
       .build();
 
-      connection.serverTimeoutInMilliseconds = 60000; // بدل 30 ثانية
-connection.keepAliveIntervalInMilliseconds = 15000;
+    connection.serverTimeoutInMilliseconds = 60000;
+    connection.keepAliveIntervalInMilliseconds = 15000;
 
-    // 1. استماع لتنبيهات المواعيد (Reminders)
+    const addBookingNotification = (eventName: string, data: any) => {
+      const newNotification: NotificationItem = {
+        title: normalizeBookingTitle(eventName),
+       message: buildBookingMessage(eventName, data),
+        isBooking: true,
+        isRequest: false,
+
+        // مهم جدًا
+        reminderId: undefined,
+        carId: undefined,
+        carName: undefined,
+        plateNumber: undefined,
+
+        bookingId: data?.bookingId || data?.id,
+        customerName:
+          data?.customerName ||
+          data?.customerFullName ||
+          data?.userName ||
+          "",
+        mechanicName: data?.mechanicName || "",
+        date: data?.date || data?.newDate || data?.bookingDate || "",
+        slotStart: data?.slotStart || data?.newSlotStart || data?.startTime || "",
+        slotEnd: data?.slotEnd || data?.newSlotEnd || data?.endTime || "",
+        time: getCurrentTime(),
+      };
+
+      prependNotification(newNotification);
+    };
+
+    // Reminder
     connection.on("ReceiveReminderNotification", (data: any) => {
-      console.log("🚨 استلام تنبيه موعد:", data);
       setNotifications((oldNotifications) => {
-        const filtered = oldNotifications.filter((n: any) => n.reminderId !== data.reminderId);
-        const newNotification = {
-          title: data.title || "تنبيه صيانة",
-          message: data.message || "لديك تنبيه جديد",
-          reminderId: data.reminderId,
-          carId: data.carId,
-          time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })
+        const filtered = oldNotifications.filter(
+          (n) => n.reminderId !== data?.reminderId
+        );
+
+        const newNotification: NotificationItem = {
+          title: data?.title || "تنبيه صيانة",
+          message: data?.message || "لديك تنبيه جديد",
+          reminderId: data?.reminderId,
+          isBooking: false,
+          isRequest: false,
+          carId: data?.carId,
+          time: getCurrentTime(),
         };
-        const updated = [newNotification, ...filtered];
-        localStorage.setItem(getStorageKey(), JSON.stringify(updated));
-        return updated;
+
+        return saveNotifications([newNotification, ...filtered]);
       });
+
       triggerShake();
     });
 
-connection.on("ReceiveServiceRequest", (data: any) => {
-  console.log("🔥🔥🔥 SERVICE REQUEST RECEIVED:", data);
+    // Service Request
+    connection.on("ReceiveServiceRequest", (data: any) => {
+      const newNotification: NotificationItem = {
+        title: "طلب صيانة جديد 🛠️",
+        isRequest: true,
+        isBooking: false,
+        requestId: data?.requestId || data?.serviceRequestId,
+        scheduledDateTime: data?.scheduledDateTime,
+        carName:
+          data?.car?.brand && data?.car?.model && data?.car?.year
+            ? `${data.car.brand} ${data.car.model} ${data.car.year}`
+            : "سيارة غير محددة",
+        plateNumber: data?.car?.plateNumber || "غير متوفر",
+        location: data?.location
+          ? {
+              lat: data.location.latitude,
+              lng: data.location.longitude,
+            }
+          : null,
+        requestDetail:
+          data?.requestType === "Emergency"
+            ? "طلب طارئ 🚨"
+            : data?.requestType === "Scheduled"
+            ? "طلب مجدول 📅"
+            : "طلب صيانة",
+        description: data?.issueDescription,
+        time: getCurrentTime(),
+      };
 
+      prependNotification(newNotification);
+    });
 
-  setNotifications((oldNotifications) => {
+    // Mechanic Accepted
+    connection.on("MechanicAccepted", async (data: any) => {
+      let mechanicName = "ميكانيكي";
 
-    const newNotification = {
-      title: "طلب صيانة جديد 🛠️",
-      isRequest: true,
-      requestId: data.requestId || data.serviceRequestId,
-      scheduledDateTime: data.scheduledDateTime,
+      try {
+        const res = await axios.get(
+          `https://gearupapp.runasp.net/api/requests/${data.serviceRequestId}/accepted-mechanics`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      carName:
-        data.car?.brand && data.car?.model && data.car?.year
-          ? `${data.car.brand} ${data.car.model} ${data.car.year}`
-          : "سيارة غير محددة",
+        const mechanic = res.data?.mechanics?.find(
+          (m: any) => m.mechanicUserId === data.mechanicUserId
+        );
 
-      plateNumber: data.car?.plateNumber || "غير متوفر",
+        if (mechanic) {
+          mechanicName = `${mechanic.firstName} ${mechanic.lastName}`;
+        }
+      } catch (error) {
+        console.error("Error fetching mechanic:", error);
+      }
 
-      location: data.location
-        ? {
-            lat: data.location.latitude,
-            lng: data.location.longitude
-          }
-        : null,
+      localStorage.setItem(
+        "accepted_mechanic",
+        JSON.stringify({
+          requestId: data?.serviceRequestId,
+          name: mechanicName,
+        })
+      );
 
-  requestDetail:
-  data.requestType === "Emergency"
-    ? "طلب طارئ 🚨"
-    : data.requestType === "Scheduled"
-    ? "طلب مجدول 📅"
-    : "طلب صيانة",
+      window.dispatchEvent(new Event("mechanicAccepted"));
 
-      description: data.issueDescription,
+      const newNotification: NotificationItem = {
+        title: "تم قبول طلبك 🎉",
+        message: `تم قبول الطلب بواسطة الميكانيكي ${mechanicName} 🛠️`,
+        isRequest: false,
+        isBooking: false,
+        mechanicName,
+        requestId: data?.requestId || data?.serviceRequestId,
+        time: getCurrentTime(),
+      };
 
-      time: new Date().toLocaleTimeString("ar-EG", {
-        hour: "2-digit",
-        minute: "2-digit"
-      })
+      prependNotification(newNotification);
+    });
+
+    // You Are Selected
+    connection.on("YouAreSelected", (data: any) => {
+      const newNotification: NotificationItem = {
+        title: "تم اختيارك 🎉",
+        message: "تم اختيارك من قبل العميل.",
+        requestId: data?.serviceRequestId,
+        hasTracking: true,
+        isRequest: true,
+        isBooking: false,
+        isSelected: true,
+        time: getCurrentTime(),
+      };
+
+      prependNotification(newNotification);
+    });
+
+    // Request Status Changed
+    const statusMap: Record<string, string> = {
+      Accepted: "تم القبول",
+      OnTheWay: "في الطريق",
+      Arrived: "وصل الميكانيكي",
+      InProgress: "جاري الإصلاح",
+      Completed: "تم الانتهاء",
+      Cancelled: "تم الإلغاء",
     };
 
-    const updated = [newNotification, ...oldNotifications];
-    localStorage.setItem(getStorageKey(), JSON.stringify(updated));
-    return updated;
-  });
+    connection.on("RequestStatusChanged", async (data: any) => {
+      const id = data?.requestId || data?.serviceRequestId;
+      if (!id) return;
 
-  triggerShake();
-});
+      let issue = "طلب صيانة";
+      let mechanicName = "الميكانيكي";
 
+      try {
+        const res = await axios.get(
+          `https://gearupapp.runasp.net/api/requests/${id}/status`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-connection.on("MechanicAccepted", async (data) => {
-  console.log("MECHANIC DATA FULL:", data);
+        const fullData = res.data;
+        issue = fullData?.issueDescription || issue;
 
-  let mechanicName = "ميكانيكي";
+        if (fullData?.mechanic) {
+          mechanicName = `${fullData.mechanic.firstName} ${fullData.mechanic.lastName}`;
+        }
+      } catch (error) {
+        console.error("Status fetch error:", error);
+      }
 
-  try {
-    const res = await axios.get(
-      `https://gearupapp.runasp.net/api/requests/${data.serviceRequestId}/accepted-mechanics`,
-      { headers: { Authorization: `Bearer ${token}` } }
+      const newNotification: NotificationItem = {
+        title: "🔄 تم تحديث حالة الطلب",
+        description: `المشكلة: ${issue}\nتم تحديث الحالة إلى: ${
+          statusMap[data?.newStatus] || data?.newStatus
+        }\nبواسطة الميكانيكي: ${mechanicName}`,
+        requestId: id,
+        status: data?.newStatus,
+        isRequest: true,
+        isBooking: false,
+        hasTracking: true,
+        time: getCurrentTime(),
+      };
+
+      prependNotification(newNotification);
+    });
+
+    // Booking Events
+    connection.on("New Booking Request", (data: any) =>
+      addBookingNotification("New Booking Request", data)
     );
-
-    console.log("MECHANICS RESPONSE FULL:", res.data);
-
-    const mechanic = res.data?.mechanics?.find(
-      (m: any) => m.mechanicUserId === data.mechanicUserId
+    connection.on("Booking Accepted", (data: any) =>
+      addBookingNotification("Booking Accepted", data)
     );
-
-    if (mechanic) {
-      mechanicName = `${mechanic.firstName} ${mechanic.lastName}`;
-    }
-
-  } catch (error) {
-    console.error("Error fetching mechanic:", error);
+    connection.on("Booking Rejected", (data: any) =>
+      addBookingNotification("Booking Rejected", data)
+    );
+    connection.on("Booking Cancelled", (data: any) =>
+      addBookingNotification("Booking Cancelled", data)
+    );
+    connection.on("Booking Rescheduled", (data: any) =>
+      addBookingNotification("Booking Rescheduled", data)
+    );
+    connection.on("Booking Completed", (data: any) =>
+      addBookingNotification("Booking Completed", data)
+    );
+    connection.on("Booking Status Updated", (data: any) =>
+      addBookingNotification("Booking Status Updated", data)
+    );
+const buildBookingMessage = (eventName: string, data: any) => {
+  if (eventName === "New Booking Request") {
+    return `لديك طلب حجز جديد بتاريخ ${data?.date || data?.bookingDate || ""}`;
   }
 
+  if (eventName === "Booking Rescheduled") {
+    return `تم تغيير موعد الحجز إلى ${data?.newDate || data?.date || ""}`;
+  }
 
-  // localStorage.setItem("accepted_mechanic_name", mechanicName);
-  localStorage.setItem(
-    "accepted_mechanic",
-    JSON.stringify({
-      requestId: data.serviceRequestId,
-      name: mechanicName
-    })
-  );
-  window.dispatchEvent(new Event("mechanicAccepted"));
+  if (eventName === "Booking Accepted") {
+    return "تم قبول الحجز بنجاح";
+  }
 
+  if (eventName === "Booking Rejected") {
+    return "تم رفض الحجز";
+  }
 
-  const newNotification = {
-    title: "تم قبول طلبك 🎉",
-    message: `تم قبول الطلب بواسطة الميكانيكي ${mechanicName} 🛠️`,
-    mechanicName: mechanicName, // 👈 مهم جدا
-    // requestId: data.serviceRequestId,
-    requestId: data.requestId || data.serviceRequestId,
-    time: new Date().toLocaleTimeString("ar-EG", {
-      hour: "2-digit",
-      minute: "2-digit"
-    })
-  };
+  if (eventName === "Booking Cancelled") {
+    return "تم إلغاء الحجز";
+  }
 
+  if (eventName === "Booking Completed") {
+    return "تم إكمال الحجز";
+  }
 
-  const storageKey = getStorageKey();
-  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
-
-  const updated = [newNotification, ...saved];
-  localStorage.setItem(storageKey, JSON.stringify(updated));
-
-  setNotifications(updated);
-  triggerShake();
-});
-
-
-connection.on("YouAreSelected", (data: any) => {
-  console.log("NOTIFICATION DATA:", data);
-  console.log("🎉 MechanicSelected:", data);
-
-  const newNotification = {
-    title: "تم اختيارك 🎉",
-    // message: data.message || "تم اختيارك لتنفيذ الطلب",
-    message: "تم اختيارك من قبل العميل. ",
-    requestId: data.serviceRequestId,
-    hasTracking: true,
-    isRequest: true,
-    isSelected: true, 
-  time: new Date().toLocaleTimeString("ar-EG", {
-      hour: "2-digit",
-      minute: "2-digit"
-    })
-  };
-
-  const storageKey = getStorageKey();
-  const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
-
-  const updated = [newNotification, ...saved];
-  localStorage.setItem(storageKey, JSON.stringify(updated));
-
-  setNotifications(updated);
-  triggerShake();
-});
-
-const statusMap: any = {
-  Accepted: "تم القبول",
-  OnTheWay: "في الطريق",
-  Arrived: "وصل الميكانيكي",
-  InProgress: "جاري الإصلاح",
-  Completed: "تم الانتهاء",
-  Cancelled: "تم الإلغاء"
+  return "تم تحديث الحجز";
 };
-connection.on("RequestStatusChanged", async (data: any) => {
-  console.log("📢 STATUS UPDATED:", data);
-
-  const id = data.requestId || data.serviceRequestId;
-
-  if (!id) {
-    console.log("❌ No requestId found");
-    return;
-  }
-
-  let issue = "طلب صيانة";
-  let mechanicName = "الميكانيكي";
-
-  try {
-    const res = await axios.get(
-      `https://gearupapp.runasp.net/api/requests/${id}/status`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    const fullData = res.data;
-
-    issue = fullData?.issueDescription || issue;
-
-    if (fullData?.mechanic) {
-      mechanicName = `${fullData.mechanic.firstName} ${fullData.mechanic.lastName}`;
-    }
-
-
-const newNotification = {
-  title: "🔄 تم تحديث حالة الطلب",
-  description: `المشكلة: ${issue}
-  تم تحديث الحالة إلى: ${statusMap[data.newStatus] || data.newStatus}
-  بواسطة الميكانيكي: ${mechanicName}`,
-
-  requestId: id,
-  status: data.newStatus,
-  isRequest: true,
-  hasTracking: true,
-  time: new Date().toLocaleTimeString("ar-EG", {
-    hour: "2-digit",
-    minute: "2-digit"
-  })
-};
-
-    const storageKey = getStorageKey();
-    const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
-
-    const updated = [newNotification, ...saved];
-
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-    setNotifications(updated);
-    triggerShake();
-
-  } catch (err) {
-    console.error("Status fetch error:", err);
-  }
-});
-
-
     const startConnection = async () => {
       try {
         if (connection.state === signalR.HubConnectionState.Disconnected) {
           await connection.start();
           console.log("SignalR Connected ✅");
         }
-      } catch (err) {
-        console.error("SignalR Connection Error ❌", err);
+      } catch (error) {
+        console.error("SignalR Connection Error ❌", error);
       }
     };
-  
+
     startConnection();
-  
+
     return () => {
-      if (connection) connection.stop();
+      connection.stop();
     };
-  }, [token]);
+  }, [token, prependNotification, saveNotifications]);
 
-
-
-  // const fetchCars = async () => {
-  //   if (!token) return;
-  //   try {
-  //     const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
-  //     setCars(res.data.cars || []);
-  //   } catch (error) { console.error(error); }
-  // };
+  // Fetch Cars
   const fetchCars = useCallback(async () => {
     if (!token) return;
+
     try {
       const res = await axios.get(
         "https://gearupapp.runasp.net/api/customers/cars",
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCars(res.data.cars || []);
+
+      setCars(res.data?.cars || []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch Cars Error:", error);
     }
   }, [token]);
 
-
-  // useEffect(() => { fetchCars(); }, [token]);
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
 
-  const getCarName = (carId: string) => {
-    const car = cars.find(c => c.id === carId);
+  const getCarName = (carId?: string) => {
+    if (!carId) return "";
+
+    const car = cars.find((c) => c.id === carId);
+
     return car ? `${car.brand} ${car.model} ${car.year}` : "جاري التحميل...";
   };
 
   const snoozeOptions = [
-     { label: " دقيقتين", value: 5 },
+    { label: "دقيقتين", value: 5 },
     { label: "ساعة واحدة", value: 0 },
     { label: "3 ساعات", value: 1 },
     { label: "يوم واحد", value: 2 },
     { label: "3 أيام", value: 3 },
     { label: "أسبوع", value: 4 },
- 
   ];
 
   return (
@@ -513,286 +643,335 @@ const newNotification = {
           50% { transform: rotate(8deg); }
           75% { transform: rotate(-8deg); }
         }
-        .animate-bell-shake { animation: gentle-shake 0.5s ease-in-out 5; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #137FEC33; border-radius: 10px; }
+
+        .animate-bell-shake {
+          animation: gentle-shake 0.5s ease-in-out 5;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #137FEC33;
+          border-radius: 10px;
+        }
       `}</style>
 
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`p-2 rounded-full transition-colors relative ${dark ? "text-white hover:bg-white/10" : "text-[#137FEC] hover:bg-blue-50"} ${isShaking ? "animate-bell-shake" : ""}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`p-2 rounded-full transition-colors relative ${
+          dark
+            ? "text-white hover:bg-white/10"
+            : "text-[#137FEC] hover:bg-blue-50"
+        } ${isShaking ? "animate-bell-shake" : ""}`}
       >
         <FaBell size={size} />
-        {notifications.length > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>}
+
+        {notifications.length > 0 && (
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+        )}
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 mt-3 w-80 rounded-2xl shadow-2xl z-[100] p-4 border backdrop-blur-md ${
-          dark ? "bg-[#0f172a]/95 border-white/10 text-white" : "bg-white/95 border-gray-100"
-        }`} dir="rtl">
-          
+        <div
+          dir="rtl"
+          className={`absolute left-0 mt-3 w-80 rounded-2xl shadow-2xl z-[100] p-4 border backdrop-blur-md ${
+            dark
+              ? "bg-[#0f172a]/95 border-white/10 text-white"
+              : "bg-white/95 border-gray-100"
+          }`}
+        >
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
-            <h3 className="font-bold text-[13px] opacity-90">التنبيهات ({notifications.length})</h3>
-            <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white transition-colors">
+            <h3 className="font-bold text-[13px] opacity-90">
+              التنبيهات ({notifications.length})
+            </h3>
+
+            <button
+              onClick={() => setIsOpen(false)}
+              className={`transition-colors ${
+                dark
+                  ? "text-slate-400 hover:text-white"
+                  : "text-slate-500 hover:text-red-500"
+              }`}
+            >
               <FaTimes size={12} />
             </button>
           </div>
 
-{/* <div className="max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1"> */}
-<div className="relative max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
+          <div className="relative max-h-80 overflow-y-auto space-y-3 custom-scrollbar px-1">
+            {notifications.length > 0 ? (
+              notifications.map((n, i) => {
+                const isBooking = isBookingNotification(n);
+                const isRequest = isRequestNotification(n);
+                const isReminder = isReminderNotification(n);
+                const displayTitle = isBooking
+                  ? normalizeBookingTitle(n.title)
+                  : n.title;
 
-      {notifications.length > 0 ? notifications.map((n, i) => (
-  <div key={i} className={`relative p-3.5 rounded-xl border transition-all ${
-    dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"
-  }`}>
-    
-    <div className="flex-1 min-w-0 text-right">
-      <div className="flex justify-between items-start mb-1">
-        <h4 className="font-bold text-[12px] text-blue-400">{n.title}</h4>
+                return (
+                  <div
+                    key={`${n.title}-${n.time}-${i}`}
+                    className={`relative p-3.5 rounded-xl border transition-all ${
+                      dark
+                        ? "bg-white/[0.03] border-white/[0.05]"
+                        : "bg-blue-50 border-blue-100"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0 text-right">
+                      {/* Title + Close */}
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <h4 className="font-bold text-[12px] text-blue-400 leading-5">
+                          {displayTitle}
+                        </h4>
 
-        <button onClick={() => removeNotificationFromList(i)} className="text-slate-600 hover:text-red-400">
-          <FaTimes size={10} />
-        </button>
-      </div>
+                        <button
+                          onClick={() => removeNotificationFromList(i)}
+                          className={`transition-colors ${
+                            dark
+                              ? "text-slate-400 hover:text-red-400"
+                              : "text-slate-600 hover:text-red-500"
+                          }`}
+                        >
+                          <FaTimes size={10} />
+                        </button>
+                      </div>
 
+                      {/* Car Info — يظهر للـ request/reminder فقط، مش booking */}
+                      {(n.carName || n.carId) && !isBooking && (
+                        <div className="mb-1">
+                          <div className="text-[11px] font-bold flex items-center gap-1 dark:text-slate-200">
+                            {n.plateNumber && (
+                              <span className="text-[10px] opacity-70">
+                                {n.plateNumber}
+                              </span>
+                            )}
 
-{(n.carName || n.carId) && (
-  <div className="mb-1">
-    
-    {/* اسم العربية */}
-    <div className="text-[11px] font-bold flex items-center gap-1 dark:text-slate-200">
-      {n.plateNumber && (
-        <span className="text-[10px] opacity-70">
-          {n.plateNumber}
-        </span>
-      )}
+                            <span>{n.carName || getCarName(n.carId)}</span>
+                          </div>
 
-      <span>
-        {n.carName || getCarName(n.carId)}
-      </span>
-    </div>
+                          {isReminder && (
+                            <div className="text-[10px] text-blue-500 font-bold mt-1">
+                              تنبيه صيانة
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-    {/* 👇 الجملة الجديدة */}
-    {!n.isRequest && (
-      <div className="text-[10px] text-blue-500 font-bold mt-1">
-        تنبيه صيانة
-      </div>
-    )}
+                      {/* Location — request فقط */}
+                      {isRequest && n.location && (
+                        <a
+                          href={`https://www.google.com/maps?q=${n.location.lat},${n.location.lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] opacity-80 text-blue-500 underline hover:text-blue-700 block mb-2"
+                        >
+                          📍 عرض الموقع على الخريطة
+                        </a>
+                      )}
 
-  </div>
-)}
+                      {/* Service Request */}
+                      {isRequest && (
+                        <div className="space-y-2 mb-2">
+                          {n.requestId && n.title?.includes("تم اختيارك") && (
+                            <div className="text-[11px] bg-green-500/10 border-r-2 border-green-500 p-2 rounded-lg text-green-500 font-bold">
+                              {n.message}
+                            </div>
+                          )}
 
+                          {n.hasTracking && role?.toLowerCase() === "mechanic" && (
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/mechanics/request/mrequest_tracking/${n.requestId}`
+                                )
+                              }
+                              className="mt-2 w-full bg-blue-500 text-white py-1 rounded text-xs"
+                            >
+                              تتبع الطلب
+                            </button>
+                          )}
 
-{/* {n.location && (
-  <div className="text-[11px] opacity-80">
-    📍 {n.location.lat}, {n.location.lng}
-  </div>
-)} */}
-{n.location && (
-  <a
-    href={`https://www.google.com/maps?q=${n.location.lat},${n.location.lng}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-[11px] opacity-80 text-blue-500 underline hover:text-blue-700"
-  >
-    📍 عرض الموقع على الخريطة
-  </a>
-)}
+                          {role?.toLowerCase() === "mechanic" && !n.hasTracking && (
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => {
+                                  if (!n.requestId) {
+                                    toast.error("requestId غير موجود");
+                                    return;
+                                  }
 
+                                  handleAccept(n.requestId, i);
+                                }}
+                                className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
+                              >
+                                قبول
+                              </button>
 
-{n.isRequest && (
-  <div className="space-y-2 mb-2">
+                              <button
+                                onClick={() => {
+                                  if (!n.requestId) {
+                                    toast.error("requestId غير موجود");
+                                    return;
+                                  }
 
-    {/* لو تم اختيار الميكانيكي */}
-    {n.requestId && n.title?.includes("تم اختيارك") && (
-      <div className="text-[11px] bg-green-500/10 border-r-2 border-green-500 p-2 rounded-lg text-green-500 font-bold">
-        {n.message}
-      </div>
-    )}
+                                  handleReject(n.requestId, i);
+                                }}
+                                className="flex-1 text-[11px] py-1 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition font-bold"
+                              >
+                                رفض
+                              </button>
+                            </div>
+                          )}
 
-    {/* زر التتبع فقط */}
-    {n.hasTracking && role?.toLowerCase() === "mechanic" && (
-      <button
+                          {n.requestDetail && (
+                            <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
+                              {n.requestDetail}
+                            </p>
+                          )}
 
+                          {n.scheduledDateTime && (
+                            <div className="text-[11px] opacity-80 mt-1">
+                              {new Date(n.scheduledDateTime).toLocaleString(
+                                "ar-EG"
+                              )}
+                            </div>
+                          )}
 
-        onClick={() => {
-          console.log("Navigating with requestId:", n.requestId);
-          navigate(`/mechanics/request/mrequest_tracking/${n.requestId}`);
-        }}
+                          {n.description && (
+                            <div className="text-[11px] leading-5 whitespace-pre-line bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400">
+                              {n.description}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
+                      {/* Booking Notification */}
+                      {isBooking && (
+                        <div className="space-y-1 mb-2">
+                          {n.customerName && (
+                            <div className="text-[11px] font-bold dark:text-slate-200">
+                              👤 {n.customerName}
+                            </div>
+                          )}
 
-        className="mt-2 w-full bg-blue-500 text-white py-1 rounded text-xs"
-      >
-        تتبع الطلب
-      </button>
-    )}
+                          {n.mechanicName && (
+                            <div className="text-[11px] dark:text-slate-300">
+                              🔧 {n.mechanicName}
+                            </div>
+                          )}
 
-    {/* أزرار قبول/رفض تظهر فقط لو مش "تم اختيارك" */}
-    {role?.toLowerCase() === "mechanic" && !n.hasTracking && (
-      <div className="flex gap-2 mt-2">
+                          {n.date && (
+                            <div className="text-[11px] opacity-80">
+                              📅 {n.date}{" "}
+                              {n.slotStart &&
+                                `${n.slotStart.slice(0, 5)} - ${n.slotEnd?.slice(
+                                  0,
+                                  5
+                                )}`}
+                            </div>
+                          )}
 
-        <button
-          // onClick={() => handleAccept(n.requestId, i)}
-          onClick={() => {
-            if (!n.requestId) {
-              console.error("Missing requestId", n);
-              toast.error("requestId غير موجود");
-              return;
-            }
-            handleAccept(n.requestId, i);
-          }}
-          className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
-        >
-          قبول
-        </button>
+                          {n.message && (
+                            <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5">
+                              {n.message}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-        <button
-          onClick={() => handleReject(n.requestId, i)}
-          className="flex-1 text-[11px] py-1 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition font-bold"
-        >
-          رفض
-        </button>
+                      {/* General message */}
+                      {!isRequest && !isBooking && !isReminder && n.message && (
+                        <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5 mb-2">
+                          {n.message}
+                        </div>
+                      )}
 
-      </div>
-    )}
+                      {/* Reminder Buttons — فقط للـ reminders الحقيقية */}
+                      {isReminder && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => {
+                              if (!n.reminderId) return;
+                              completeReminder(n.reminderId, i);
+                            }}
+                            className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
+                          >
+                            إتمام
+                          </button>
 
-    <p className="text-[10px] opacity-90 font-bold text-blue-500/80">
-      {n.requestDetail}
-    </p>
-    {n.scheduledDateTime && (
-  <div className="text-[11px] opacity-80 mt-1">
-   {new Date(n.scheduledDateTime).toLocaleString("ar-EG")}
-  </div>
-  )}
+                          <button
+                            onClick={() =>
+                              setActiveSnoozeIndex(
+                                activeSnoozeIndex === i ? null : i
+                              )
+                            }
+                            className="flex-1 text-[11px] py-1 rounded bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition font-bold"
+                          >
+                            تأجيل
+                          </button>
+                        </div>
+                      )}
 
-    <div className="text-[11px] leading-5 whitespace-pre-line bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400">
-  {n.description}
-</div>
+                      {/* Snooze Options — reminder فقط */}
+                      {isReminder && activeSnoozeIndex === i && (
+                        <div
+                          className={`fixed z-[999999] w-32 rounded-lg shadow-2xl p-1.5 border ${
+                            dark
+                              ? "bg-slate-800 border-white/20 text-white"
+                              : "bg-white border-gray-200 text-gray-800"
+                          }`}
+                          style={{
+                            right: "auto",
+                            transform: "translateY(-100%)",
+                          }}
+                        >
+                          <div className="text-[9px] font-bold mb-1 pb-1 border-b border-gray-500/10 opacity-60 text-center">
+                            مدة التأجيل
+                          </div>
 
-  </div>
-)}
+                          <div className="flex flex-col">
+                            {snoozeOptions.map((opt, idx) => (
+                              <div key={idx}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
 
-      {/* لو مش ريكوست (تذكير عادي) اعرض الرسالة العادية */}
-      {/* {!n.isRequest && n.message && (
-        <p className="text-[11px] opacity-60 mb-2">{n.message}</p>
-      )} */}
-      {!n.isRequest && n.reminderId && (
-  <div className="flex gap-2 mt-2">
+                                    if (!n.reminderId) return;
 
-    {/* زر إتمام */}
-    <button
-      onClick={() => completeReminder(n.reminderId, i)}
-      className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
-    >
-      إتمام
-    </button>
+                                    snoozeReminder(n.reminderId, opt.value, i);
+                                  }}
+                                  className="block w-full text-[11px] py-1.5 px-2 rounded-md text-right hover:bg-blue-600 hover:text-white transition-all font-medium"
+                                >
+                                  {opt.label}
+                                </button>
 
-    {/* زر تأجيل */}
-    <button
-      onClick={() =>
-        setActiveSnoozeIndex(activeSnoozeIndex === i ? null : i)
-      }
-      className="flex-1 text-[11px] py-1 rounded bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition font-bold"
-    >
-      تأجيل
-    </button>
+                                {idx < snoozeOptions.length - 1 && (
+                                  <div
+                                    className={`h-[0.5px] mx-1 my-0 ${
+                                      dark ? "bg-white/5" : "bg-gray-50"
+                                    }`}
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-  </div>
-)}
-
-
-{/* {activeSnoozeIndex === i && (
-  <div 
-    className={`fixed z-[999999] w-40 rounded-xl shadow-2xl p-2 border ${
-      dark ? "bg-slate-800 border-white/20 text-white" : "bg-white border-gray-200 text-gray-800"
-    }`}
-    style={{ 
-      right: 'auto',
-      /* قللنا الـ translateY شوية لـ -102% بدلاً من -110% عشان متبقاش طايرة بزيادة وتختفي 
-      transform: 'translateY(-102%)' 
-    }}
-  >
-    {/* تأكدي إن الـ Header ده موجود عشان بيدي مساحة (Spacing) فوق أول خيار *
-    <div className="text-[10px] font-bold mb-2 pb-1 border-b border-gray-500/20 opacity-50 text-center">
-      اختر مدة التأجيل
-    </div>
-    
-    <div className="flex flex-col">
-      {snoozeOptions.map((opt, idx) => (
-        <div key={idx}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              snoozeReminder(n.reminderId, opt.value, i);
-            }}
-            className="block w-full text-[12px] py-2 px-3 rounded-lg text-right hover:bg-blue-600 hover:text-white transition-all font-medium"
-          >
-            {opt.label}
-          </button>
-          
-          {/* الخط الفاصل *
-          {idx < snoozeOptions.length - 1 && (
-            <div className={`h-[1px] mx-1 my-0.5 ${dark ? "bg-white/10" : "bg-gray-100"}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)} */}
-{activeSnoozeIndex === i && (
-  <div 
-    className={`fixed z-[999999] w-32 rounded-lg shadow-2xl p-1.5 border ${
-      dark ? "bg-slate-800 border-white/20 text-white" : "bg-white border-gray-200 text-gray-800"
-    }`}
-    style={{ 
-      right: 'auto',
-      transform: 'translateY(-100%)' 
-    }}
-  >
-    <div className="text-[9px] font-bold mb-1 pb-1 border-b border-gray-500/10 opacity-60 text-center">
-      مدة التأجيل
-    </div>
-    
-    <div className="flex flex-col">
-      {snoozeOptions.map((opt, idx) => (
-        <div key={idx}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              snoozeReminder(n.reminderId, opt.value, i);
-            }}
-            className="block w-full text-[11px] py-1.5 px-2 rounded-md text-right hover:bg-blue-600 hover:text-white transition-all font-medium"
-          >
-            {opt.label}
-          </button>
-          
-          {idx < snoozeOptions.length - 1 && (
-            <div className={`h-[0.5px] mx-1 my-0 ${dark ? "bg-white/5" : "bg-gray-50"}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-
-      <span className="text-[8px] mt-2 opacity-30 block font-mono">{n.time}</span>
-    </div>
-  </div>
-)) : (
-  <div className="text-center py-6 opacity-30 text-[11px]">لا توجد تنبيهات</div>
-)}
-
+                      <span className="text-[8px] mt-2 opacity-30 block font-mono">
+                        {n.time}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-6 opacity-30 text-[11px]">
+                لا توجد تنبيهات
+              </div>
+            )}
           </div>
-
-          {/* <button 
-            onClick={() => { setIsOpen(false); navigate("/customer/reminders"); }} 
-            className={`w-full mt-3 py-2 text-[11px] font-bold rounded-lg transition-all ${
-              dark ? "bg-blue-500/10 text-blue-400 hover:bg-blue-600 hover:text-white" : "bg-blue-50 text-blue-600"
-            }`}
-          >
-            عرض سجل التنبيهات الكامل
-          </button> */}
         </div>
       )}
     </div>
