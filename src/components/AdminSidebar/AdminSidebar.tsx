@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  FaUsers, FaTools, FaClipboardList, FaBell,
-  FaCog, FaMapMarkedAlt,FaRegCommentDots,
+  FaUsers, FaTools,
+  FaCog,FaRegCommentDots,
 } from "react-icons/fa";
 import { MdDashboard, MdMenu, MdClose, MdLogout } from "react-icons/md";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -90,12 +90,12 @@ const AdminSidebar: React.FC = () => {
             <SidebarItem icon={<MdDashboard />}        label="لوحة التحكم"  dark={dark} to="/admin/admindashboard"        closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaUsers />}            label="المستخدمين"   dark={dark} to="/admin/usersmanagement"       closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaTools />}            label="الميكانيكيين" dark={dark} to="/admin/MechanicsManagement"   closeSidebar={() => setIsOpen(false)} />
-            <SidebarItem icon={<FaClipboardList />}    label="الحجوزات"     dark={dark} to="/admin/bookingmanagement"     closeSidebar={() => setIsOpen(false)} />
+            {/* <SidebarItem icon={<FaClipboardList />}    label="الحجوزات"     dark={dark} to="/admin/bookingmanagement"     closeSidebar={() => setIsOpen(false)} /> */}
             <SidebarItem icon={<FaRegCommentDots />}   label="المراجعات"    dark={dark} to="/admin/Reviews"               closeSidebar={() => setIsOpen(false)} />
             {/* <SidebarItem icon={<FaUsers />}            label="المشرفين"     dark={dark} to="/admin/supervisormanagement"  closeSidebar={() => setIsOpen(false)} /> */}
-            <SidebarItem icon={<FaBell />}             label="الإشعارات"    dark={dark} to="/admin/NotificationsManagement" closeSidebar={() => setIsOpen(false)} />
+            {/* <SidebarItem icon={<FaBell />}             label="الإشعارات"    dark={dark} to="/admin/NotificationsManagement" closeSidebar={() => setIsOpen(false)} /> */}
             <SidebarItem icon={<FaCog />}              label="الخدمات"      dark={dark} to="/admin/Services"              closeSidebar={() => setIsOpen(false)} />
-            <SidebarItem icon={<FaMapMarkedAlt />}     label="المدن"        dark={dark} to="/admin/CitiesManagement"      closeSidebar={() => setIsOpen(false)} />
+            {/* <SidebarItem icon={<FaMapMarkedAlt />}     label="المدن"        dark={dark} to="/admin/CitiesManagement"      closeSidebar={() => setIsOpen(false)} /> */}
           </nav>
 
           <div className={`rounded-2xl p-4 mt-6 flex-shrink-0 transition-colors duration-500

@@ -16,24 +16,38 @@ interface Booking {
   status: string;
 }
 
+// واجهة بيانات المراجعة (تأكد من تطابقها مع رد الـ API الفعلي)
+interface Review {
+  id: string;
+  clientName: string;
+  rating: number;
+  comment: string;
+  date: string; // createdAt من الـ API
+}
+
 const MachineDashboard = () => {
   const { dark } = useTheme();
   
   // State for Data
   const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<Booking[]>([]);
+  
+  // State for Average Rating
+  const [averageRating, setAverageRating] = useState<number | string>("--");
+  const [loadingRating, setLoadingRating] = useState(true);
+
+  // State for Reviews
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingToday, setLoadingToday] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null); // ID of booking being processed
-
-  // Static Reviews Data
-  const reviews = [
-    { id: 1, client: "مالك جونسون", rating: 5, comment: "خدمة ممتازة! كان جون مهريًا، ومهنيًا، وجعلها جاهزة للاستلام الأسعار أعجب به أشد", time: "منذ ساعة" },
-    { id: 2, client: "مالك جونسون", rating: 5, comment: "خدمة ممتازة! كان جون مهريًا، ومهنيًا، وجعلها جاهزة للاستلام الأسعار أعجب به أشد", time: "منذ ساعة" },
-  ];
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // --- Fetch Data ---
   const token = sessionStorage.getItem("userToken");
+
+ 
 
   // Fetch Pending Requests
   const fetchPendingRequests = async () => {
@@ -44,7 +58,6 @@ const MachineDashboard = () => {
       });
       if (!res.ok) throw new Error("Failed to fetch requests");
       const data: Booking[] = await res.json();
-      // Filter only Pending
       const pending = data.filter(b => b.status === "Pending");
       setPendingBookings(pending);
     } catch (err) {
@@ -72,9 +85,88 @@ const MachineDashboard = () => {
     }
   };
 
+  // Fetch Average Rating
+  // Fetch Average Rating
+   // Fetch Average Rating
+  const fetchAverageRating = async () => {
+    try {
+      setLoadingRating(true);
+      const res = await fetch(`https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/average-rating`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to fetch rating");
+      const data = await res.json();
+
+      console.log("Rating Data:", data); 
+
+      // --- التعديل هنا: نبحث عن avgRating أولاً ---
+      let ratingValue = "0";
+
+      if (typeof data === 'number') {
+        ratingValue = String(data);
+      } else if (typeof data === 'object' && data !== null) {
+        // تم وضع avgRating في البداية لأن هذا هو ما يظهر في الصورة
+        ratingValue = data.avgRating ?? data.averageRating ?? data.rating ?? "0";
+      }
+      
+      setAverageRating(ratingValue);
+      
+    } catch (err) {
+      console.error(err);
+      setAverageRating("0");
+    } finally {
+      setLoadingRating(false);
+    }
+  };
+
+
+// استخرج الـ ID من الـ JWT token
+const getMechanicId = () => {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    console.log("Token payload:", payload); // شوف الحقل الصح
+    return payload.sub ?? payload.id ?? payload.userId ?? payload.mechanicId;
+  } catch {
+    return null;
+  }
+};
+
+const mechanicId = getMechanicId();
+const fetchLatestReviews = async () => {
+  try {
+    setLoadingReviews(true);
+    const res = await fetch(
+      `https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/latest?count=10`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+
+    // الـ API بيرجع { reviews: [...], totalCount: n }
+    const mapped = data.reviews.map((r: any) => ({
+      id: r.id,
+      clientName: r.userName,   // ✅ userName مش clientName
+      rating: r.rating,
+      comment: r.comment,
+      date: r.createdAt,        // ✅ createdAt مش date
+    }));
+
+    setReviews(mapped);
+  } catch (err) {
+    console.error("Reviews error:", err);
+    setReviews([]);
+  } finally {
+    setLoadingReviews(false);
+  }
+};
+
   useEffect(() => {
     fetchPendingRequests();
     fetchTodayAppointments();
+    fetchAverageRating();
+    fetchLatestReviews(); // جلب المراجعات
   }, []);
 
   // --- Actions ---
@@ -86,7 +178,6 @@ const MachineDashboard = () => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
       });
       if (!res.ok) throw new Error("Failed to accept");
-      // Refresh both lists
       await Promise.all([fetchPendingRequests(), fetchTodayAppointments()]);
     } catch (err) {
       console.error(err);
@@ -103,7 +194,7 @@ const MachineDashboard = () => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
       });
       if (!res.ok) throw new Error("Failed to reject");
-      await fetchPendingRequests(); // Just refresh pending list
+      await fetchPendingRequests();
     } catch (err) {
       console.error(err);
     } finally {
@@ -115,14 +206,13 @@ const MachineDashboard = () => {
   const stats = [
     { title: "طلبات الحجز الجديدة", value: loadingRequests ? "..." : pendingBookings.length.toString(), change: "طلبات قيد الانتظار", positive: true },
     { title: "مواعيد اليوم", value: loadingToday ? "..." : todayAppointments.length.toString(), change: "موعد مجدول", positive: true },
-    { title: "متوسط التقييم", value: "4.8", change: "0+ هذا الشهر", positive: true },
+    { title: "متوسط التقييم", value: loadingRating ? "..." : averageRating.toString(), change: "0+ هذا الشهر", positive: true },
   ];
 
   const cardBase = `rounded-xl transition-all ${
     !dark ? "bg-white shadow-md" : "bg-[#0d1629]"
   }`;
 
-  // Helper for status badge (for appointments)
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Confirmed":
@@ -196,7 +286,6 @@ const MachineDashboard = () => {
             <div className="p-8 text-center text-gray-400">لا توجد طلبات جديدة</div>
           ) : (
             <>
-              {/* Desktop table */}
               <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -237,7 +326,6 @@ const MachineDashboard = () => {
                 </table>
               </div>
 
-              {/* Mobile cards */}
               <div className="sm:hidden p-3 space-y-3">
                 {pendingBookings.map((b) => (
                   <div key={b.id} className={`p-4 rounded-xl border ${!dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
@@ -305,28 +393,37 @@ const MachineDashboard = () => {
             </div>
           </div>
 
-          {/* المراجعات */}
+          {/* المراجعات (Dynamic) */}
           <div className={cardBase}>
             <div className={`p-4 sm:p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
               <h2 className="text-lg sm:text-xl font-bold">المراجعات الأخيرة</h2>
             </div>
             <div className="p-3 sm:p-6 space-y-3">
-              {reviews.map((review) => (
-                <div key={review.id} className={`p-3 sm:p-4 rounded-xl border ${
-                  !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
-                }`}>
-                  <div className="flex items-center justify-between mb-2 gap-2">
-                    <h4 className="font-semibold text-sm">{review.client}</h4>
-                    <div className="flex gap-0.5 flex-shrink-0">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <FaStar key={i} className="text-yellow-500 text-xs sm:text-sm" />
-                      ))}
+              {loadingReviews ? (
+                <div className="text-center py-6 text-gray-400">جاري تحميل المراجعات...</div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">لا توجد مراجعات حتى الآن</div>
+              ) : (
+                reviews.map((review) => (
+                  <div key={review.id} className={`p-3 sm:p-4 rounded-xl border ${
+                    !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
+                  }`}>
+                    <div className="flex items-center justify-between mb-2 gap-2">
+                      <h4 className="font-semibold text-sm">{review.clientName}</h4>
+                      <div className="flex gap-0.5 flex-shrink-0">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <FaStar key={i} className="text-yellow-500 text-xs sm:text-sm" />
+                        ))}
+                      </div>
                     </div>
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2 line-clamp-2">{review.comment}</p>
+                    {/* ملاحظة: هنا نستعرض التاريخ كما جاء من الـ API أو نقوم بتنسيقه */}
+                    <span className="text-xs text-gray-500">
+                        {review.date ? new Date(review.date).toLocaleDateString('ar-EG') : ""}
+                    </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-400 mb-2 line-clamp-2">{review.comment}</p>
-                  <span className="text-xs text-gray-500">{review.time}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

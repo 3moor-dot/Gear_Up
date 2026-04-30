@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Footer from "../../components/Footer/footer";
 import { FaPhone, FaEye, FaEyeSlash } from "react-icons/fa6";
 import { FaLock } from "react-icons/fa";
 import Swal from "sweetalert2"; // 1. استيراد المكتبة
@@ -190,7 +189,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-      <Footer />
+    
     </div>
   );
 };

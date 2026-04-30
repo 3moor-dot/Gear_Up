@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
-import { FaEye, FaSearch } from "react-icons/fa";
+import { FaEye, FaSearch, FaMapMarkerAlt, FaClock, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useTheme } from "../../../contexts/ThemeContext";
 
 // Types
@@ -16,10 +16,36 @@ interface ApiMechanic {
   registeredAt: string;
 }
 
+// ✅ تعديل: تغيير isActive إلى accountStatus من نوع number
+interface ApiMechanicDetails {
+  // id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  profilePhotoUrl: string | null;
+  accountStatus: number; // ✅ تم التعديل هنا (كان isActive: boolean)
+  isEmailConfirmed: boolean;
+  isPhoneConfirmed: boolean;
+  // mechanicProfileId: string;
+  latitude: number;
+  longitude: number;
+  isAvailable: boolean;
+  isVerified: boolean;
+  supportsFieldVisit: boolean;
+  // primarySpecializationId: string | null;
+  workStartTime: string | null;
+  workEndTime: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+type MechanicStatus = 'Active' | 'Pending' | 'Frozen' | 'Rejected';
+
 interface MechanicDisplay {
   id: string;
   name: string;
-  status: 'Active' | 'Pending' | 'Rejected'; 
+  status: MechanicStatus; 
   statusLabel: string; 
   phone: string;
   email: string;
@@ -33,13 +59,16 @@ const MechanicsManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  
   const [selectedMechanic, setSelectedMechanic] = useState<MechanicDisplay | null>(null);
   
-  // ✅ Pagination States
+  const [mechanicDetails, setMechanicDetails] = useState<ApiMechanicDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // عدد العناصر في الصفحة
+  const itemsPerPage = 10;
 
-  // Fetch Data
+  // Fetch Data (القائمة العامة)
   useEffect(() => {
     const fetchMechanics = async () => {
       setLoading(true);
@@ -82,10 +111,44 @@ const MechanicsManagement: React.FC = () => {
     fetchMechanics();
   }, []);
 
-  // Status Logic
+  // Fetch Details
+  useEffect(() => {
+    if (selectedMechanic && !mechanicDetails) {
+      const fetchDetails = async () => {
+        setLoadingDetails(true);
+        const token = sessionStorage.getItem("userToken");
+        try {
+          const response = await fetch(`https://gearupapp.runasp.net/api/admin/mechanics/${selectedMechanic.id}`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+          if (response.ok) {
+            const data: ApiMechanicDetails = await response.json();
+            setMechanicDetails(data);
+          } else {
+            console.error("Failed to fetch mechanic details");
+          }
+        } catch (error) {
+          console.error("Error fetching details:", error);
+        } finally {
+          setLoadingDetails(false);
+        }
+      };
+      fetchDetails();
+    } else if (!selectedMechanic) {
+      setMechanicDetails(null);
+    }
+  }, [selectedMechanic]);
+
+  // Status Logic (مشترك بين القائمة والتفاصيل)
   const mapStatus = (status: number) => {
-    if (status === 2) return { status: 'Active' as const, label: 'نشط' };
-    if (status === 1) return { status: 'Pending' as const, label: 'معلق' };
+    if (status === 0) return { status: 'Pending' as const, label: 'معلق' };
+    if (status === 1) return { status: 'Active' as const, label: 'نشط' };
+    if (status === 2) return { status: 'Frozen' as const, label: 'مجمد' };
+    if (status === 3) return { status: 'Rejected' as const, label: 'مرفوض' };
     return { status: 'Rejected' as const, label: 'مرفوض' };
   };
 
@@ -95,25 +158,44 @@ const MechanicsManagement: React.FC = () => {
       year: 'numeric', month: 'short', day: 'numeric'
     });
   };
+  
+  // Helper لعرض الحالة (صح أو خطأ)
+  const renderStatusBadge = (status: boolean, labelTrue: string, labelFalse: string) => {
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
+        status 
+          ? "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400" 
+          : "bg-gray-100 text-gray-500 dark:bg-gray-700/30 dark:text-gray-400"
+      }`}>
+        {status ? <FaCheckCircle /> : <FaTimesCircle />}
+        {status ? labelTrue : labelFalse}
+      </span>
+    );
+  };
 
-  // Tabs Logic
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "all", label: "الكل", count: allMechanics.length },
     { id: "Active", label: "نشط", count: allMechanics.filter(m => m.status === 'Active').length },
     { id: "Pending", label: "معلق", count: allMechanics.filter(m => m.status === 'Pending').length },
+    { id: "Frozen", label: "مجمد", count: allMechanics.filter(m => m.status === 'Frozen').length },
     { id: "Rejected", label: "مرفوض", count: allMechanics.filter(m => m.status === 'Rejected').length },
-  ];
+  ], [allMechanics]);
 
-  const filteredMechanics = allMechanics.filter((m) => {
-    const matchesTab = activeTab === "all" || m.status === activeTab;
-    const matchesSearch = 
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.phone.includes(searchTerm);
-    return matchesTab && matchesSearch;
-  });
+  const filteredMechanics = useMemo(() => {
+    return allMechanics.filter((m) => {
+      const matchesTab = activeTab === "all" || m.status === activeTab;
+      const matchesSearch = 
+        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.phone.includes(searchTerm);
+      return matchesTab && matchesSearch;
+    });
+  }, [allMechanics, activeTab, searchTerm]);
 
-  // ✅ Pagination Logic
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
+
   const totalPages = Math.ceil(filteredMechanics.length / itemsPerPage);
   const paginatedMechanics = filteredMechanics.slice(
     (currentPage - 1) * itemsPerPage,
@@ -125,8 +207,8 @@ const MechanicsManagement: React.FC = () => {
       Active: "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400",
       Pending: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
       Rejected: "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400",
+      Frozen: "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300", 
     };
-    
     const label = tabs.find(t => t.id === status)?.label || status;
     return (
       <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${colorMap[status] || "bg-gray-200 text-gray-600"}`}>
@@ -183,7 +265,7 @@ const MechanicsManagement: React.FC = () => {
             type="text"
             placeholder="البحث حسب الاسم أو البريد أو الهاتف..."
             value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className={`flex-1 bg-transparent outline-none text-sm md:text-base ${!dark ? "text-gray-900" : "text-white"} placeholder-gray-500`}
           />
         </div>
@@ -193,7 +275,7 @@ const MechanicsManagement: React.FC = () => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
+              onClick={() => setActiveTab(tab.id)}
               className={`px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
@@ -251,7 +333,7 @@ const MechanicsManagement: React.FC = () => {
               </table>
             </div>
 
-            {/* ✅ HERE IS THE PAGINATION SECTION (DESKTOP) */}
+            {/* PAGINATION SECTION (DESKTOP) */}
             <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t ${!dark ? "border-gray-200" : "border-gray-800"}`}>
               <span className={`text-xs md:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>
                 عرض {(currentPage - 1) * itemsPerPage + 1} إلى {Math.min(currentPage * itemsPerPage, filteredMechanics.length)} من {filteredMechanics.length} ميكانيكي
@@ -308,7 +390,7 @@ const MechanicsManagement: React.FC = () => {
               </div>
             ))}
 
-            {/* ✅ HERE IS THE PAGINATION SECTION (MOBILE) */}
+            {/* PAGINATION SECTION (MOBILE) */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-4">
                 {Array.from({ length: totalPages }).map((_, i) => (
@@ -338,7 +420,7 @@ const MechanicsManagement: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedMechanic(null)} />
       )}
 
-      {/* DRAWER */}
+      {/* DRAWER - DETAILS VIEW */}
       <div
         dir="rtl"
         className={`fixed top-0 left-0 h-full w-full sm:w-[420px] z-50 shadow-2xl transition-transform duration-300 overflow-y-auto
@@ -355,49 +437,114 @@ const MechanicsManagement: React.FC = () => {
         </div>
 
         {/* Drawer Content */}
-        {selectedMechanic && (
-          <div className="p-5 space-y-5">
-            <div className="flex justify-center">
-              {getStatusBadge(selectedMechanic.status)}
+        <div className="p-5 space-y-6">
+          
+          {/* Loading State for Details */}
+          {loadingDetails && (
+            <div className="flex flex-col items-center justify-center py-10 space-y-3">
+              <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <p className={`text-sm ${dark ? "text-gray-400" : "text-gray-500"}`}>جاري تحميل البيانات...</p>
             </div>
+          )}
 
-            {/* Mechanic Info */}
-            <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
-              <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>البيانات الشخصية</h3>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                  {selectedMechanic.name.charAt(0)}
+          {/* Data Display */}
+          {!loadingDetails && mechanicDetails && (
+            <div className="space-y-5">
+              
+              {/* Profile Section */}
+              <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-blue-600 flex-shrink-0">
+                    {mechanicDetails.profilePhotoUrl ? (
+                      <img 
+                        src={mechanicDetails.profilePhotoUrl} 
+                        alt="profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/150"; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500">
+                        {mechanicDetails.firstName.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold truncate">{mechanicDetails.firstName} {mechanicDetails.lastName}</h3>
+                    <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.email}</p>
+                    <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.phoneNumber}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-lg">{selectedMechanic.name}</p>
-                  <p className={`text-xs ${!dark ? "text-gray-500" : "text-gray-400"}`}>ميكانيكي</p>
+                
+                {/* Main Status */}
+                <div className="pt-2 flex flex-wrap gap-2">
+                  {/* ✅ تم التعديل هنا: استخدام دالة getStatusBadge مع دالة mapStatus لعرض الحالة الرقمية */}
+                  {getStatusBadge(mapStatus(mechanicDetails.accountStatus).status)}
+                  {renderStatusBadge(mechanicDetails.isVerified, "تم التوثيق", "غير موثق")}
+                  {renderStatusBadge(mechanicDetails.isAvailable, "متاح حالياً", "غير متاح")}
                 </div>
               </div>
-            </div>
 
-            {/* Details */}
-            <div className={`rounded-xl p-4 space-y-1 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
-              <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${!dark ? "text-gray-500" : "text-gray-400"}`}>معلومات الاتصال</h3>
-              {[
-                { label: "رقم الهاتف", value: selectedMechanic.phone, icon: "📞" },
-                { label: "البريد الإلكتروني", value: selectedMechanic.email, icon: "✉️" },
-                { label: "تاريخ التسجيل", value: selectedMechanic.regDate, icon: "📅" },
-                { label: "الحالة الحالية", value: selectedMechanic.statusLabel, icon: "⚠️" },
-              ].map(({ label, value, icon }) => (
-                <div key={label} className={`flex items-center justify-between py-2 border-b last:border-0 ${!dark ? "border-gray-200" : "border-gray-700"}`}>
-                  <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>{icon} {label}</span>
-                  <span className="text-sm font-medium">{value}</span>
+              {/* Verification Details */}
+              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>التحقق</h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {renderStatusBadge(mechanicDetails.isEmailConfirmed, "البريد المؤكد", "البريد غير مؤكد")}
+                  {renderStatusBadge(mechanicDetails.isPhoneConfirmed, "الهاتف مؤكد", "الهاتف غير مؤكد")}
+                  {renderStatusBadge(mechanicDetails.supportsFieldVisit, "يدعم الزيارات", "لا يدعم الزيارات")}
                 </div>
-              ))}
+              </div>
+
+              {/* Work Times & Location */}
+              <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>العمل والموقع</h3>
+                
+                {/* Location */}
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                    <FaMapMarkerAlt />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">الإحداثيات</p>
+                    <p className="font-mono">{mechanicDetails.latitude}, {mechanicDetails.longitude}</p>
+                  </div>
+                </div>
+
+                {/* Times */}
+                {(mechanicDetails.workStartTime && mechanicDetails.workEndTime) ? (
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                      <FaClock />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">أوقات العمل</p>
+                      <p className="font-medium">{mechanicDetails.workStartTime} - {mechanicDetails.workEndTime}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 flex items-center gap-2">
+                    <FaClock /> لم يتم تحديد أوقات العمل
+                  </div>
+                )}
+              </div>
+
+              {/* System Info */}
+              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+                <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>النظام</h3>
+                <div className="text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">تاريخ الإنشاء:</span>
+                    <span>{formatDate(mechanicDetails.createdAt)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">آخر تحديث:</span>
+                    <span>{formatDate(mechanicDetails.updatedAt)}</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            
-             {/* ID Display */}
-             <div className={`rounded-xl p-4 text-center ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
-                <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${!dark ? "text-gray-500" : "text-gray-400"}`}>المعرف الفريد (ID)</p>
-                <p className="text-sm font-mono text-blue-600 dark:text-blue-400 break-all">{selectedMechanic.id}</p>
-             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

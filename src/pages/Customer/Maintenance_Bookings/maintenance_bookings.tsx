@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
-import { MdAdd, MdMoreVert, MdClose, MdStar } from "react-icons/md";
+import { MdAdd, MdMoreVert, MdClose, MdStar, MdCheckCircle } from "react-icons/md";
 import AddBookingModal from "./add_booking_modal";
 import { useState, useEffect, useRef } from "react";
 import RescheduleModal from "./reschedule_modal";
@@ -26,6 +26,8 @@ interface BookingResponse {
   status: string;
   createdAt: string;
   updatedAt: string | null;
+  // ✅ إضافة حقل التقييم (تأكد من مطابقة الاسم مع رد الـ API)
+  rating?: { stars: number; comment: string } | null; 
 }
 
 interface Booking extends BookingResponse {
@@ -33,6 +35,7 @@ interface Booking extends BookingResponse {
   statusColor: string;
   actions: boolean;
 }
+
 interface PrefillData {
   mechanics?: { id: string }[];
   service?: string;
@@ -114,7 +117,7 @@ const ActionMenu = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-44 bg-white dark:bg-[#1E293B] border dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#1E293B] border dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
           {status === "Pending" ? (
             <>
               <button
@@ -137,15 +140,26 @@ const ActionMenu = ({
               </button>
             </>
           ) : status === "Completed" ? (
-            <button
-              onClick={() => {
-                onRate(booking);
-                onClose();
-              }}
-              className="block w-full text-right px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-medium"
-            >
-              ⭐ تقييم الخدمة
-            </button>
+            <>
+              {/* ✅ التحقق: هل الحجز يحتوي على تقييم؟ */}
+              {!booking.rating ? (
+                <button
+                  onClick={() => {
+                    onRate(booking);
+                    onClose();
+                  }}
+                  className="block w-full text-right px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors font-medium flex items-center gap-2"
+                >
+                  <MdStar size={16} />
+                  تقييم الخدمة
+                </button>
+              ) : (
+                <span className="block w-full text-right px-4 py-2.5 text-sm text-green-600 dark:text-green-400 font-medium flex items-center gap-2 cursor-default">
+                  <MdCheckCircle size={16} />
+                  تم التقييم
+                </span>
+              )}
+            </>
           ) : (
             <span className="block w-full text-right px-4 py-2.5 text-sm text-gray-400">
               لا توجد إجراءات
@@ -244,6 +258,7 @@ const MaintenanceBookings = () => {
       setLoading(false);
     }
   };
+  
   useEffect(() => {
     if (!prefillData) return;
 
@@ -274,6 +289,7 @@ const MaintenanceBookings = () => {
     setIsModalOpen(true);
   }
 }, [location.state]);
+  
   // ✅ فتح سلايد التقييم
   const openRatingDrawer = (booking: Booking) => {
     console.log("booking from row:", booking);
@@ -285,6 +301,7 @@ const MaintenanceBookings = () => {
     setRatingSuccess(false);
     setIsRatingOpen(true);
   };
+
   // ✅ إرسال التقييم
   const handleSubmitRating = async () => {
     if (!ratingBooking || stars === 0) {
@@ -329,6 +346,9 @@ const MaintenanceBookings = () => {
 
         throw new Error(message);
       }
+
+      // ✅ إعادة تحميل البيانات لتحديث حالة "تم التقييم"
+      await fetchBookings();
 
       setRatingSuccess(true);
 
@@ -623,7 +643,7 @@ const MaintenanceBookings = () => {
                       </div>
                     </div>
 
-                    {/* أزرار الموبايل */}
+                    {/* أزرار الموبايل - Pending */}
                     {booking.status === "Pending" && (
                       <div className="flex gap-2 pt-3 border-t dark:border-gray-800">
                         <button
@@ -647,16 +667,23 @@ const MaintenanceBookings = () => {
                       </div>
                     )}
 
-                    {/* ✅ زر التقييم في الموبايل */}
+                    {/* ✅ زر التقييم في الموبايل - Completed Logic Updated */}
                     {booking.status === "Completed" && (
                       <div className="pt-3 border-t dark:border-gray-800">
-                        <button
-                          onClick={() => openRatingDrawer(booking)}
-                          className="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 py-2.5 rounded-lg text-sm font-bold hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <MdStar size={18} />
-                          تقييم الخدمة
-                        </button>
+                        {!booking.rating ? (
+                          <button
+                            onClick={() => openRatingDrawer(booking)}
+                            className="w-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 py-2.5 rounded-lg text-sm font-bold hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <MdStar size={18} />
+                            تقييم الخدمة
+                          </button>
+                        ) : (
+                          <div className="w-full bg-green-50 dark:bg-green-900/20 text-green-600 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
+                            <MdCheckCircle size={18} />
+                            تم التقييم
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -687,7 +714,7 @@ const MaintenanceBookings = () => {
         </main>
       </div>
 
-      {/* ✅ Overlay التقييم */}
+      {/* Overlay التقييم */}
       {isRatingOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
@@ -695,7 +722,7 @@ const MaintenanceBookings = () => {
         />
       )}
 
-      {/* ✅ سلايد التقييم من اليسار */}
+      {/* سلايد التقييم من اليسار */}
       <div
         dir="rtl"
         className={`fixed top-0 left-0 h-full w-full sm:w-[440px] z-50 shadow-2xl transition-transform duration-300 ease-out overflow-y-auto
@@ -720,7 +747,7 @@ const MaintenanceBookings = () => {
         {ratingBooking && (
           <div className="p-6 space-y-6">
 
-            {/* ✅ حالة النجاح */}
+            {/* حالة النجاح */}
             {ratingSuccess ? (
               <div className="flex flex-col items-center justify-center py-16 space-y-4">
                 <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">

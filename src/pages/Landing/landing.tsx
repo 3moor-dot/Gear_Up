@@ -55,12 +55,12 @@ const steps = [
   { icon: <FaScrewdriverWrench />,title: "تنفيذ ومتابعة",      desc: "تنفيذ الصيانة ومتابعة حالة السيارة والخدمة.",                                number: "4" },
 ];
 
-const stats = [
-  { value: "24/7", label: "دعم فني",       icon: <FaHeadset />         },
-  { value: "98%",  label: "دقة تشخيص",    icon: <FaBrain />           },
-  { value: "+50K", label: "عميل نشط",      icon: <FaCircleCheck />     },
-  { value: "+10K", label: "ورشة موثوقة",   icon: <FaScrewdriverWrench />},
-];
+// const stats = [
+//   { value: "24/7", label: "دعم فني",       icon: <FaHeadset />         },
+//   { value: "98%",  label: "دقة تشخيص",    icon: <FaBrain />           },
+//   { value: "+50K", label: "عميل نشط",      icon: <FaCircleCheck />     },
+//   { value: "+10K", label: "ورشة موثوقة",   icon: <FaScrewdriverWrench />},
+// ];
 
 const systemsLeft  = [{ label: "نظام التعليق" }, { label: "نظام الفرامل"  }, { label: "نظام التوجيه"  }];
 const systemsRight = [{ label: "نظام التبريد" }, { label: "نظام الوقود"   }, { label: "نظام الكهرباء" }];
@@ -180,12 +180,12 @@ const Landing: React.FC = () => {
               className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.35] mb-5"
             >
               العناية بالسيارة بطريقة
-              <span className="block text-[#2563EB] mt-2">أسهل وأكثر ذكاءً</span>
+              <span className="block text-[#2563EB] mt-8 mb-8">أسهل وأكثر ذكاءً</span>
             </motion.h1>
 
             <motion.p
               variants={cardVariant}
-              className="text-sm sm:text-base lg:text-lg leading-8 text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0"
+              className="text-sm sm:text-base lg:text-lg leading-8 text-gray-600 dark:text-gray-300 mb-16 max-w-2xl mx-auto lg:mx-0"
             >
               منصة ذكية مدعومة بالذكاء الاصطناعي، تبسّط عمليات الصيانة والتشخيص
               وتمنحك تجربة أكثر راحة واحترافية لإدارة كل ما يخص سيارتك.
@@ -210,7 +210,7 @@ const Landing: React.FC = () => {
             </motion.div>
 
             {/* Stats */}
-            <motion.div
+            {/* <motion.div
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10"
               variants={staggerFast}
               initial="hidden"
@@ -229,7 +229,7 @@ const Landing: React.FC = () => {
                   <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">{item.label}</div>
                 </motion.div>
               ))}
-            </motion.div>
+            </motion.div> */}
           </motion.div>
 
           {/* Image side */}
