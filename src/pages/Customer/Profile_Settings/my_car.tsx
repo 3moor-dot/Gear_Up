@@ -96,7 +96,11 @@ export const MyCars = ({}: MyCarsProps) => {
     });
   };
 
-  const validatePlate = (plate: string) => /^[\u0600-\u06FF0-9\s]+$/.test(plate);
+  // ✅ عدّل الـ validation
+const validatePlate = (plate: string) => {
+  const trimmed = plate.trim();
+  return trimmed.length > 0 && /^[\u0600-\u06FF0-9\s]+$/.test(trimmed);
+};
 
   const handleAddCar = async () => {
     if (!newCar.brand || !newCar.model || !newCarPhoto || !newCar.plateNumber) {
@@ -122,7 +126,7 @@ export const MyCars = ({}: MyCarsProps) => {
     fd.append("Brand", newCar.brand);
     fd.append("Model", newCar.model);
     fd.append("Year", newCar.year);
-    fd.append("PlateNumber", newCar.plateNumber);
+    fd.append("PlateNumber", newCar.plateNumber.trim());
     fd.append("CarPhoto", newCarPhoto);
 
     try {
@@ -137,16 +141,15 @@ export const MyCars = ({}: MyCarsProps) => {
     } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
     finally { setLoading(false); }
   };
-
-  const handleUpdateCar = async () => {
+const handleUpdateCar = async () => {
     if (!editData) return;
     setLoading(true);
     const fd = new FormData();
     fd.append("Brand", editData.brand);
     fd.append("Model", editData.model);
     fd.append("Year", editData.year.toString());
-    fd.append("PlateNumber", editData.plateNumber);
     if (editCarPhoto) fd.append("CarPhoto", editCarPhoto);
+    // ❌ شيلنا PlateNumber لأن الـ API مش بيقبله
 
     try {
       const res = await fetch(`${BASE_URL}/${editData.id}`, {
@@ -278,52 +281,58 @@ export const MyCars = ({}: MyCarsProps) => {
                   </div>
                 </div>
 
-                {isExpanded && (
-                  <div className="border-t border-gray-100 dark:border-gray-700/50 p-4 sm:p-6">
-                    {isEditMode ? (
-                      <div className="flex flex-col gap-5">
-                        <PhotoUploader id={`editPhoto-${car.id}`} previewSrc={editPreviewUrl || editData?.carPhotoUrl} onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) { setEditCarPhoto(f); setEditPreviewUrl(URL.createObjectURL(f)); }
-                        }} />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة</label>
-                            <select className={FIELD_CLASS} value={editData?.brand} onChange={(e) => setEditData({ ...editData!, brand: e.target.value })}>
-                              {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
-                            </select>
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
-                            <input type="text" value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={FIELD_CLASS} />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
-                            <select className={FIELD_CLASS} value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: parseInt(e.target.value) })}>
-                              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">رقم اللوحة</label>
-                            <input type="text" value={editData?.plateNumber} onChange={(e) => setEditData({ ...editData!, plateNumber: e.target.value })} className={FIELD_CLASS} />
-                          </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                          <button onClick={handleUpdateCar} disabled={loading} className="flex-1 bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm">
-                            <MdSave size={16} /> {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
-                          </button>
-                          <button onClick={() => { setEditModeId(null); setEditPreviewUrl(null); }} className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold text-sm">إلغاء</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                        <InfoCard label="الماركة والموديل" value={`${car.brand} - ${car.model}`} />
-                        <InfoCard label="سنة الصنع" value={car.year} />
-                        <InfoCard label="رقم اللوحة" value={car.plateNumber} />
-                      </div>
-                    )}
-                  </div>
-                )}
+             {isExpanded && (
+  <div className="border-t border-gray-100 dark:border-gray-700/50 p-4 sm:p-6">
+    {isEditMode ? (
+      <div className="flex flex-col gap-5">
+        <PhotoUploader id={`editPhoto-${car.id}`} previewSrc={editPreviewUrl || editData?.carPhotoUrl} onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) { setEditCarPhoto(f); setEditPreviewUrl(URL.createObjectURL(f)); }
+        }} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة</label>
+            <select className={FIELD_CLASS} value={editData?.brand} onChange={(e) => setEditData({ ...editData!, brand: e.target.value })}>
+              {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
+            <input type="text" value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={FIELD_CLASS} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
+            <select className={FIELD_CLASS} value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: parseInt(e.target.value) })}>
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+
+          {/* رقم اللوحة - عرض فقط */}
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-gray-400">
+              رقم اللوحة <span className="text-[10px] font-normal">(غير قابل للتعديل)</span>
+            </label>
+            <div className={`${FIELD_CLASS} opacity-60 cursor-not-allowed select-none`}>
+              {editData?.plateNumber}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <button onClick={handleUpdateCar} disabled={loading} className="flex-1 bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm">
+            <MdSave size={16} /> {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
+          </button>
+          <button onClick={() => { setEditModeId(null); setEditPreviewUrl(null); }} className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold text-sm">إلغاء</button>
+        </div>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+        <InfoCard label="الماركة والموديل" value={`${car.brand} - ${car.model}`} />
+        <InfoCard label="سنة الصنع" value={car.year} />
+        <InfoCard label="رقم اللوحة" value={car.plateNumber} />
+      </div>
+    )}
+  </div>
+)}
               </div>
             );
           })}
