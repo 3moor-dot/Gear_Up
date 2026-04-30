@@ -16,31 +16,28 @@ interface ApiMechanic {
   registeredAt: string;
 }
 
-// ✅ تعديل: تغيير isActive إلى accountStatus من نوع number
 interface ApiMechanicDetails {
-  // id: string;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
   profilePhotoUrl: string | null;
-  accountStatus: number; // ✅ تم التعديل هنا (كان isActive: boolean)
+  accountStatus: number; 
   isEmailConfirmed: boolean;
   isPhoneConfirmed: boolean;
-  // mechanicProfileId: string;
   latitude: number;
   longitude: number;
   isAvailable: boolean;
   isVerified: boolean;
   supportsFieldVisit: boolean;
-  // primarySpecializationId: string | null;
   workStartTime: string | null;
   workEndTime: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-type MechanicStatus = 'Active' | 'Pending' | 'Frozen' | 'Rejected';
+// ✅ إضافة حالة Disabled للأنواع
+type MechanicStatus = 'Active' | 'Pending' | 'Frozen' | 'Rejected' | 'Disabled';
 
 interface MechanicDisplay {
   id: string;
@@ -143,12 +140,13 @@ const MechanicsManagement: React.FC = () => {
     }
   }, [selectedMechanic]);
 
-  // Status Logic (مشترك بين القائمة والتفاصيل)
+  // ✅ Status Logic (تم التعديل لإضافة الـ 4)
   const mapStatus = (status: number) => {
     if (status === 0) return { status: 'Pending' as const, label: 'معلق' };
     if (status === 1) return { status: 'Active' as const, label: 'نشط' };
     if (status === 2) return { status: 'Frozen' as const, label: 'مجمد' };
     if (status === 3) return { status: 'Rejected' as const, label: 'مرفوض' };
+    if (status === 4) return { status: 'Disabled' as const, label: 'معطل' }; // ✅ الحالة الجديدة
     return { status: 'Rejected' as const, label: 'مرفوض' };
   };
 
@@ -159,7 +157,6 @@ const MechanicsManagement: React.FC = () => {
     });
   };
   
-  // Helper لعرض الحالة (صح أو خطأ)
   const renderStatusBadge = (status: boolean, labelTrue: string, labelFalse: string) => {
     return (
       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
@@ -173,12 +170,14 @@ const MechanicsManagement: React.FC = () => {
     );
   };
 
+  // ✅ تحديث الـ Tabs لتشمل "معطل"
   const tabs = useMemo(() => [
     { id: "all", label: "الكل", count: allMechanics.length },
     { id: "Active", label: "نشط", count: allMechanics.filter(m => m.status === 'Active').length },
     { id: "Pending", label: "معلق", count: allMechanics.filter(m => m.status === 'Pending').length },
     { id: "Frozen", label: "مجمد", count: allMechanics.filter(m => m.status === 'Frozen').length },
     { id: "Rejected", label: "مرفوض", count: allMechanics.filter(m => m.status === 'Rejected').length },
+    { id: "Disabled", label: "معطل", count: allMechanics.filter(m => m.status === 'Disabled').length }, // التبويب الجديد
   ], [allMechanics]);
 
   const filteredMechanics = useMemo(() => {
@@ -202,12 +201,14 @@ const MechanicsManagement: React.FC = () => {
     currentPage * itemsPerPage
   );
 
+  // ✅ تحديث ألوان الـ Badges
   const getStatusBadge = (status: string) => {
     const colorMap: Record<string, string> = {
       Active: "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400",
       Pending: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
       Rejected: "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400",
-      Frozen: "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300", 
+      Frozen: "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
+      Disabled: "bg-slate-100 text-slate-700 dark:bg-slate-700/30 dark:text-slate-400", // لون جديد للحالة المعطلة
     };
     const label = tabs.find(t => t.id === status)?.label || status;
     return (
@@ -477,7 +478,6 @@ const MechanicsManagement: React.FC = () => {
                 
                 {/* Main Status */}
                 <div className="pt-2 flex flex-wrap gap-2">
-                  {/* ✅ تم التعديل هنا: استخدام دالة getStatusBadge مع دالة mapStatus لعرض الحالة الرقمية */}
                   {getStatusBadge(mapStatus(mechanicDetails.accountStatus).status)}
                   {renderStatusBadge(mechanicDetails.isVerified, "تم التوثيق", "غير موثق")}
                   {renderStatusBadge(mechanicDetails.isAvailable, "متاح حالياً", "غير متاح")}

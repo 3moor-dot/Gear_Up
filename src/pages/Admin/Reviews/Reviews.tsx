@@ -144,7 +144,7 @@ const Reviews: React.FC = () => {
         <div className="relative mb-6">
           <input
             type="text"
-                 placeholder="ابحث حسب المراجع أو الميكانسكس أو الكلمة الرئيسية…"
+                 placeholder="ابحث حسب المراجع أو الميكانيكي أو الكلمة الرئيسية…"
             className={`w-full py-3 px-12 rounded-xl outline-none transition-all text-sm md:text-base
               ${dark
                 ? "bg-[#137FEC1A] text-white border border-[#1E2A44] placeholder-gray-500"

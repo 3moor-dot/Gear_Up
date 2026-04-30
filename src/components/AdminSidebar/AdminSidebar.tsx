@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaUsers, FaTools,
-  FaCog,FaRegCommentDots,
+  FaCog,FaRegCommentDots,FaClipboardList
 } from "react-icons/fa";
 import { MdDashboard, MdMenu, MdClose, MdLogout } from "react-icons/md";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -90,7 +90,7 @@ const AdminSidebar: React.FC = () => {
             <SidebarItem icon={<MdDashboard />}        label="لوحة التحكم"  dark={dark} to="/admin/admindashboard"        closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaUsers />}            label="المستخدمين"   dark={dark} to="/admin/usersmanagement"       closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaTools />}            label="الميكانيكيين" dark={dark} to="/admin/MechanicsManagement"   closeSidebar={() => setIsOpen(false)} />
-            {/* <SidebarItem icon={<FaClipboardList />}    label="الحجوزات"     dark={dark} to="/admin/bookingmanagement"     closeSidebar={() => setIsOpen(false)} /> */}
+            <SidebarItem icon={<FaClipboardList />}    label="الحجوزات"     dark={dark} to="/admin/bookingmanagement"     closeSidebar={() => setIsOpen(false)} />
             <SidebarItem icon={<FaRegCommentDots />}   label="المراجعات"    dark={dark} to="/admin/Reviews"               closeSidebar={() => setIsOpen(false)} />
             {/* <SidebarItem icon={<FaUsers />}            label="المشرفين"     dark={dark} to="/admin/supervisormanagement"  closeSidebar={() => setIsOpen(false)} /> */}
             {/* <SidebarItem icon={<FaBell />}             label="الإشعارات"    dark={dark} to="/admin/NotificationsManagement" closeSidebar={() => setIsOpen(false)} /> */}

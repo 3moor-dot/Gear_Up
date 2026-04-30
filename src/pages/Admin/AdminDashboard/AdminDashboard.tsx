@@ -161,68 +161,128 @@ const AdminDashboard: React.FC = () => {
           {/* USERS TABLE */}
           <Section title="تسجيلات المستخدمين الأخيرة">
             <TableWrapper>
-              <table className="w-full text-sm">
-                <thead className={`${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
-                  <tr>
-                    <th className="p-4 text-right font-semibold">الاسم</th>
-                    <th className="p-4 text-right font-semibold">رقم الهاتف</th>
-                    <th className="p-4 text-right font-semibold">البريد الإلكتروني</th>
-                    <th className="p-4 text-right font-semibold">تاريخ التسجيل</th>
-                    <th className="p-4 text-right font-semibold">الحالة</th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${!dark ? "divide-gray-200" : "divide-gray-800"}`}>
-                  {recentUsers.length > 0 ? (
-                    recentUsers.map((user) => (
-                      <tr key={user.id} className={`${!dark ? "hover:bg-gray-50" : "hover:bg-[#131c2f]"} transition-colors`}>
-                        <td className="p-4 font-medium whitespace-nowrap">{user.name}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{user.phone}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{user.email}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{formatDate(user.registeredAt)}</td>
-                        <td className="p-4 whitespace-nowrap">{getStatusBadge(user.accountStatus)}</td>
-                      </tr>
-                    ))
-                  ) : (
+              {/* DESKTOP TABLE */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className={`${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
                     <tr>
-                      <td colSpan={5} className="p-4 text-center text-gray-500">لا يوجد مستخدمين حديثين</td>
+                      <th className="p-4 text-right font-semibold">الاسم</th>
+                      <th className="p-4 text-right font-semibold">رقم الهاتف</th>
+                      <th className="p-4 text-right font-semibold">البريد الإلكتروني</th>
+                      <th className="p-4 text-right font-semibold">تاريخ التسجيل</th>
+                      <th className="p-4 text-right font-semibold">الحالة</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className={`divide-y ${!dark ? "divide-gray-200" : "divide-gray-800"}`}>
+                    {recentUsers.length > 0 ? (
+                      recentUsers.map((user) => (
+                        <tr key={user.id} className={`${!dark ? "hover:bg-gray-50" : "hover:bg-[#131c2f]"} transition-colors`}>
+                          <td className="p-4 font-medium whitespace-nowrap">{user.name}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{user.phone}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{user.email}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{formatDate(user.registeredAt)}</td>
+                          <td className="p-4 whitespace-nowrap">{getStatusBadge(user.accountStatus)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-4 text-center text-gray-500">لا يوجد مستخدمين حديثين</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE CARDS */}
+              <div className="md:hidden space-y-3">
+                {recentUsers.length > 0 ? (
+                  recentUsers.map((user) => (
+                    <div key={user.id} className={`p-4 rounded-xl border ${!dark ? "bg-white border-gray-200" : "bg-[#0d1629] border-gray-800"}`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-sm">{user.name}</h3>
+                        {getStatusBadge(user.accountStatus)}
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">الهاتف:</span> {user.phone}
+                        </p>
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">البريد:</span> {user.email}
+                        </p>
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">التسجيل:</span> {formatDate(user.registeredAt)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500 text-sm">لا يوجد مستخدمين حديثين</div>
+                )}
+              </div>
             </TableWrapper>
           </Section>
 
           {/* MECHANICS TABLE */}
           <Section title="تسجيلات الميكانيكيين الأخيرة">
             <TableWrapper>
-              <table className="w-full text-sm">
-                <thead className={`${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
-                  <tr>
-                    <th className="p-4 text-right font-semibold">الاسم</th>
-                    <th className="p-4 text-right font-semibold">رقم الهاتف</th>
-                    <th className="p-4 text-right font-semibold">البريد الإلكتروني</th>
-                    <th className="p-4 text-right font-semibold">تاريخ التسجيل</th>
-                    <th className="p-4 text-right font-semibold">الحالة</th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${!dark ? "divide-gray-200" : "divide-gray-800"}`}>
-                  {recentMechanics.length > 0 ? (
-                    recentMechanics.map((mech) => (
-                      <tr key={mech.id} className={`${!dark ? "hover:bg-gray-50" : "hover:bg-[#131c2f]"} transition-colors`}>
-                        <td className="p-4 font-medium whitespace-nowrap">{mech.name}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{mech.phone}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{mech.email}</td>
-                        <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{formatDate(mech.registeredAt)}</td>
-                        <td className="p-4 whitespace-nowrap">{getStatusBadge(mech.accountStatus)}</td>
-                      </tr>
-                    ))
-                  ) : (
+              {/* DESKTOP TABLE */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className={`${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
                     <tr>
-                      <td colSpan={5} className="p-4 text-center text-gray-500">لا يوجد ميكانيكيين حديثين</td>
+                      <th className="p-4 text-right font-semibold">الاسم</th>
+                      <th className="p-4 text-right font-semibold">رقم الهاتف</th>
+                      <th className="p-4 text-right font-semibold">البريد الإلكتروني</th>
+                      <th className="p-4 text-right font-semibold">تاريخ التسجيل</th>
+                      <th className="p-4 text-right font-semibold">الحالة</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className={`divide-y ${!dark ? "divide-gray-200" : "divide-gray-800"}`}>
+                    {recentMechanics.length > 0 ? (
+                      recentMechanics.map((mech) => (
+                        <tr key={mech.id} className={`${!dark ? "hover:bg-gray-50" : "hover:bg-[#131c2f]"} transition-colors`}>
+                          <td className="p-4 font-medium whitespace-nowrap">{mech.name}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{mech.phone}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{mech.email}</td>
+                          <td className={`p-4 whitespace-nowrap ${!dark ? "text-gray-600" : "text-gray-400"}`}>{formatDate(mech.registeredAt)}</td>
+                          <td className="p-4 whitespace-nowrap">{getStatusBadge(mech.accountStatus)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-4 text-center text-gray-500">لا يوجد ميكانيكيين حديثين</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE CARDS */}
+              <div className="md:hidden space-y-3">
+                {recentMechanics.length > 0 ? (
+                  recentMechanics.map((mech) => (
+                    <div key={mech.id} className={`p-4 rounded-xl border ${!dark ? "bg-white border-gray-200" : "bg-[#0d1629] border-gray-800"}`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-sm">{mech.name}</h3>
+                        {getStatusBadge(mech.accountStatus)}
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">الهاتف:</span> {mech.phone}
+                        </p>
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">البريد:</span> {mech.email}
+                        </p>
+                        <p className={`${dark ? "text-gray-400" : "text-gray-600"}`}>
+                          <span className="font-medium">التسجيل:</span> {formatDate(mech.registeredAt)}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500 text-sm">لا يوجد ميكانيكيين حديثين</div>
+                )}
+              </div>
             </TableWrapper>
           </Section>
 
@@ -256,10 +316,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value}) => {
         {value.toLocaleString()}
       </h2>
       <div className="mt-4 flex items-center gap-2">
-         {/* أيقونة بسيطة تعبر عن الزيادة أو مجرد أيقونة جمالية */}
-         {/* <div className={`p-2 rounded-lg ${iconColor} ${!dark ? "bg-opacity-10 bg-current" : "bg-opacity-20 bg-current"}`}>
-            <FaCheckCircle className="text-lg" />
-         </div> */}
+         {/* Icon placeholder */}
       </div>
     </div>
   );
@@ -287,11 +344,7 @@ const TableWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       rounded-xl overflow-hidden border transition-colors
       ${dark ? "border-gray-800 bg-[#0d1629]" : "border-gray-200 bg-white"}
     `}>
-      <div className="overflow-x-auto">
-        <div className="min-w-[700px]">
-          {children}
-        </div>
-      </div>
+      {children}
     </div>
   );
 };
