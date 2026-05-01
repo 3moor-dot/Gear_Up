@@ -155,7 +155,7 @@ const Register: React.FC = () => {
       Swal.fire({
         icon: "success",
         title: "تم إنشاء الحساب!",
-        text: "أهلاً بك في عائلة GearUp، سيتم تحويلك لصفحة الدخول الآن.",
+        text: "أهلاً بك في GearUp",
         timer: 3000,
         showConfirmButton: false,
         background: isDarkMode() ? '#1B1F2D' : '#fff',

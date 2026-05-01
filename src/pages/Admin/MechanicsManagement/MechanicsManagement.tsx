@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
@@ -14,7 +15,7 @@ interface ApiMechanic {
   phone: string;
   status: number; 
   registeredAt: string;
-}
+} 
 
 interface ApiMechanicDetails {
   firstName: string;
@@ -61,9 +62,34 @@ const MechanicsManagement: React.FC = () => {
   
   const [mechanicDetails, setMechanicDetails] = useState<ApiMechanicDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false); 
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const fetchMechanicDetails = async (id: string) => {
+    setLoadingDetails(true);
+    const token = sessionStorage.getItem("userToken");
+    try {
+      const response = await fetch(`https://gearupapp.runasp.net/api/admin/mechanics/${id}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (response.ok) {
+        const data: ApiMechanicDetails = await response.json();
+        setMechanicDetails(data);
+      } else {
+        console.error("Failed to fetch mechanic details");
+      }
+    } catch (error) {
+      console.error("Error fetching details:", error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
 
   // Fetch Data (القائمة العامة)
   useEffect(() => {
@@ -108,45 +134,58 @@ const MechanicsManagement: React.FC = () => {
     fetchMechanics();
   }, []);
 
-  // Fetch Details
+  // Fetch Details Effect
   useEffect(() => {
-    if (selectedMechanic && !mechanicDetails) {
-      const fetchDetails = async () => {
-        setLoadingDetails(true);
-        const token = sessionStorage.getItem("userToken");
-        try {
-          const response = await fetch(`https://gearupapp.runasp.net/api/admin/mechanics/${selectedMechanic.id}`, {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
-          if (response.ok) {
-            const data: ApiMechanicDetails = await response.json();
-            setMechanicDetails(data);
-          } else {
-            console.error("Failed to fetch mechanic details");
-          }
-        } catch (error) {
-          console.error("Error fetching details:", error);
-        } finally {
-          setLoadingDetails(false);
-        }
-      };
-      fetchDetails();
-    } else if (!selectedMechanic) {
+    if (selectedMechanic) {
+      fetchMechanicDetails(selectedMechanic.id);
+    } else {
       setMechanicDetails(null);
     }
   }, [selectedMechanic]);
 
-  // ✅ Status Logic (تم التعديل لإضافة الـ 4)
+  const handleStatusChange = async (action: 'activate' | 'freeze' | 'disable') => {
+    if (!selectedMechanic) return;
+    setUpdatingStatus(true);
+    const token = sessionStorage.getItem("userToken");
+    
+    try {
+      const response = await fetch(`https://gearupapp.runasp.net/api/admin/mechanics/${selectedMechanic.id}/${action}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const newStatusMap = { 'activate': 1, 'freeze': 2, 'disable': 4 };
+        const newStatusVal = newStatusMap[action];
+        const statusInfo = mapStatus(newStatusVal);
+
+        setAllMechanics(prev => prev.map(m => 
+          m.id === selectedMechanic.id 
+          ? { ...m, status: statusInfo.status, statusLabel: statusInfo.label } 
+          : m
+        ));
+
+        await fetchMechanicDetails(selectedMechanic.id);
+      } else {
+        alert("فشل تحديث الحالة، يرجى المحاولة مرة أخرى");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("حدث خطأ أثناء الاتصال بالخادم");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   const mapStatus = (status: number) => {
     if (status === 0) return { status: 'Pending' as const, label: 'معلق' };
     if (status === 1) return { status: 'Active' as const, label: 'نشط' };
     if (status === 2) return { status: 'Frozen' as const, label: 'مجمد' };
     if (status === 3) return { status: 'Rejected' as const, label: 'مرفوض' };
-    if (status === 4) return { status: 'Disabled' as const, label: 'معطل' }; // ✅ الحالة الجديدة
+    if (status === 4) return { status: 'Disabled' as const, label: 'معطل' }; 
     return { status: 'Rejected' as const, label: 'مرفوض' };
   };
 
@@ -170,14 +209,13 @@ const MechanicsManagement: React.FC = () => {
     );
   };
 
-  // ✅ تحديث الـ Tabs لتشمل "معطل"
   const tabs = useMemo(() => [
     { id: "all", label: "الكل", count: allMechanics.length },
     { id: "Active", label: "نشط", count: allMechanics.filter(m => m.status === 'Active').length },
     { id: "Pending", label: "معلق", count: allMechanics.filter(m => m.status === 'Pending').length },
     { id: "Frozen", label: "مجمد", count: allMechanics.filter(m => m.status === 'Frozen').length },
     { id: "Rejected", label: "مرفوض", count: allMechanics.filter(m => m.status === 'Rejected').length },
-    { id: "Disabled", label: "معطل", count: allMechanics.filter(m => m.status === 'Disabled').length }, // التبويب الجديد
+    { id: "Disabled", label: "معطل", count: allMechanics.filter(m => m.status === 'Disabled').length }, 
   ], [allMechanics]);
 
   const filteredMechanics = useMemo(() => {
@@ -201,14 +239,13 @@ const MechanicsManagement: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  // ✅ تحديث ألوان الـ Badges
   const getStatusBadge = (status: string) => {
     const colorMap: Record<string, string> = {
       Active: "bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-400",
       Pending: "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300",
       Rejected: "bg-red-100 text-red-700 dark:bg-red-600/20 dark:text-red-400",
       Frozen: "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300",
-      Disabled: "bg-slate-100 text-slate-700 dark:bg-slate-700/30 dark:text-slate-400", // لون جديد للحالة المعطلة
+      Disabled: "bg-slate-100 text-slate-700 dark:bg-slate-700/30 dark:text-slate-400", 
     };
     const label = tabs.find(t => t.id === status)?.label || status;
     return (
@@ -432,15 +469,18 @@ const MechanicsManagement: React.FC = () => {
         {/* Drawer Header */}
         <div className={`flex items-center justify-between p-5 border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
           <h2 className="text-lg font-bold">تفاصيل الميكانيكي</h2>
-          <button onClick={() => setSelectedMechanic(null)} className={`w-8 h-8 flex items-center justify-center rounded-full transition ${!dark ? "hover:bg-gray-100 text-gray-600" : "hover:bg-gray-800 text-gray-400"}`}>
+          <button 
+            onClick={() => setSelectedMechanic(null)} 
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition shrink-0 ${!dark ? "hover:bg-gray-100 text-gray-600" : "hover:bg-gray-800 text-gray-400"}`}
+          >
             ✕
           </button>
         </div>
 
         {/* Drawer Content */}
-        <div className="p-5 space-y-6">
+        <div className="p-5 space-y-5">
           
-          {/* Loading State for Details */}
+          {/* Loading State */}
           {loadingDetails && (
             <div className="flex flex-col items-center justify-center py-10 space-y-3">
               <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -452,53 +492,103 @@ const MechanicsManagement: React.FC = () => {
           {!loadingDetails && mechanicDetails && (
             <div className="space-y-5">
               
-              {/* Profile Section */}
-              <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-blue-600 flex-shrink-0">
-                    {mechanicDetails.profilePhotoUrl ? (
-                      <img 
-                        src={mechanicDetails.profilePhotoUrl} 
-                        alt="profile" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/150"; }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500">
-                        {mechanicDetails.firstName.charAt(0)}
-                      </div>
-                    )}
+              {/* --- COMBINED HEADER DIV: Info + Status Badge + Badges --- */}
+              <div className={`rounded-xl p-4 border ${!dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
+                {/* Top Row: Info (Right) and Status Badge (Left) */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0">
+                      {mechanicDetails.profilePhotoUrl ? (
+                        <img 
+                          src={mechanicDetails.profilePhotoUrl} 
+                          alt="profile" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/150"; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-xl font-bold text-gray-500">
+                          {mechanicDetails.firstName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h3 className="text-lg font-bold truncate">{mechanicDetails.firstName} {mechanicDetails.lastName}</h3>
+                      <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.email}</p>
+                      <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.phoneNumber}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold truncate">{mechanicDetails.firstName} {mechanicDetails.lastName}</h3>
-                    <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.email}</p>
-                    <p className={`text-sm truncate ${dark ? "text-gray-400" : "text-gray-600"}`}>{mechanicDetails.phoneNumber}</p>
+                  
+                  {/* Status Badge Top Left */}
+                  <div className="shrink-0">
+                    {getStatusBadge(mapStatus(mechanicDetails.accountStatus).status)}
                   </div>
                 </div>
-                
-                {/* Main Status */}
-                <div className="pt-2 flex flex-wrap gap-2">
-                  {getStatusBadge(mapStatus(mechanicDetails.accountStatus).status)}
-                  {renderStatusBadge(mechanicDetails.isVerified, "تم التوثيق", "غير موثق")}
-                  {renderStatusBadge(mechanicDetails.isAvailable, "متاح حالياً", "غير متاح")}
+
+                {/* Bottom Row: Badges (Verified/Available) */}
+                <div className="pt-3 mt-2 border-t border-gray-200/50 dark:border-gray-800/50 flex flex-wrap gap-2">
+                   {renderStatusBadge(mechanicDetails.isVerified, "تم التوثيق", "غير موثق")}
+                   {renderStatusBadge(mechanicDetails.isAvailable, "متاح حالياً", "غير متاح")}
                 </div>
               </div>
 
+              {/* --- DIV ACCOUNT ACTIONS (Independent) --- */}
+              {/* Condition: Hide entire section if Disabled */}
+              {mapStatus(mechanicDetails.accountStatus).status !== 'Disabled' && (
+                <div className={`rounded-xl p-4 border ${!dark ? "bg-white border-gray-200 shadow-sm" : "bg-[#131c2f] border-gray-800"}`}>
+                  <h3 className="font-bold text-sm mb-3">تغيير حالة الحساب</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* زر تفعيل: لا يظهر إذا كان الحالة نشط */}
+                    {mapStatus(mechanicDetails.accountStatus).status !== 'Active' && (
+                      <button
+                        disabled={updatingStatus || loadingDetails}
+                        onClick={() => handleStatusChange('activate')}
+                        className="px-2 py-2 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg transition-colors text-center"
+                      >
+                        تنشيط
+                      </button>
+                    )}
+                    
+                    {/* زر تجميد: لا يظهر إذا كان الحالة مجمد */}
+                    {mapStatus(mechanicDetails.accountStatus).status !== 'Frozen' && (
+                      <button
+                        disabled={updatingStatus || loadingDetails}
+                        onClick={() => handleStatusChange('freeze')}
+                        className="px-2 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors text-center"
+                      >
+                        تجميد
+                      </button>
+                    )}
+                    
+                    {/* زر تعطيل: لا يظهر إذا كان الحالة معطل */}
+                    {mapStatus(mechanicDetails.accountStatus).status !== 'Disabled' && (
+                      <button
+                        disabled={updatingStatus || loadingDetails}
+                        onClick={() => handleStatusChange('disable')}
+                        className="px-2 py-2 text-xs font-medium text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50 rounded-lg transition-colors text-center"
+                      >
+                        تعطيل
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* --- OTHER DETAILS --- */}
+              
               {/* Verification Details */}
-              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>التحقق</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  {renderStatusBadge(mechanicDetails.isEmailConfirmed, "البريد المؤكد", "البريد غير مؤكد")}
+                  {renderStatusBadge(mechanicDetails.isEmailConfirmed, "البريد مؤكد", "البريد غير مؤكد")}
                   {renderStatusBadge(mechanicDetails.isPhoneConfirmed, "الهاتف مؤكد", "الهاتف غير مؤكد")}
                   {renderStatusBadge(mechanicDetails.supportsFieldVisit, "يدعم الزيارات", "لا يدعم الزيارات")}
                 </div>
               </div>
 
               {/* Work Times & Location */}
-              <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <div className={`rounded-xl p-4 space-y-3 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>العمل والموقع</h3>
                 
-                {/* Location */}
                 <div className="flex items-center gap-3 text-sm">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
                     <FaMapMarkerAlt />
@@ -509,7 +599,6 @@ const MechanicsManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Times */}
                 {(mechanicDetails.workStartTime && mechanicDetails.workEndTime) ? (
                   <div className="flex items-center gap-3 text-sm">
                     <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
@@ -528,7 +617,7 @@ const MechanicsManagement: React.FC = () => {
               </div>
 
               {/* System Info */}
-              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border border-gray-800"}`}>
+              <div className={`rounded-xl p-4 space-y-2 ${!dark ? "bg-gray-50 border border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${!dark ? "text-gray-500" : "text-gray-400"}`}>النظام</h3>
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">

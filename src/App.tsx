@@ -47,6 +47,7 @@ import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import MRequestTracking from "./pages/Mechanics/request/Mrequest_tracking";
 import Mrequest_history from "./pages/Mechanics/request/request_history";
+ import UploadLicense from "./pages/Registration/UploadLicense";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 const App: React.FC = () => {
@@ -112,6 +113,8 @@ const App: React.FC = () => {
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
+           <Route path="/upload-license" element={<UploadLicense />} /> 
+          {/* <Route path="/pending-approval" element={<PendingApproval />} /> */}
           <Route path="/login" element={<LogIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-account" element={<VerifyAccount />} />

@@ -21,10 +21,13 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       </div>
     );
 
+  // ✅ تعديل: إحداثيات افتراضية لمصر (القاهرة)
+  const defaultCenter = { lat: 26.8206, lng: 30.8025 };
+
   const center =
     latitude && longitude
       ? { lat: Number(latitude), lng: Number(longitude) }
-      : { lat: 0, lng: 0 };
+      : defaultCenter; // ✅ استخدام مصر كنقطة بداية بدلاً من 0,0
 
   return (
     <div
@@ -36,7 +39,8 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
-        zoom={latitude ? 17 : 2}
+        // ✅ تعديل: تغيير الزوم من 2 (عالم) إلى 6 (دولة)
+        zoom={latitude ? 17 : 6} 
         onClick={(e) => {
           if (isEditing && e.latLng) {
             setLocation(e.latLng.lat(), e.latLng.lng());
