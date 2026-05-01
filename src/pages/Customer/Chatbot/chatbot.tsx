@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import {
   MdSend,
@@ -44,6 +44,7 @@ interface Technician {
 }
 
 interface Message {
+  issue_summary?: string;
   id: number;
   role: "bot" | "user";
   text: string;
@@ -373,7 +374,6 @@ const MessageBubble = ({
   msg,
   onCreateReminder,
   onFollowUpClick,
-  selectedCarId,
   previousUserMessage,
 
 }: {
@@ -456,17 +456,26 @@ const MessageBubble = ({
             </p>
             {!isUser &&
               msg.requires_mechanic === true &&
+              msg.is_emergency === true &&
               hasTechnicians(msg.technicians) && (
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    const chatbotPayload = {
+                      car_id: msg.car_id,
+                      issue_summary: msg.issue_summary || msg.text,
+                      required_service: msg.required_service,
+                      recommended_mechanics: msg.recommended_mechanics,
+                      is_emergency: true,
+                    };
+                    localStorage.setItem("chatbot_request", JSON.stringify(chatbotPayload));
+
                     navigate("/customer/maintenancerequest", {
                       state: {
                         isSOS: true,
-                        technicians: msg.technicians,
-                        carId: selectedCarId,
+                        carId: msg.car_id,
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
                 >
                   🚨 SOS اطلب فني فورًا
@@ -757,10 +766,10 @@ const ChatbotPage = () => {
     carsRef.current = cars;
   }, [cars]);
 
-  const selectedCarLabel = (() => {
-    const car = cars.find((c) => c.id === selectedCarId);
-    return car ? `${car.year} ${car.brand} ${car.model}` : "";
-  })();
+  const selectedCarLabel = useMemo(() => {
+  const car = cars.find((c) => c.id === selectedCarId);
+  return car ? `${car.year} ${car.brand} ${car.model}` : "";
+}, [cars, selectedCarId]);
 
   const setSelectedCarLabel = (label: string) => {
     const car = cars.find((c) => `${c.year} ${c.brand} ${c.model}` === label);
@@ -878,6 +887,7 @@ const ChatbotPage = () => {
           id: Date.now() + 1,
           role: "bot",
           text: formatted.text,
+          issue_summary: (parsedReply as any)?.issue_summary,
           time: getTime(),
           offersReminder: formatted.offersReminder,
           reminder: formatted.reminder,
