@@ -24,7 +24,6 @@ type ServiceRequest = {
 };
 
 const ServiceHistory = () => {
-  // const [historyData, setHistoryData] = useState([]);
   const [historyData, setHistoryData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,10 +102,8 @@ const ServiceHistory = () => {
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
-  // const currentItems = historyData.slice(indexOfFirst, indexOfLast);
-  // const totalPages = Math.ceil(historyData.length / itemsPerPage);
   const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
-const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
@@ -117,8 +114,6 @@ const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
         <Header />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
-
-
 
 {/* Title Section */}
 <div className="text-right">
@@ -134,41 +129,65 @@ const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
           {/* TABLE CARD */}
           <div className="rounded-xl overflow-hidden shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-right text-sm">
-                <thead>
-                  <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-                  <th className="p-3"> المشكلة</th>
-                    <th className="p-3">التاريخ</th>
-                    <th className="p-3">السيارة</th>
-                    <th className="p-3">الخدمة</th>
-                    <th className="p-3">الحالة</th>
-                    <th className="p-3">الميكانيكي</th>
-                  </tr>
-                </thead>
+            {loading ? (
+              // Loading State
+              <div className="flex items-center justify-center p-12 min-h-[300px]">
+                <span className="text-gray-500 dark:text-gray-300 text-lg">جاري التحميل...</span>
+              </div>
+            ) : currentItems.length === 0 ? (
+              // Empty State (No Data) - تصميم مشابه للصورة المطلوبة
+              <div className="flex flex-col items-center justify-center p-8 md:p-12 min-h-[400px] text-center space-y-4">
+                
+                {/* أيقونة توضيحية (يمكنك استبدالها بصورة إذا أردت) */}
+                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2">
+                    <svg 
+                        className="w-12 h-12 text-gray-400 dark:text-gray-500" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                </div>
 
-                <tbody className="text-gray-700 dark:text-gray-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={6} className="text-center p-6">
-                        جاري التحميل...
-                      </td>
-                    </tr>
-                  ) : currentItems.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center p-6">
-                        لا يوجد بيانات
-                      </td>
-                    </tr>
-                  ) : (
-                    currentItems.map((row) => (
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                  لا يوجد طلبات صيانة
+                </h3>
+                
+                <p className="text-gray-500 dark:text-gray-400 max-w-sm">
+                  لم تقم بإرسال أي طلبات صيانة حالياً. عند إرسال طلب، ستظهر تفاصيله وسجله هنا.
+                </p>
 
-                <tr
-                  key={row.requestId}
-                  onClick={() => navigate(`/customer/maintenance_request/request_tracking/${row.requestId}`)}
-                  className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                <button 
+                  onClick={() => navigate('/customer/maintenancerequest')} 
+                  className="mt-4 px-6 py-2 bg-[#137FEC] hover:bg-blue-600 text-white rounded-lg transition duration-200 shadow-sm"
                 >
+           طلب صيانة
+                </button>
+              </div>
+            ) : (
+              // Table State (Exists Data)
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-sm">
+                  <thead>
+                    <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+                    <th className="p-3"> المشكلة</th>
+                      <th className="p-3">التاريخ</th>
+                      <th className="p-3">السيارة</th>
+                      <th className="p-3">الخدمة</th>
+                      <th className="p-3">الحالة</th>
+                      <th className="p-3">الميكانيكي</th>
+                    </tr>
+                  </thead>
 
+                  <tbody className="text-gray-700 dark:text-gray-200">
+                    {currentItems.map((row) => (
+                      <tr
+                        key={row.requestId}
+                        onClick={() => navigate(`/customer/maintenance_request/request_tracking/${row.requestId}`)}
+                        className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                      >
                         <td className="p-3">{row.issueDescription}</td>
 
                         <td className="p-3">
@@ -185,15 +204,15 @@ const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
             
                         <td className="p-3">
-  <span
-    className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-      statusColorMap[row.status as keyof typeof statusColorMap] ||
-      "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-    }`}
-  >
-    {statusMap[row.status as keyof typeof statusMap] || "—"}
-  </span>
-</td>
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              statusColorMap[row.status as keyof typeof statusColorMap] ||
+                              "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                            }`}
+                          >
+                            {statusMap[row.status as keyof typeof statusMap] || "—"}
+                          </span>
+                        </td>
 
 
                         <td className="p-3 flex items-center gap-2">
@@ -207,35 +226,65 @@ const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
                           </span>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* PAGINATION - يظهر فقط إذا كان هناك بيانات */}
+          {/* {currentItems.length > 0 && (
+            <div className="flex justify-center items-center gap-3 text-gray-700 dark:text-gray-200">
+              <button
+                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                السابق
+              </button>
+
+              <span>
+                {currentPage} / {totalPages || 1}
+              </span>
+
+              <button
+                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+                onClick={() =>
+                  setCurrentPage(p => Math.min(p + 1, totalPages || 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                التالي
+              </button>
             </div>
-          </div>
+          )} */}
+          {/* PAGINATION - يظهر فقط إذا كان هناك أكثر من صفحة */}
+{filteredHistory.length > itemsPerPage && (
+  <div className="flex justify-center items-center gap-3 text-gray-700 dark:text-gray-200">
+    <button
+      className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+      disabled={currentPage === 1}
+    >
+      السابق
+    </button>
 
-          {/* PAGINATION */}
-          <div className="flex justify-center items-center gap-3 text-gray-700 dark:text-gray-200">
-            <button
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800"
-              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-            >
-              السابق
-            </button>
+    <span>
+      {currentPage} / {totalPages || 1}
+    </span>
 
-            <span>
-              {currentPage} / {totalPages || 1}
-            </span>
-
-            <button
-              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800"
-              onClick={() =>
-                setCurrentPage(p => Math.min(p + 1, totalPages || 1))
-              }
-            >
-              التالي
-            </button>
-          </div>
+    <button
+      className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+      onClick={() =>
+        setCurrentPage(p => Math.min(p + 1, totalPages || 1))
+      }
+      disabled={currentPage === totalPages}
+    >
+      التالي
+    </button>
+  </div>
+)}
 
         </main>
       </div>
