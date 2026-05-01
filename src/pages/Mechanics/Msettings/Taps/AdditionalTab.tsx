@@ -44,6 +44,7 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
         onClick={(e) => {
           if (isEditing && e.latLng) {
             setLocation(e.latLng.lat(), e.latLng.lng());
+            
           }
         }}
         options={{
@@ -132,6 +133,16 @@ const AdditionalTab = () => {
       return defaultData;
     }
   });
+
+
+  useEffect(() => {
+    if (data.latitude && data.longitude) {
+      console.log("Updated Location:", {
+        lat: data.latitude,
+        lng: data.longitude,
+      });
+    }
+  }, [data.latitude, data.longitude]);
 
   useEffect(() => {
     if (data?.mainSpecialty?.length) {
