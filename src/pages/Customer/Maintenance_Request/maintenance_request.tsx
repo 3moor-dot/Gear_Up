@@ -472,7 +472,7 @@ const MaintenanceRequest = () => {
                                 </div>
                             </section>
 
-                            {/* تصنيف العطل - Updated Section */}
+                            {/* تصنيف العطل - Updated Section with Dark Hover */}
                             <section>
                                 <h3 className={sectionTitleStyle}>تصنيف العطل</h3>
                                 <div className="grid grid-cols-4 gap-3">
@@ -488,7 +488,7 @@ const MaintenanceRequest = () => {
                                             className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all border-2
                                                 ${serviceType === s.v 
                                                     ? 'bg-blue-500 border-blue-500 text-white shadow-lg transform scale-105' 
-                                                    : 'bg-white dark:bg-[#1F2937] border-gray-200 dark:border-transparent text-gray-600 dark:text-gray-300 hover:border-blue-300 hover:shadow-md'
+                                                    : 'bg-white dark:bg-[#1F2937] border-gray-200 dark:border-transparent text-gray-600 dark:text-gray-300 hover:border-blue-300 hover:shadow-md dark:hover:border-blue-400 dark:hover:shadow-lg'
                                                 }`}
                                         >
                                             {s.icon}
