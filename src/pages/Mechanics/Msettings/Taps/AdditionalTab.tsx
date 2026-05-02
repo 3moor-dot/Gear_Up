@@ -206,54 +206,40 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, []);
 
-  // ---------------- FETCH MECHANIC DATA ----------------
-  useEffect(() => {
-    const fetchMechanicData = async () => {
-      try {
-        const res = await axios.get(
-          "https://gearupapp.runasp.net/api/mechanics/my/profile",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        const json = res.data;
-        
-        const apiData: AdditionalData = {
-          location: json.location || "",
-          latitude: json.latitude || undefined,
-          longitude: json.longitude || undefined,
-          mainSpecialty: json.primarySpecializationId ? [json.primarySpecializationId] : [],
-          subSpecialty: json.subSpecializationId || "",
-          fieldVisit: json.supportsFieldVisit || json.fieldVisit || false,
-          workingHoursFrom: json.workStartTime || json.workingHoursFrom || "08:00",
-          workingHoursTo: json.workEndTime || json.workingHoursTo || "18:00",
-          experience: json.experience || "",
-        };
-
-        setData(apiData);
-        localStorage.setItem(getStorageKey(), JSON.stringify(apiData));
-
-      } catch  { // 🔥 حل مشكلة Empty block statement
-        console.log("API fetch skipped, using localStorage data");
-      }
-    };
-
-    fetchMechanicData();
-  }, []);
 
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
 
   // ---------------- تحديد موقعي ----------------
+  // const handleGetMyLocation = () => {
+  //   if (!navigator.geolocation) {
+  //     setError("المتصفح لا يدعم تحديد الموقع");
+  //     return;
+  //   }
+
+  //   setError("جاري البحث عن موقعك...");
+
+  //   navigator.geolocation.getCurrentPosition(
+  //     (position) => {
+  //       setError("");
+  //       setData((prev) => ({
+  //         ...prev,
+  //         latitude: position.coords.latitude,
+  //         longitude: position.coords.longitude,
+  //       }));
+  //     },
+  //     (err) => {
+  //       setError("خطأ في تحديد الموقع، تأكد من تفعيل خدمة الموقع من إعدادات المتصفح");
+  //       console.error(err);
+  //     }
+  //   );
+  // };
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
       setError("المتصفح لا يدعم تحديد الموقع");
       return;
     }
-
-    setError("جاري البحث عن موقعك...");
-
+  
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setError("");
@@ -271,62 +257,75 @@ const AdditionalTab = () => {
   };
 
   // ---------------- SAVE ----------------
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError("");
-    setSuccess("");
-  
-    try {
-      const profilePromise = axios.put(
-        "https://gearupapp.runasp.net/api/mechanics/my/profile/complete",
-        {
-          latitude: data.latitude,
-          longitude: data.longitude,
-          primarySpecializationId: selectedMain,
-          subSpecializationId: selectedSub || null,
-        },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
-      );
 
-      const fieldVisitPromise = axios.put(
-        "https://gearupapp.runasp.net/api/mechanics/my/field-visit",
-        { supportsFieldVisit: data.fieldVisit },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
-      );
+const handleSave = async () => {
+  setIsSaving(true);
+  setError("");
+  setSuccess("");
 
-      const workingHoursPromise = axios.put(
-        "https://gearupapp.runasp.net/api/mechanics/my/working-hours",
-        { 
-          workStartTime: data.workingHoursFrom, 
-          workEndTime: data.workingHoursTo 
-        },
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
-      );
+  try {
+    const saveLocation = axios.put(
+      "https://gearupapp.runasp.net/api/mechanics/my/location",
+      {
+        latitude: data.latitude,
+        longitude: data.longitude,
+        location: data.location,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-      await Promise.all([profilePromise, fieldVisitPromise, workingHoursPromise]);
-  
-      const newData = {
-        ...data,
-        mainSpecialty: [selectedMain],
-        subSpecialty: selectedSub,
-      };
-  
-      setData(newData);
-      localStorage.setItem(getStorageKey(), JSON.stringify(newData));
-  
-      setSuccess("تم الحفظ بنجاح");
-      setIsEditing(false);
-  
-      setTimeout(() => { setSuccess(""); }, 3000);
-  
-    } catch (err: any) {
-      console.log(err);
-      setError(err?.response?.data?.message || "حصل خطأ أثناء الحفظ");
-      setTimeout(() => { setError(""); }, 4000);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    const saveSpecialization = axios.put(
+      "https://gearupapp.runasp.net/api/mechanics/my/profile/complete",
+      {
+        primarySpecializationId: selectedMain,
+        subSpecializationId: selectedSub || null,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const fieldVisitPromise = axios.put(
+      "https://gearupapp.runasp.net/api/mechanics/my/field-visit",
+      { supportsFieldVisit: data.fieldVisit },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const workingHoursPromise = axios.put(
+      "https://gearupapp.runasp.net/api/mechanics/my/working-hours",
+      {
+        workStartTime: data.workingHoursFrom,
+        workEndTime: data.workingHoursTo,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    await Promise.all([
+      saveLocation,
+      saveSpecialization,
+      fieldVisitPromise,
+      workingHoursPromise,
+    ]);
+
+    setSuccess("تم الحفظ بنجاح");
+    setIsEditing(false);
+    setTimeout(() => {
+      setSuccess("");
+    }, 2500);
+
+  } catch (err) {
+    console.log(err);
+    setError("حصل خطأ أثناء الحفظ");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   // ---------------- إلغاء ----------------
   const handleCancel = () => {
@@ -461,7 +460,7 @@ const AdditionalTab = () => {
               onChange={(e) => setData((prev) => ({ ...prev, workingHoursFrom: e.target.value }))}
               disabled={!isEditing}
               className={`w-full px-3 py-1.5 rounded-lg border outline-none text-sm ${
-                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-700 text-white"
+                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-600 text-white [color-scheme:dark]"
               } ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
             />
             <span className={`text-sm font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>إلى</span>
@@ -471,7 +470,7 @@ const AdditionalTab = () => {
               onChange={(e) => setData((prev) => ({ ...prev, workingHoursTo: e.target.value }))}
               disabled={!isEditing}
               className={`w-full px-3 py-1.5 rounded-lg border outline-none text-sm ${
-                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-700 text-white"
+                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-600 text-white [color-scheme:dark]"
               } ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
             />
           </div>

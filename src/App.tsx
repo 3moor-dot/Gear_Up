@@ -50,11 +50,14 @@ import Mrequest_history from "./pages/Mechanics/request/request_history";
 import UploadLicense from "./pages/Registration/UploadLicense";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
+
 import AiMechanicProfile from "./pages/Customer/Aiprofile/ai_mechanic_profile";
 // import { useSearchParams, useNavigate } from "react-router-dom";
 // import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import AddBookingWrapper from "./pages/Customer/Maintenance_Bookings/addBookingWrapper";
  
+import RegistrationOtp from "./pages/Registration/registration_otp"; // أو المسار الصح
+
 const App: React.FC = () => {
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -119,6 +122,9 @@ const App: React.FC = () => {
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/registration_otp" element={<RegistrationOtp />} />
+          {/* <Route path="/verify-otp" element={<VerifyOtp />} /> */}
+
            <Route path="/upload-license" element={<UploadLicense />} /> 
           {/* <Route path="/pending-approval" element={<PendingApproval />} /> */}
           <Route path="/login" element={<LogIn />} />
