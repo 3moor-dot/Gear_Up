@@ -35,7 +35,7 @@ import ProfileSettings from "./pages/Customer/Profile_Settings/profile_settings"
 import MaintenanceRequest from "./pages/Customer/Maintenance_Request/maintenance_request";
 import RequestTracking from "./pages/Customer/Maintenance_Request/request_tracking";
 import MaintenanceBookings from "./pages/Customer/Maintenance_Bookings/maintenance_bookings";
-import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
+// import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import RescheduleModal from "./pages/Customer/Maintenance_Bookings/reschedule_modal";
 import CancelBookingModal from "./pages/Customer/Maintenance_Bookings/cancel_booking_modal";
 import MachineDashboard from "./pages/Mechanics/MachineDashboard/MachineDashboard";
@@ -44,12 +44,17 @@ import Booking from "./pages/Mechanics/Booking/Booking";
 import Schedule from "./pages/Mechanics/Schedule/Schedule";
 import MBookingDetails from "./pages/Mechanics/Booking/MBookingDetails";
 import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
-import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
+// import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import MRequestTracking from "./pages/Mechanics/request/Mrequest_tracking";
 import Mrequest_history from "./pages/Mechanics/request/request_history";
- import UploadLicense from "./pages/Registration/UploadLicense";
+import UploadLicense from "./pages/Registration/UploadLicense";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
+import AiMechanicProfile from "./pages/Customer/Aiprofile/ai_mechanic_profile";
+// import { useSearchParams, useNavigate } from "react-router-dom";
+// import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
+import AddBookingWrapper from "./pages/Customer/Maintenance_Bookings/addBookingWrapper";
+ 
 const App: React.FC = () => {
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -104,11 +109,12 @@ const App: React.FC = () => {
           <Route path="/customer/maintenancerequest" element={<MaintenanceRequest />} />
           <Route path="/customer/profilesettings" element={<ProfileSettings />} />
           <Route path="/customer/maintenancebookings" element={<MaintenanceBookings />} />
-          <Route path="/add-booking" element={<AddBookingModel isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
-          <Route path="/reschedule-booking" element={<RescheduleModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
+          <Route path="/customer/add-booking" element={<AddBookingWrapper />} />       <Route path="/reschedule-booking" element={<RescheduleModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/cancel-booking" element={<CancelBookingModal isOpen={true} onClose={() => { window.location.href = '/customer/maintenancebookings'; }} />} />
           <Route path="/customer/chatbot" element={<Chatbot />} />
           <Route path="/customer/maintenance_request/request_tracking/:requestId" element={<RequestTracking />} />
+          {/* <Route path="/customer/mechanic_profile/:id" element={<MechanicProfile />} /> */}
+         <Route path="/ai_mechanic_profile/:id" element={<AiMechanicProfile />} />
 
           {/* PUBLIC PAGES */}
           <Route path="/" element={<LandingPage />} />
@@ -126,7 +132,7 @@ const App: React.FC = () => {
           <Route path="/mechanics/booking" element={<Booking/>} />
           <Route path="/mechanics/booking/mbookingdetails/:id"element={<MBookingDetails />}/>
           <Route path="/mechanics/mprofile" element={<Mprofile />} />
-          <Route path="/mechanics/machineprofile" element={<Mechine_profile  />} />
+          {/* <Route path="/mechanics/machineprofile" element={<Mechine_profile  />} /> */}
           <Route path="/mechanics/request/mrequest_tracking/:requestId" element={<MRequestTracking />} />
           <Route path="/mechanics/request/mrequest_history" element={<Mrequest_history />} />
 

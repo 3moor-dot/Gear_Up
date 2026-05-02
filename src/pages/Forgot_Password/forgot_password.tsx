@@ -1,6 +1,6 @@
  import { useState } from "react";
 import { Link } from "react-router-dom";
-import Footer from "../../components/Footer/footer";
+// import Footer from "../../components/Footer/footer";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -128,7 +128,7 @@ const ForgotPassword = () => {
       </div>
 
       {/* FOOTER */}
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

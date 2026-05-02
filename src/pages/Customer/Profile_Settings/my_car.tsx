@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   MdCloudUpload, MdEdit, MdDelete, MdAdd, MdSave,
-  MdKeyboardArrowDown, MdKeyboardArrowUp, MdClose, MdDirectionsCar
+  MdKeyboardArrowDown, MdKeyboardArrowUp, MdClose, MdDirectionsCar, MdSearch
 } from "react-icons/md";
 import Swal from "sweetalert2";
 
@@ -14,16 +14,9 @@ interface Car {
   carPhotoUrl: string;
 }
 
-// إضافة الواجهة لإصلاح خطأ TypeScript في ملف ProfileSettings
 interface MyCarsProps {
   inputStyle?: string;
 }
-
-const CAR_BRANDS = [
-  "تويوتا", "هيونداي", "كيا", "نيسان", "ميتسوبيشي", "مرسيدس", "بي إم دبليو",
-  "أودي", "فولكس فاجن", "فورد", "شيفروليه", "رينو", "فيات", "سكودا", "هوندا",
-  "مازدا", "شيري", "إم جي", "بي واي دي", "سوزوكي", "ستروين", "بيجو", "جيب"
-].sort((a, b) => a.localeCompare(b, 'ar'));
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: currentYear - 1999 + 1 }, (_, i) => currentYear - i);
@@ -58,7 +51,153 @@ const PhotoUploader = ({ id, previewSrc, onChange }: { id: string; previewSrc?: 
   </div>
 );
 
-// تصحيح استقبال البروبس هنا
+// --- مكون اختيار السنة ---
+const CustomYearSelect = ({ value, onChange, years }: { value: string, onChange: (year: string) => void, years: number[] }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`${FIELD_CLASS} !pr-10 cursor-pointer flex items-center justify-between`}
+      >
+        <span className={!value ? "text-gray-400 font-normal" : ""}>{value || "اختر سنة الصنع"}</span>
+        <MdKeyboardArrowDown className="text-gray-400" size={20} />
+      </div>
+      
+      {/* تم تغيير z-50 إلى z-[9999] للتأكد من ظهورها فوق الكروت */}
+      {isOpen && (
+        <ul className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+          {years.map((y) => (
+            <li
+              key={y}
+              onClick={() => { onChange(y.toString()); setIsOpen(false); }}
+              className={`px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-gray-800 dark:text-gray-200 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors flex justify-between items-center ${value === y.toString() ? "bg-blue-50 dark:bg-blue-900/20 text-[#137FEC]" : ""}`}
+            >
+              <span>{y}</span>
+              {value === y.toString() && <MdKeyboardArrowDown className="text-[#137FEC] transform rotate-0" size={16} />}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+// --- مكون البحث والاختيار للماركات ---
+const SearchableBrandSelect = ({ value, onSelect, token }: { value: string, onSelect: (brand: string) => void, token: string | null }) => {
+  const [query, setQuery] = useState(value || "");
+  const [isOpen, setIsOpen] = useState(false);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  const fetchBrands = async (searchTerm: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`https://gearupapp.runasp.net/api/customers/cars/brands/search?query=${encodeURIComponent(searchTerm)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBrands(data.brands || []);
+      } else {
+        setBrands([]);
+      }
+    } catch (e) { 
+      console.error("Error searching brands:", e); 
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchBrands(query);
+      if (!hasInitialized && query === "") {
+        setHasInitialized(true);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, token]);
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+          onFocus={() => { 
+            setIsOpen(true); 
+            if (!hasInitialized) {
+              fetchBrands(query);
+              setHasInitialized(true);
+            }
+          }}
+          placeholder="ابحث عن الماركة أو اختر من القائمة"
+          className={`${FIELD_CLASS} !pr-10`}
+        />
+        <MdSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+      </div>
+      
+      {/* تم تغيير z-50 إلى z-[9999] للتأكد من ظهورها فوق الكروت */}
+      {isOpen && (brands.length > 0 || loading) && (
+        <ul className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+          {loading ? (
+            <li className="px-4 py-3 text-center text-sm text-gray-500 flex justify-center items-center gap-2">
+              جاري التحميل... <span className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
+            </li>
+          ) : (
+            <>
+              {brands.map((brand) => (
+                <li
+                  key={brand}
+                  onClick={() => { onSelect(brand); setQuery(brand); setIsOpen(false); }}
+                  className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-gray-800 dark:text-gray-200 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors flex justify-between items-center"
+                >
+                  <span>{brand}</span>
+                  {brand === query && <MdKeyboardArrowDown className="text-blue-500" size={16} />}
+                </li>
+              ))}
+              {brands.length === 0 && !loading && (
+                 <li className="px-4 py-3 text-center text-sm text-gray-400">لا توجد نتائج مطابقة</li>
+              )}
+            </>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 export const MyCars = ({}: MyCarsProps) => {
   const [cars, setCars] = useState<Car[]>([]);
   const [expandedCarId, setExpandedCarId] = useState<string | null>(null);
@@ -66,7 +205,10 @@ export const MyCars = ({}: MyCarsProps) => {
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const [newCar, setNewCar] = useState({ brand: "", model: "", year: currentYear.toString(), plateNumber: "" });
+  const [models, setModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  const [newCar, setNewCar] = useState({ brand: "", model: "", year: "", plateNumber: "" });
   const [newCarPhoto, setNewCarPhoto] = useState<File | null>(null);
 
   const [editData, setEditData] = useState<Car | null>(null);
@@ -76,13 +218,39 @@ export const MyCars = ({}: MyCarsProps) => {
   const token = sessionStorage.getItem("userToken");
   const BASE_URL = "https://gearupapp.runasp.net/api/customers/cars";
 
-  useEffect(() => { fetchCars(); }, []);
+  useEffect(() => {
+    fetchCars();
+  }, []);
 
   const fetchCars = async () => {
     try {
       const res = await fetch(BASE_URL, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) { const d = await res.json(); setCars(d.cars); }
     } catch (e) { console.error(e); }
+  };
+
+  const fetchModelsList = async (brandName: string) => {
+    if (!brandName) {
+      setModels([]);
+      return;
+    }
+    setLoadingModels(true);
+    try {
+      const res = await fetch(`${BASE_URL}/models/search?brand=${encodeURIComponent(brandName)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setModels(data.models || []);
+      } else {
+        setModels([]);
+      }
+    } catch (e) {
+      console.error("Error fetching models:", e);
+      setModels([]);
+    } finally {
+      setLoadingModels(false);
+    }
   };
 
   const showToast = (icon: any, title: string) => {
@@ -96,11 +264,10 @@ export const MyCars = ({}: MyCarsProps) => {
     });
   };
 
-  // ✅ عدّل الـ validation
-const validatePlate = (plate: string) => {
-  const trimmed = plate.trim();
-  return trimmed.length > 0 && /^[\u0600-\u06FF0-9\s]+$/.test(trimmed);
-};
+  const validatePlate = (plate: string) => {
+    const trimmed = plate.trim();
+    return trimmed.length > 0 && /^[\u0600-\u06FF0-9\s]+$/.test(trimmed);
+  };
 
   const handleAddCar = async () => {
     if (!newCar.brand || !newCar.model || !newCarPhoto || !newCar.plateNumber) {
@@ -134,14 +301,18 @@ const validatePlate = (plate: string) => {
         method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd
       });
       if (res.ok) {
-        setNewCar({ brand: "", model: "", year: currentYear.toString(), plateNumber: "" });
-        setNewCarPhoto(null); setShowAddForm(false); fetchCars();
+        setNewCar({ brand: "", model: "", year: "", plateNumber: "" });
+        setNewCarPhoto(null);
+        setModels([]);
+        setShowAddForm(false);
+        fetchCars();
         showToast('success', 'تمت إضافة السيارة بنجاح');
       } else { showToast('error', 'فشل إضافة السيارة'); }
     } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
     finally { setLoading(false); }
   };
-const handleUpdateCar = async () => {
+
+  const handleUpdateCar = async () => {
     if (!editData) return;
     setLoading(true);
     const fd = new FormData();
@@ -149,7 +320,6 @@ const handleUpdateCar = async () => {
     fd.append("Model", editData.model);
     fd.append("Year", editData.year.toString());
     if (editCarPhoto) fd.append("CarPhoto", editCarPhoto);
-    // ❌ شيلنا PlateNumber لأن الـ API مش بيقبله
 
     try {
       const res = await fetch(`${BASE_URL}/${editData.id}`, {
@@ -157,6 +327,7 @@ const handleUpdateCar = async () => {
       });
       if (res.ok) {
         setEditModeId(null); setEditCarPhoto(null); setEditPreviewUrl(null);
+        setModels([]);
         fetchCars(); showToast('success', 'تم تحديث البيانات');
       } else showToast('error', 'فشل التحديث');
     } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
@@ -187,7 +358,6 @@ const handleUpdateCar = async () => {
 
   return (
     <div className="bg-white dark:bg-primary_BGD border border-gray-100 dark:border-gray-700 rounded-[32px] sm:rounded-[40px] p-4 sm:p-8 md:p-10 shadow-xl" dir="rtl">
-      {/* Header و Form الإضافة والسيارات كما هي في الكود الأصلي */}
       <div className="flex items-center justify-between mb-5 border-b pb-4 dark:border-gray-700">
         <h2 className="text-[#137FEC] text-lg sm:text-2xl font-black flex items-center gap-2">
           <div className="bg-blue-50 dark:bg-blue-900/30 p-1.5 sm:p-2 rounded-xl">
@@ -208,23 +378,42 @@ const handleUpdateCar = async () => {
           <div className="flex flex-col gap-5">
             <PhotoUploader id="newCarPhoto" previewSrc={newCarPhoto ? URL.createObjectURL(newCarPhoto) : null} onChange={(e) => setNewCarPhoto(e.target.files?.[0] || null)} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة (Brand)</label>
-                <select className={FIELD_CLASS} value={newCar.brand} onChange={(e) => setNewCar({ ...newCar, brand: e.target.value })}>
-                  <option value="">اختر الماركة</option>
-                  {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
+                <SearchableBrandSelect 
+                  value={newCar.brand} 
+                  token={token}
+                  onSelect={(selectedBrand) => {
+                    setNewCar({ ...newCar, brand: selectedBrand, model: "" });
+                    fetchModelsList(selectedBrand);
+                  }} 
+                />
               </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل (Model)</label>
-                <input type="text" placeholder="مثلاً: كورولا" className={FIELD_CLASS} value={newCar.model} onChange={(e) => setNewCar({ ...newCar, model: e.target.value })} />
+                <select 
+                  className={FIELD_CLASS} 
+                  value={newCar.model} 
+                  disabled={!newCar.brand || loadingModels}
+                  onChange={(e) => setNewCar({ ...newCar, model: e.target.value })}
+                >
+                  <option value="">{newCar.brand ? "اختر الموديل" : "يرجى اختيار الماركة أولاً"}</option>
+                  {models.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                {loadingModels && <p className="text-xs text-blue-400 mt-1">جاري تحميل الموديلات...</p>}
               </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
-                <select className={FIELD_CLASS} value={newCar.year} onChange={(e) => setNewCar({ ...newCar, year: e.target.value })}>
-                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
+                <CustomYearSelect 
+                  value={newCar.year} 
+                  years={YEARS}
+                  onChange={(year) => setNewCar({ ...newCar, year })} 
+                />
               </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">رقم اللوحة</label>
                 <input 
@@ -242,7 +431,7 @@ const handleUpdateCar = async () => {
           </div>
         </div>
       )}
-      {/* قائمة السيارات */}
+
       {cars.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-center px-4">
           <MdDirectionsCar size={44} className="text-gray-200 dark:text-gray-700 mb-3" />
@@ -256,8 +445,7 @@ const handleUpdateCar = async () => {
             const isEditMode = editModeId === car.id;
 
             return (
-              <div key={car.id} className="overflow-hidden border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm">
-                <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+               <div key={car.id} className="border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm">                <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-0" onClick={() => !isEditMode && setExpandedCarId(isExpanded ? null : car.id)}>
                     <div className="w-12 h-9 sm:w-16 sm:h-11 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0">
                       <img src={car.carPhotoUrl} alt={car.brand} className="w-full h-full object-cover" />
@@ -271,7 +459,12 @@ const handleUpdateCar = async () => {
 
                   <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
                     {!editModeId && (
-                      <button onClick={() => { setEditModeId(car.id); setEditData(car); setExpandedCarId(car.id); }} className="flex items-center gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95">
+                      <button onClick={() => {
+                        setEditModeId(car.id);
+                        setEditData(car);
+                        setExpandedCarId(car.id);
+                        fetchModelsList(car.brand); 
+                      }} className="flex items-center gap-1 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95">
                         <MdEdit size={14} /> <span className="hidden xs:inline">تعديل</span>
                       </button>
                     )}
@@ -290,24 +483,42 @@ const handleUpdateCar = async () => {
           if (f) { setEditCarPhoto(f); setEditPreviewUrl(URL.createObjectURL(f)); }
         }} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          
           <div className="space-y-1.5">
             <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الماركة</label>
-            <select className={FIELD_CLASS} value={editData?.brand} onChange={(e) => setEditData({ ...editData!, brand: e.target.value })}>
-              {CAR_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
-            <input type="text" value={editData?.model} onChange={(e) => setEditData({ ...editData!, model: e.target.value })} className={FIELD_CLASS} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
-            <select className={FIELD_CLASS} value={editData?.year} onChange={(e) => setEditData({ ...editData!, year: parseInt(e.target.value) })}>
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <SearchableBrandSelect 
+              value={editData?.brand || ""} 
+              token={token}
+              onSelect={(selectedBrand) => {
+                setEditData({ ...editData!, brand: selectedBrand, model: "" });
+                fetchModelsList(selectedBrand);
+              }} 
+            />
           </div>
 
-          {/* رقم اللوحة - عرض فقط */}
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
+            <select 
+              className={FIELD_CLASS} 
+              value={editData?.model} 
+              disabled={!editData?.brand || loadingModels}
+              onChange={(e) => setEditData({ ...editData!, model: e.target.value })}
+            >
+              <option value="">{editData?.brand ? "اختر الموديل" : "اختر الماركة أولاً"}</option>
+              {models.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            {loadingModels && <p className="text-xs text-blue-400 mt-1">جاري تحميل الموديلات...</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">سنة الصنع</label>
+            <CustomYearSelect 
+              value={editData?.year.toString() || ""} 
+              years={YEARS}
+              onChange={(year) => setEditData({ ...editData!, year: parseInt(year) })} 
+            />
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-xs sm:text-sm font-extrabold text-gray-400">
               رقم اللوحة <span className="text-[10px] font-normal">(غير قابل للتعديل)</span>
@@ -321,7 +532,11 @@ const handleUpdateCar = async () => {
           <button onClick={handleUpdateCar} disabled={loading} className="flex-1 bg-[#137FEC] hover:bg-blue-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-sm">
             <MdSave size={16} /> {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
           </button>
-          <button onClick={() => { setEditModeId(null); setEditPreviewUrl(null); }} className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold text-sm">إلغاء</button>
+          <button onClick={() => { 
+            setEditModeId(null); 
+            setEditPreviewUrl(null); 
+            setModels([]); 
+          }} className="flex-1 sm:flex-none bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-6 py-3 rounded-2xl font-bold text-sm">إلغاء</button>
         </div>
       </div>
     ) : (
