@@ -206,6 +206,41 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, []);
 
+  useEffect(() => {
+    const fetchMyData = async () => {
+      try {
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/mechanics/my/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        const apiData = res.data;
+  
+        setData({
+          location: apiData.location || "",
+          latitude: apiData.latitude,
+          longitude: apiData.longitude,
+          mainSpecialty: [apiData.primarySpecializationId],
+          subSpecialty: apiData.subSpecializationId || "",
+          fieldVisit: apiData.supportsFieldVisit,
+          workingHoursFrom: apiData.workStartTime,
+          workingHoursTo: apiData.workEndTime,
+          experience: "",
+        });
+  
+        setSelectedMain(apiData.primarySpecializationId);
+        setSelectedSub(apiData.subSpecializationId || "");
+  
+      } catch (err) {
+        console.log(err);
+      }
+    };
+  
+    fetchMyData();
+  }, []);
+
 
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
@@ -312,6 +347,14 @@ const handleSave = async () => {
       fieldVisitPromise,
       workingHoursPromise,
     ]);
+    localStorage.setItem(
+      getStorageKey(),
+      JSON.stringify({
+        ...data,
+        mainSpecialty: [selectedMain],
+        subSpecialty: selectedSub,
+      })
+    );
 
     setSuccess("تم الحفظ بنجاح");
     setIsEditing(false);
