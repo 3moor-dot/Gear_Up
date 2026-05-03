@@ -8,7 +8,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
+    googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0", // 🔥 تأكد إن المفتاح شغال
   });
 
   if (loadError)
@@ -21,13 +21,12 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       </div>
     );
 
-  // ✅ تعديل: إحداثيات افتراضية لمصر (القاهرة)
-  const defaultCenter = { lat: 26.8206, lng: 30.8025 };
+  const defaultCenter = { lat: 26.8206, lng: 30.8025 }; // مصر
 
   const center =
     latitude && longitude
       ? { lat: Number(latitude), lng: Number(longitude) }
-      : defaultCenter; // ✅ استخدام مصر كنقطة بداية بدلاً من 0,0
+      : defaultCenter;
 
   return (
     <div
@@ -39,12 +38,10 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
-        // ✅ تعديل: تغيير الزوم من 2 (عالم) إلى 6 (دولة)
         zoom={latitude ? 17 : 6} 
         onClick={(e) => {
           if (isEditing && e.latLng) {
             setLocation(e.latLng.lat(), e.latLng.lng());
-            
           }
         }}
         options={{
@@ -92,7 +89,7 @@ const getStorageKey = () => {
     const userId = payload.nameid || payload.sub || payload.id || payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
     
     return `mechanic_data_${userId}`;
-  } catch  { // 🔥 حل مشكلة Empty block statement
+  } catch {
     return `mechanic_data_${token}`;
   }
 };
@@ -129,28 +126,25 @@ const AdditionalTab = () => {
     try {
       const saved = localStorage.getItem(getStorageKey());
       return saved ? JSON.parse(saved) : defaultData;
-    } catch { // 🔥 حل مشكلة Empty block statement
+    } catch {
       return defaultData;
     }
   });
 
-
+  // تحديث حالة الـ Main/Sub بناءً على الـ Data
   useEffect(() => {
-    if (data.latitude && data.longitude) {
-      console.log("Updated Location:", {
-        lat: data.latitude,
-        lng: data.longitude,
-      });
-    }
-  }, [data.latitude, data.longitude]);
-
-  useEffect(() => {
-    if (data?.mainSpecialty?.length) {
-      setSelectedMain(data.mainSpecialty[0]);
+    // 🔥 تعديل: نتأكد إن القيم مش null قبل ما ناخدها عشان القائمة ماتظهرش فاضية
+    if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
+      setSelectedMain(String(data.mainSpecialty[0]));
     } else {
       setSelectedMain("");
     }
-    setSelectedSub(data?.subSpecialty || "");
+    
+    if (data?.subSpecialty) {
+      setSelectedSub(String(data.subSpecialty));
+    } else {
+      setSelectedSub("");
+    }
   }, [data]);
 
   // ---------------- FETCH SPECIALIZATIONS ----------------
@@ -159,17 +153,15 @@ const AdditionalTab = () => {
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/specializations",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        const rawData: any[] = res.data; // 🔥 حددنا النوع هنا
+        const rawData: any[] = res.data;
         const namesWithSubs = new Set(
-          rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name) // 🔥 أضفنا any
+          rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
         );
         
-        const filteredRaw = rawData.filter((item: any) => { // 🔥 أضفنا any
+        const filteredRaw = rawData.filter((item: any) => {
           if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
             return false;
           }
@@ -206,14 +198,13 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, []);
 
+  // ---------------- FETCH MY DATA ----------------
   useEffect(() => {
     const fetchMyData = async () => {
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/mechanics/my/profile",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
   
         const apiData = res.data;
@@ -222,16 +213,14 @@ const AdditionalTab = () => {
           location: apiData.location || "",
           latitude: apiData.latitude,
           longitude: apiData.longitude,
-          mainSpecialty: [apiData.primarySpecializationId],
+          // 🔥 تعديل: لو القيمة null هنخلي مصفوفة فاضية عشان مبيظهرش [null] في السلكت
+          mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
           subSpecialty: apiData.subSpecializationId || "",
-          fieldVisit: apiData.supportsFieldVisit,
-          workingHoursFrom: apiData.workStartTime,
-          workingHoursTo: apiData.workEndTime,
+          fieldVisit: apiData.supportsFieldVisit || false,
+          workingHoursFrom: apiData.workStartTime || "08:00",
+          workingHoursTo: apiData.workEndTime || "18:00",
           experience: "",
         });
-  
-        setSelectedMain(apiData.primarySpecializationId);
-        setSelectedSub(apiData.subSpecializationId || "");
   
       } catch (err) {
         console.log(err);
@@ -241,34 +230,10 @@ const AdditionalTab = () => {
     fetchMyData();
   }, []);
 
-
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
 
   // ---------------- تحديد موقعي ----------------
-  // const handleGetMyLocation = () => {
-  //   if (!navigator.geolocation) {
-  //     setError("المتصفح لا يدعم تحديد الموقع");
-  //     return;
-  //   }
-
-  //   setError("جاري البحث عن موقعك...");
-
-  //   navigator.geolocation.getCurrentPosition(
-  //     (position) => {
-  //       setError("");
-  //       setData((prev) => ({
-  //         ...prev,
-  //         latitude: position.coords.latitude,
-  //         longitude: position.coords.longitude,
-  //       }));
-  //     },
-  //     (err) => {
-  //       setError("خطأ في تحديد الموقع، تأكد من تفعيل خدمة الموقع من إعدادات المتصفح");
-  //       console.error(err);
-  //     }
-  //   );
-  // };
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
       setError("المتصفح لا يدعم تحديد الموقع");
@@ -292,83 +257,85 @@ const AdditionalTab = () => {
   };
 
   // ---------------- SAVE ----------------
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
 
-const handleSave = async () => {
-  setIsSaving(true);
-  setError("");
-  setSuccess("");
+    // 🔥 خطوة 1: التحقق من صحة البيانات قبل الإرسال (Validation)
+    if (!selectedMain) {
+      setError("يرجى اختيار التخصص الرئيسي");
+      setIsSaving(false);
+      return;
+    }
 
-  try {
-    const saveLocation = axios.put(
-      "https://gearupapp.runasp.net/api/mechanics/my/location",
-      {
-        latitude: data.latitude,
-        longitude: data.longitude,
-        location: data.location,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    if (!data.latitude || !data.longitude) {
+      setError("يرجى تحديد الموقع بدقة على الخريطة (انقر على الموقع)");
+      setIsSaving(false);
+      return;
+    }
 
-    const saveSpecialization = axios.put(
-      "https://gearupapp.runasp.net/api/mechanics/my/profile/complete",
-      {
+    try {
+      // 🔥 خطوة 2: تجهيز البيانات والتأكد من الأنواع
+      const payloadLocation = {
+        latitude: Number(data.latitude), // تأكد إنه رقم
+        longitude: Number(data.longitude), // تأكد إنه رقم
+        location: data.location || "تم التحديد عبر الخريطة",
+      };
+
+      const payloadSpecialization = {
         primarySpecializationId: selectedMain,
         subSpecializationId: selectedSub || null,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      };
 
-    const fieldVisitPromise = axios.put(
-      "https://gearupapp.runasp.net/api/mechanics/my/field-visit",
-      { supportsFieldVisit: data.fieldVisit },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      const payloadFieldVisit = {
+        supportsFieldVisit: data.fieldVisit,
+      };
 
-    const workingHoursPromise = axios.put(
-      "https://gearupapp.runasp.net/api/mechanics/my/working-hours",
-      {
+      const payloadWorkingHours = {
         workStartTime: data.workingHoursFrom,
         workEndTime: data.workingHoursTo,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      };
 
-    await Promise.all([
-      saveLocation,
-      saveSpecialization,
-      fieldVisitPromise,
-      workingHoursPromise,
-    ]);
-    localStorage.setItem(
-      getStorageKey(),
-      JSON.stringify({
-        ...data,
-        mainSpecialty: [selectedMain],
-        subSpecialty: selectedSub,
-      })
-    );
+      // إرسال الطلبات
+      await Promise.all([
+        axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-    setSuccess("تم الحفظ بنجاح");
-    setIsEditing(false);
-    setTimeout(() => {
-      setSuccess("");
-    }, 2500);
+      // 🔥 خطوة 3: الحفظ في LocalStorage فقط بعد النجاح
+      localStorage.setItem(
+        getStorageKey(),
+        JSON.stringify({
+          ...data,
+          mainSpecialty: [selectedMain],
+          subSpecialty: selectedSub,
+        })
+      );
 
-  } catch (err) {
-    console.log(err);
-    setError("حصل خطأ أثناء الحفظ");
-  } finally {
-    setIsSaving(false);
-  }
-};
+      setSuccess("تم الحفظ بنجاح");
+      setIsEditing(false);
+      setTimeout(() => setSuccess(""), 2500);
+
+    } catch (err: any) {
+      console.error("Save Error:", err);
+      // 🔥 خطوة 4: عرض رسالة الخطأ من السيرفر لو موجودة
+      const serverMessage = err?.response?.data?.message || err?.response?.data || "حصل خطأ أثناء الحفظ";
+      setError(typeof serverMessage === 'string' ? serverMessage : "حصل خطأ غير متوقع");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // ---------------- إلغاء ----------------
   const handleCancel = () => {
@@ -378,7 +345,7 @@ const handleSave = async () => {
       if (saved) {
         setData(JSON.parse(saved));
       }
-    } catch  {} // 🔥 حل مشكلة Empty block statement
+    } catch {}
   };
 
   // ---------------- UI ----------------
@@ -398,7 +365,7 @@ const handleSave = async () => {
           {isEditing ? (
             <>
               <button onClick={handleCancel} className={`px-4 py-2 rounded-xl text-sm font-medium ${!dark ? "bg-gray-200" : "bg-gray-700 text-white"}`}>إلغاء</button>
-              <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium">
+              <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-50">
                 {isSaving ? <FaSpinner className="animate-spin" /> : <FaSave />} حفظ
               </button>
             </>
@@ -411,15 +378,15 @@ const handleSave = async () => {
       </div>
 
       {/* messages */}
-      {success && <div className="p-3 bg-green-500/10 text-green-500 text-center">{success}</div>}
-      {error && <div className="p-3 bg-red-500/10 text-red-500 text-center">{error}</div>}
+      {success && <div className="p-3 bg-green-500/10 text-green-500 text-center text-sm font-medium">{success}</div>}
+      {error && <div className="p-3 bg-red-500/10 text-red-500 text-center text-sm font-medium">{error}</div>}
 
       {/* ================= LOCATION ================= */}
       <div className="space-y-4">
-        <div className="flex justify-between">
-          <label className="text-sm font-bold">موقع الورشة</label>
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-bold">موقع الورشة <span className="text-red-500">*</span></label>
           {isEditing && (
-            <button onClick={handleGetMyLocation} className="text-blue-500 flex gap-2">
+            <button onClick={handleGetMyLocation} className="text-blue-500 flex gap-2 items-center text-sm hover:underline">
               <FaLocationArrow /> تحديد موقعي
             </button>
           )}
@@ -437,7 +404,7 @@ const handleSave = async () => {
       {/* ================= SPECIALIZATION ================= */}
       <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4`}>
         <div className="space-y-2">
-          <label className="text-sm font-bold">التخصص الرئيسي</label>
+          <label className="text-sm font-bold">التخصص الرئيسي <span className="text-red-500">*</span></label>
           <select
             disabled={!isEditing}
             value={selectedMain}

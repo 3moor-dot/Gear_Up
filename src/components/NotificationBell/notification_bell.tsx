@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useCallback } from "react";
-import { FaBell, FaTimes } from "react-icons/fa";
+import { FaBell, FaTimes, FaStar, FaRegStar, FaPaperPlane } from "react-icons/fa"; 
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
@@ -110,7 +111,6 @@ const isReminderNotification = (n: NotificationItem) => {
   );
 };
 
-// تصليح النوتيفيكيشن القديمة اللي متخزنة في localStorage
 const migrateNotifications = (notifications: NotificationItem[]) => {
   return notifications.map((n) => {
     const isBooking = isBookingNotification(n);
@@ -121,8 +121,6 @@ const migrateNotifications = (notifications: NotificationItem[]) => {
         title: normalizeBookingTitle(n.title),
         isBooking: true,
         isRequest: false,
-
-        // مهم جدًا عشان البوكينج مايتعاملش كـ Reminder
         reminderId: undefined,
         carId: undefined,
         carName: undefined,
@@ -163,9 +161,39 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
   const [isShaking, setIsShaking] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [cars, setCars] = useState<any[]>([]);
-  const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(
-    null
-  );
+  const [activeSnoozeIndex, setActiveSnoozeIndex] = useState<number | null>(null);
+
+  // --- Rating Modal State ---
+  const [ratingModal, setRatingModal] = useState<{
+    isOpen: boolean;
+    requestId: string | null;
+    notificationIndex: number | null;
+    stars: number;
+    comment: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    requestId: null,
+    notificationIndex: null,
+    stars: 5,
+    comment: "",
+    loading: false,
+  });
+
+  // --- Price Modal State (New) ---
+  const [priceModal, setPriceModal] = useState<{
+    isOpen: boolean;
+    requestId: string | null;
+    notificationIndex: number | null;
+    price: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    requestId: null,
+    notificationIndex: null,
+    price: "",
+    loading: false,
+  });
 
   const getStorageKey = useCallback(() => {
     return getStorageKeyByToken(token);
@@ -192,6 +220,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
   );
 
   const prependNotification = useCallback(
+    
     (notification: NotificationItem) => {
       setNotifications((prev) => {
         const updated = saveNotifications([notification, ...prev]);
@@ -210,6 +239,89 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     });
 
     setActiveSnoozeIndex(null);
+  };
+
+  // --- Handle Rating Submission ---
+  const handleRatingSubmit = async () => {
+    if (!ratingModal.requestId) return;
+
+    setRatingModal((prev) => ({ ...prev, loading: true }));
+
+    try {
+      await axios.post(
+        `https://gearupapp.runasp.net/api/requests/${ratingModal.requestId}/rate`,
+        {
+          stars: ratingModal.stars,
+          comment: ratingModal.comment,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("شكراً لك! تم إرسال تقييمك بنجاح ⭐");
+      
+      if (ratingModal.notificationIndex !== null) {
+        removeNotificationFromList(ratingModal.notificationIndex);
+      }
+
+      setRatingModal({
+        isOpen: false,
+        requestId: null,
+        notificationIndex: null,
+        stars: 5,
+        comment: "",
+        loading: false,
+      });
+    } catch (error) {
+      console.error("Rating Error:", error);
+      toast.error("فشل إرسال التقييم، حاول مرة أخرى.");
+      setRatingModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  // --- Handle Price Submission (New) ---
+  const handlePriceSubmit = async () => {
+    if (!priceModal.requestId) return;
+    
+    // Validation: Price must be a positive number
+    const numericPrice = Number(priceModal.price);
+    if (!priceModal.price || numericPrice <= 0) {
+      toast.error("يرجى إدخال سعر صحيح");
+      return;
+    }
+
+    setPriceModal((prev) => ({ ...prev, loading: true }));
+
+    try {
+      await axios.post(
+        `https://gearupapp.runasp.net/api/mechanic/requests/${priceModal.requestId}/accept`,
+        {
+          price: numericPrice,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("تم قبول الطلب بنجاح ✅");
+
+      if (priceModal.notificationIndex !== null) {
+        removeNotificationFromList(priceModal.notificationIndex);
+      }
+
+      setPriceModal({
+        isOpen: false,
+        requestId: null,
+        notificationIndex: null,
+        price: "",
+        loading: false,
+      });
+    } catch (error) {
+      console.error("Accept with Price Error:", error);
+      toast.error("فشل قبول الطلب، حاول مرة أخرى.");
+      setPriceModal((prev) => ({ ...prev, loading: false }));
+    }
   };
 
   useEffect(() => {
@@ -291,22 +403,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     }
   };
 
-  const handleAccept = async (requestId: string, index: number) => {
-    try {
-      await axios.post(
-        `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/accept`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      toast.success("تم قبول الطلب ✅");
-      removeNotificationFromList(index);
-    } catch (error) {
-      console.error("Accept Error:", error);
-      toast.error("فشل قبول الطلب ❌");
-    }
-  };
-
+  // Note: handleAccept logic moved to Price Modal handler
   const handleReject = async (requestId: string, index: number) => {
     try {
       await axios.post(
@@ -343,13 +440,10 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
        message: buildBookingMessage(eventName, data),
         isBooking: true,
         isRequest: false,
-
-        // مهم جدًا
         reminderId: undefined,
         carId: undefined,
         carName: undefined,
         plateNumber: undefined,
-
         bookingId: data?.bookingId || data?.id,
         customerName:
           data?.customerName ||
@@ -366,7 +460,6 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       prependNotification(newNotification);
     };
 
-    // Reminder
     connection.on("ReceiveReminderNotification", (data: any) => {
       setNotifications((oldNotifications) => {
         const filtered = oldNotifications.filter(
@@ -389,8 +482,8 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       triggerShake();
     });
 
-    // Service Request
     connection.on("ReceiveServiceRequest", (data: any) => {
+      console.log("🔥 NEW REQUEST:", data);
       const newNotification: NotificationItem = {
         title: "طلب صيانة جديد 🛠️",
         isRequest: true,
@@ -421,7 +514,6 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       prependNotification(newNotification);
     });
 
-    // Mechanic Accepted
     connection.on("MechanicAccepted", async (data: any) => {
       let mechanicName = "ميكانيكي";
 
@@ -465,7 +557,6 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       prependNotification(newNotification);
     });
 
-    // You Are Selected
     connection.on("YouAreSelected", (data: any) => {
       const newNotification: NotificationItem = {
         title: "تم اختيارك 🎉",
@@ -481,7 +572,6 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       prependNotification(newNotification);
     });
 
-    // Request Status Changed
     const statusMap: Record<string, string> = {
       Accepted: "تم القبول",
       OnTheWay: "في الطريق",
@@ -520,7 +610,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
           statusMap[data?.newStatus] || data?.newStatus
         }\nبواسطة الميكانيكي: ${mechanicName}`,
         requestId: id,
-        status: data?.newStatus,
+        status: data?.newStatus, // Ensure status is set here
         isRequest: true,
         isBooking: false,
         hasTracking: true,
@@ -530,7 +620,6 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       prependNotification(newNotification);
     });
 
-    // Booking Events
     connection.on("New Booking Request", (data: any) =>
       addBookingNotification("New Booking Request", data)
     );
@@ -552,6 +641,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     connection.on("Booking Status Updated", (data: any) =>
       addBookingNotification("Booking Status Updated", data)
     );
+
 const buildBookingMessage = (eventName: string, data: any) => {
   if (eventName === "New Booking Request") {
     return `لديك طلب حجز جديد بتاريخ ${data?.date || data?.bookingDate || ""}`;
@@ -579,6 +669,7 @@ const buildBookingMessage = (eventName: string, data: any) => {
 
   return "تم تحديث الحجز";
 };
+
     const startConnection = async () => {
       try {
         if (connection.state === signalR.HubConnectionState.Disconnected) {
@@ -597,7 +688,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
     };
   }, [token, prependNotification, saveNotifications]);
 
-  // Fetch Cars
   const fetchCars = useCallback(async () => {
     if (!token) return;
 
@@ -719,7 +809,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                     }`}
                   >
                     <div className="flex-1 min-w-0 text-right">
-                      {/* Title + Close */}
                       <div className="flex justify-between items-start mb-1 gap-2">
                         <h4 className="font-bold text-[12px] text-blue-400 leading-5">
                           {displayTitle}
@@ -737,7 +826,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </button>
                       </div>
 
-                      {/* Car Info — يظهر للـ request/reminder فقط، مش booking */}
                       {(n.carName || n.carId) && !isBooking && (
                         <div className="mb-1">
                           <div className="text-[11px] font-bold flex items-center gap-1 dark:text-slate-200">
@@ -758,7 +846,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </div>
                       )}
 
-                      {/* Location — request فقط */}
                       {isRequest && n.location && (
                         <a
                           href={`https://www.google.com/maps?q=${n.location.lat},${n.location.lng}`}
@@ -770,7 +857,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </a>
                       )}
 
-                      {/* Service Request */}
                       {isRequest && (
                         <div className="space-y-2 mb-2">
                           {n.requestId && n.title?.includes("تم اختيارك") && (
@@ -794,14 +880,21 @@ const buildBookingMessage = (eventName: string, data: any) => {
 
                           {role?.toLowerCase() === "mechanic" && !n.hasTracking && (
                             <div className="flex gap-2 mt-2">
+                              {/* --- Modified Accept Button --- */}
                               <button
                                 onClick={() => {
                                   if (!n.requestId) {
                                     toast.error("requestId غير موجود");
                                     return;
                                   }
-
-                                  handleAccept(n.requestId, i);
+                                  // Open Price Modal instead of calling API directly
+                                  setPriceModal({
+                                    isOpen: true,
+                                    requestId: n.requestId,
+                                    notificationIndex: i,
+                                    price: "",
+                                    loading: false
+                                  });
                                 }}
                                 className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold"
                               >
@@ -846,7 +939,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </div>
                       )}
 
-                      {/* Booking Notification */}
                       {isBooking && (
                         <div className="space-y-1 mb-2">
                           {n.customerName && (
@@ -880,14 +972,31 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </div>
                       )}
 
-                      {/* General message */}
                       {!isRequest && !isBooking && !isReminder && n.message && (
                         <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5 mb-2">
                           {n.message}
                         </div>
                       )}
 
-                      {/* Reminder Buttons — فقط للـ reminders الحقيقية */}
+                      {/* NEW: Rating Button for Customer when Status is Completed */}
+                      {isRequest && 
+                       role?.toLowerCase() === "customer" && 
+                       n.status === "Completed" && (
+                        <button
+                          onClick={() => setRatingModal({
+                            isOpen: true,
+                            requestId: n.requestId || null,
+                            notificationIndex: i,
+                            stars: 5,
+                            comment: "",
+                            loading: false
+                          })}
+                          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 rounded text-xs font-bold mt-2 transition flex items-center justify-center gap-1"
+                        >
+                          <FaStar /> تقييم الميكانيكي
+                        </button>
+                      )}
+
                       {isReminder && (
                         <div className="flex gap-2 mt-2">
                           <button
@@ -913,7 +1022,6 @@ const buildBookingMessage = (eventName: string, data: any) => {
                         </div>
                       )}
 
-                      {/* Snooze Options — reminder فقط */}
                       {isReminder && activeSnoozeIndex === i && (
                         <div
                           className={`fixed z-[999999] w-32 rounded-lg shadow-2xl p-1.5 border ${
@@ -971,6 +1079,143 @@ const buildBookingMessage = (eventName: string, data: any) => {
                 لا توجد تنبيهات
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW: Price Modal (Mechanic Accept) --- */}
+      {priceModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] backdrop-blur-sm">
+          <div
+            className={`w-[90%] max-w-sm rounded-2xl p-6 shadow-2xl ${
+              dark ? "bg-slate-800 text-white" : "bg-white text-slate-800"
+            }`}
+          >
+            <h3 className="text-lg font-bold mb-4 text-center flex items-center justify-center gap-2">
+                تحديد السعر
+            </h3>
+
+            {/* Price Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-2 opacity-80">
+              سعر التقدير (جنيه)
+              </label>
+              <input
+                type="number"
+                value={priceModal.price}
+                onChange={(e) => setPriceModal((prev) => ({ ...prev, price: e.target.value }))}
+                placeholder="مثال: 150"
+                className={`w-full rounded-lg p-3 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  dark ? "bg-slate-700 border-none text-white" : "bg-gray-50 border border-gray-200"
+                }`}
+              />
+              <span className="text-[10px] opacity-60">سيتم عرض هذا السعر للعميل للموافقة</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  setPriceModal({
+                    isOpen: false,
+                    requestId: null,
+                    notificationIndex: null,
+                    price: "",
+                    loading: false,
+                  })
+                }
+                className="flex-1 py-2 rounded-lg text-sm font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 transition"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handlePriceSubmit}
+                disabled={priceModal.loading}
+                className="flex-1 py-2 rounded-lg text-sm font-bold bg-green-600 hover:bg-green-700 text-white transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {priceModal.loading ? (
+                  "جاري الإرسال..."
+                ) : (
+                  <>
+                    <FaPaperPlane /> قبول وإرسال
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Rating Modal --- */}
+      {ratingModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] backdrop-blur-sm">
+          <div
+            className={`w-[90%] max-w-sm rounded-2xl p-6 shadow-2xl ${
+              dark ? "bg-slate-800 text-white" : "bg-white text-slate-800"
+            }`}
+          >
+            <h3 className="text-lg font-bold mb-4 text-center">تقييم الخدمة ⭐</h3>
+
+            {/* Stars */}
+            <div className="flex justify-center gap-2 mb-4 text-2xl">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRatingModal((prev) => ({ ...prev, stars: star }))}
+                  className="transition-transform hover:scale-110"
+                >
+                  {star <= ratingModal.stars ? (
+                    <FaStar className="text-yellow-400" />
+                  ) : (
+                    <FaRegStar className="text-gray-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Comment */}
+            <textarea
+              value={ratingModal.comment}
+              onChange={(e) => setRatingModal((prev) => ({ ...prev, comment: e.target.value }))}
+              placeholder="اكتب تعليقك هنا (اختياري)..."
+              className={`w-full rounded-lg p-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                dark ? "bg-slate-700 border-none text-white" : "bg-gray-50 border border-gray-200"
+              }`}
+              rows={3}
+            />
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() =>
+                  setRatingModal({
+                    isOpen: false,
+                    requestId: null,
+                    notificationIndex: null,
+                    stars: 5,
+                    comment: "",
+                    loading: false,
+                  })
+                }
+                className="flex-1 py-2 rounded-lg text-sm font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 transition"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleRatingSubmit}
+                disabled={ratingModal.loading}
+                className="flex-1 py-2 rounded-lg text-sm font-bold bg-blue-500 hover:bg-blue-600 text-white transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {ratingModal.loading ? (
+                  "جاري الإرسال..."
+                ) : (
+                  <>
+                    <FaPaperPlane /> إرسال التقييم
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

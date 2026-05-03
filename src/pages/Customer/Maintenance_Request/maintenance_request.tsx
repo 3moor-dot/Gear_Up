@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdImage, MdLocationOn, MdDirectionsCar, MdCalendarToday } from "react-icons/md";
-import { FaChevronDown, FaWrench, FaOilCan, FaExclamationTriangle } from "react-icons/fa";
+import { FaChevronDown, FaWrench, FaOilCan, FaExclamationTriangle, FaStar } from "react-icons/fa"; // Added FaStar
 import { GiCarWheel } from "react-icons/gi";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
@@ -87,6 +87,7 @@ const MaintenanceRequest = () => {
   const [pendingCarId, setPendingCarId] = useState<string | null>(null);
   const [isFromChatbot, setIsFromChatbot] = useState(false);
   const [chatbotData, setChatbotData] = useState<any>(null);
+  
   useEffect(() => {
     console.log("LOCATION:", location);
   }, [location]);
@@ -189,6 +190,7 @@ const MaintenanceRequest = () => {
     };
     fetchCars();
   }, []);
+  
   useEffect(() => {
     const stored = localStorage.getItem("chatbot_request");
     if (!stored) return;
@@ -214,6 +216,7 @@ const MaintenanceRequest = () => {
 
     localStorage.removeItem("chatbot_request");
   }, []);
+  
   useEffect(() => {
     if (!pendingCarId) return;
 
@@ -580,29 +583,71 @@ const MaintenanceRequest = () => {
                     {acceptedMechanics.map((m: any) => (
                       <div
                         key={m.mechanicUserId}
-                        className="w-full max-w-md bg-white dark:bg-[#1F2937] rounded-2xl shadow-lg border border-blue-500/10 p-4"
+                        className="w-full max-w-md bg-white dark:bg-[#1F2937] rounded-2xl shadow-lg border border-blue-500/10 p-4 transition-all hover:shadow-xl"
                       >
+                        {/* Header: Image + Name */}
                         <div className="flex items-center gap-3">
                           <img
-                            src={m.profilePhotoUrl}
+                            src={m.profilePhotoUrl || "/default-avatar.png"}
                             alt="mechanic"
-                            className="w-12 h-12 rounded-full object-cover border"
+                            className="w-14 h-14 rounded-full object-cover border border-gray-200"
                           />
                           <div className="text-right flex-1">
-                            <p className="dark:text-white font-bold text-sm">
+                            <p className="dark:text-white font-bold text-base">
                               👨‍🔧 {m.firstName} {m.lastName}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              📞 {m.phoneNumber}
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                               <span>📞 {m.phoneNumber}</span>
                             </p>
+                            {m.distanceKm !== undefined && (
+                                <p className="text-[10px] text-blue-400 mt-1">📍 {m.distanceKm} كم</p>
+                            )}
                           </div>
                         </div>
-                        <p className="text-green-500 text-xs mt-3 font-bold text-right">
-                          تم قبول الطلب ✅
+
+                        {/* Specializations (New) */}
+                        {Array.isArray(m.specializations) && m.specializations.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {m.specializations.map((spec: any, idx: number) => (
+                              <span
+                                key={idx}
+                                className="text-[9px] md:text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800"
+                              >
+                                {typeof spec === 'string' ? spec : spec.name || spec}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Info Grid: Price & Rating */}
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                            {/* Price Box */}
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl text-center border border-blue-100 dark:border-blue-800">
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block mb-1">السعر المقترح</span>
+                                <span className="font-bold text-green-600 dark:text-green-400 text-sm block">
+                                {m.price > 0 ? `${m.price} ج.م` : 'جاري التحديد'}
+                                </span>
+                            </div>
+
+                            {/* Rating Box */}
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-xl text-center border border-yellow-100 dark:border-yellow-800 flex flex-col items-center justify-center">
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400 block mb-1">التقييم</span>
+                                <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 font-bold text-sm">
+                                    <FaStar className="text-xs" />
+                                    <span>{m.averageStars || 0}</span>
+                                </div>
+                                <span className="text-[10px] text-gray-400">({m.totalRatings || 0})</span>
+                            </div>
+                        </div>
+
+                        <p className="text-green-500 text-xs mt-3 font-bold text-right flex items-center gap-1">
+                           <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                           تم قبول الطلب
                         </p>
+                        
                         <button
                           onClick={() => handleSelectMechanic(m.mechanicUserId)}
-                          className="mt-4 w-full bg-[#137FEC] hover:bg-blue-600 text-white py-2 rounded-xl text-sm font-bold transition-all"
+                          className="mt-4 w-full bg-[#137FEC] hover:bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold transition-all shadow-md"
                         >
                           اختيار الميكانيكي
                         </button>
