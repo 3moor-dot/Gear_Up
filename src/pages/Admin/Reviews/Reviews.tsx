@@ -342,7 +342,7 @@ const Reviews: React.FC = () => {
                           
                           {/* Dropdown Menu */}
                           {activeMenuId === review.id && (
-                            <div className={`absolute top-full left-0 w-32 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
+                            <div className={`absolute top-0 left-full w-32 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
                                 !dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-800"
                               }`}>
                               <button
@@ -412,7 +412,7 @@ const Reviews: React.FC = () => {
                         <FaEllipsisH className="text-gray-400" />
                     </button>
                      {activeMenuId === review.id && (
-                        <div className={`absolute top-full left-0 w-32 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
+                        <div className={`absolute top-0 left-full w-32 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
                             !dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-800"
                           }`}>
                             <button onClick={() => { setSelectedReview(review); setActiveMenuId(null); }} className="w-full text-right px-4 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20">عرض</button>

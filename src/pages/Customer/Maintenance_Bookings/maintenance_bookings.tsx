@@ -117,8 +117,7 @@ const ActionMenu = ({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-[#1E293B] border dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
-          {status === "Pending" ? (
+         <div className="absolute top-0 left-full ml-1 w-48 bg-white dark:bg-[#1E293B] border dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden">          {status === "Pending" ? (
             <>
               <button
                 onClick={() => {
@@ -517,7 +516,7 @@ const MaintenanceBookings = () => {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden md:block bg-white dark:bg-[#0F172A] rounded-xl overflow-hidden shadow-sm border dark:border-white/5">
+<div className="hidden md:block bg-white dark:bg-[#0F172A] rounded-xl shadow-sm border dark:border-white/5">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[900px]">
                     <thead>

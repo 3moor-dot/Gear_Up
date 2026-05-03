@@ -85,8 +85,7 @@ const MachineDashboard = () => {
     }
   };
 
-  // Fetch Average Rating
-  // Fetch Average Rating
+   
    // Fetch Average Rating
   const fetchAverageRating = async () => {
     try {
@@ -137,7 +136,7 @@ const fetchLatestReviews = async () => {
   try {
     setLoadingReviews(true);
     const res = await fetch(
-      `https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/latest?count=10`,
+      `https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/latest?count=5`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
