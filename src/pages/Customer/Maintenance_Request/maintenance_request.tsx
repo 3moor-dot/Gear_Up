@@ -168,11 +168,17 @@ const MaintenanceRequest = () => {
     googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
   });
 
+  // const isStepOneValid =
+  //   selectedCarId &&
+  //   issueDescription.trim() &&
+  //   location &&
+  //   (requestType === 1 || (scheduledDate && scheduledTime));
   const isStepOneValid =
-    selectedCarId &&
-    issueDescription.trim() &&
-    location &&
-    (requestType === 1 || (scheduledDate && scheduledTime));
+  cars.length > 0 && // 👈 مهم جداً
+  selectedCarId &&
+  issueDescription.trim() &&
+  location &&
+  (requestType === 1 || (scheduledDate && scheduledTime));
 
   useEffect(() => {
     const fetchCars = async () => {
@@ -393,7 +399,7 @@ const MaintenanceRequest = () => {
           {currentStep === 1 ? (
             <div className="space-y-10 animate-in fade-in duration-500">
               {/* 1. اختيار السيارة */}
-              <section>
+              {/* <section>
                 <h3 className={sectionTitleStyle}>اختر مركبة</h3>
                 <div className="relative">
                   <button onClick={() => !carsLoading && setIsOpen(!isOpen)} className={`${inputStyle} flex items-center justify-between p-5 border-2 ${isOpen ? 'border-blue-500' : 'border-blue-500/20'}`}>
@@ -434,7 +440,84 @@ const MaintenanceRequest = () => {
                     </div>
                   )}
                 </div>
-              </section>
+              </section> */}
+              <section>
+  <h3 className={sectionTitleStyle}>اختر مركبة</h3>
+
+  {carsLoading ? (
+    <div className="text-gray-400 text-sm">جاري تحميل السيارات...</div>
+  ) : cars.length === 0 ? (
+    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 p-4 rounded-xl text-center">
+      <p className="text-yellow-700 dark:text-yellow-400 font-bold text-sm">
+        لا يوجد سيارات مضافة 🚗
+      </p>
+      <p className="text-xs text-gray-500 mt-1">
+        قم بإضافة سيارة أولاً حتى تتمكن من إرسال طلب صيانة
+      </p>
+    </div>
+  ) : (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`${inputStyle} flex items-center justify-between p-5 border-2 ${
+          isOpen ? "border-blue-500" : "border-blue-500/20"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          {selectedCar ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={selectedCar.carPhotoUrl}
+                className="w-16 h-12 object-cover rounded-xl"
+                alt=""
+              />
+              <div className="flex flex-col text-right">
+                <span className="text-xl font-black dark:text-white">
+                  {selectedCar.brand} {selectedCar.model}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {selectedCar.plateNumber}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-gray-400">اختر سيارة...</span>
+          )}
+        </div>
+        <FaChevronDown className="text-blue-500 text-xl" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1F2937] border-2 border-blue-500/20 rounded-[25px] shadow-2xl overflow-hidden">
+          {cars.map((car) => (
+            <div
+              key={car.id}
+              onClick={() => {
+                setSelectedCarId(car.id);
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-4 p-4 hover:bg-blue-50 dark:hover:bg-blue-600/10 cursor-pointer border-b border-gray-100 dark:border-gray-700"
+            >
+              <img
+                src={car.carPhotoUrl}
+                className="w-12 h-10 object-cover rounded-lg"
+                alt=""
+              />
+              <div className="text-right flex-1">
+                <p className="font-bold dark:text-white">
+                  {car.brand} {car.model}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {car.plateNumber}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+</section>
 
               {/* 2. نوع الخدمة - Spaced Out & New Icon */}
               <section>
@@ -606,7 +689,7 @@ const MaintenanceRequest = () => {
                         </div>
 
                         {/* Specializations (New) */}
-                        {Array.isArray(m.specializations) && m.specializations.length > 0 && (
+                        {/* {Array.isArray(m.specializations) && m.specializations.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-3">
                             {m.specializations.map((spec: any, idx: number) => (
                               <span
@@ -616,8 +699,26 @@ const MaintenanceRequest = () => {
                                 {typeof spec === 'string' ? spec : spec.name || spec}
                               </span>
                             ))}
-                          </div>
-                        )}
+                          </div> */}
+                          {/* Specializations */}
+<div className="flex flex-wrap gap-1 mt-3">
+  {Array.isArray(m.specializations) && m.specializations.length > 0 ? (
+    m.specializations.map((spec: any, idx: number) => (
+      <span
+        key={idx}
+        className="text-[9px] md:text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800"
+      >
+        {typeof spec === 'string' ? spec : spec.name || spec}
+      </span>
+    ))
+  ) : (
+    // هذا الجزء سيظهر فقط إذا لم تكن هناك تخصصات
+    <span className="text-[10px] text-gray-400 dark:text-gray-500">
+      لا يوجد تخصصات محددة
+    </span>
+  )}
+</div>
+                        
 
                         {/* Info Grid: Price & Rating */}
                         <div className="grid grid-cols-2 gap-3 mt-4">
@@ -640,10 +741,10 @@ const MaintenanceRequest = () => {
                             </div>
                         </div>
 
-                        <p className="text-green-500 text-xs mt-3 font-bold text-right flex items-center gap-1">
+                        {/* <p className="text-green-500 text-xs mt-3 font-bold text-right flex items-center gap-1">
                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
                            تم قبول الطلب
-                        </p>
+                        </p> */}
                         
                         <button
                           onClick={() => handleSelectMechanic(m.mechanicUserId)}

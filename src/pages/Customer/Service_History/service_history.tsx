@@ -180,8 +180,8 @@ const ServiceHistory = () => {
                 <table className="w-full text-right text-sm">
                   <thead>
                     <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-                      {/* تم دمج التاريخ تحت المشكلة، لذلك حذفنا عمود التاريخ المنفصل */}
-                      <th className="p-3"> المشكلة والتاريخ</th>
+
+                      <th className="p-3"> المشكلة </th>
                       <th className="p-3">السيارة</th>
                       <th className="p-3">الخدمة</th>
                       <th className="p-3">الحالة</th>

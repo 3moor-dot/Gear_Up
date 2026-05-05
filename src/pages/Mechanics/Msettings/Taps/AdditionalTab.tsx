@@ -345,7 +345,9 @@ const AdditionalTab = () => {
       if (saved) {
         setData(JSON.parse(saved));
       }
-    } catch {}
+    } catch {
+        // ignore error
+    }
   };
 
   // ---------------- UI ----------------

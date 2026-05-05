@@ -157,7 +157,10 @@ const RegistrationOtp = () => {
             {otpArray.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => (inputsRef.current[i] = el)}
+                // ref={(el) => (inputsRef.current[i] = el)}
+                ref={(el) => {
+                  inputsRef.current[i] = el;
+                }}
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, i)}
                 maxLength={1}

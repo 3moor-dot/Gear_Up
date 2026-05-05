@@ -1137,7 +1137,7 @@ const buildBookingMessage = (eventName: string, data: any) => {
                   "جاري الإرسال..."
                 ) : (
                   <>
-                    <FaPaperPlane /> قبول وإرسال
+                <FaPaperPlane /> إرسال
                   </>
                 )}
               </button>
