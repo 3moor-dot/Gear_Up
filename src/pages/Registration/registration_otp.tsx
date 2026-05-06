@@ -1,12 +1,14 @@
 
-import { useState, useRef } from "react";
-import { FaEnvelope } from "react-icons/fa";
+import { useState, useRef, useEffect } from "react"; // ✅ تم إضافة useEffect
+import { FaEnvelope, FaRegClock } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
 
 const RegistrationOtp = () => {
   const [otpArray, setOtpArray] = useState<string[]>(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false); // ✅ حالة التحميل لإعادة الإرسال
+  const [timer, setTimer] = useState(30); // ✅ العداد الزمني
 
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -14,6 +16,17 @@ const RegistrationOtp = () => {
 
   const isDarkMode = () =>
     document.documentElement.classList.contains("dark");
+
+  // ✅ تأثير العداد الزمني (Timer Effect)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   // ✅ handle typing
   const handleChange = (value: string, index: number) => {
@@ -39,6 +52,62 @@ const RegistrationOtp = () => {
     setOtpArray(arr);
 
     inputsRef.current[5]?.focus();
+  };
+
+  // ✅ handle Resend OTP
+  const handleResend = async () => {
+    if (!email) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "البريد الإلكتروني غير موجود",
+        background: isDarkMode() ? "#1B1F2D" : "#fff",
+        color: isDarkMode() ? "#fff" : "#000",
+      });
+      return;
+    }
+
+    setResendLoading(true);
+
+    try {
+      // ⚠️ ملاحظة: تأكد من رابط إعادة الإرسال الصحيح هنا.
+      // الـ Endpoint الذي أرفقته كان للتحقق (user-registration-otp)، لذا افترضنا هنا رابط إعادة الإرسال.
+      const res = await fetch(
+        "https://gearupapp.runasp.net/api/users/resend-otp", 
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.message || "فشل إعادة الإرسال");
+
+      Swal.fire({
+        icon: "success",
+        title: "تم الإرسال",
+        text: "تم إرسال كود تفعيل جديد إلى بريدك الإلكتروني",
+        timer: 2000,
+        showConfirmButton: false,
+        background: isDarkMode() ? "#1B1F2D" : "#fff",
+        color: isDarkMode() ? "#fff" : "#000",
+      });
+
+      // إعادة تعيين العداد
+      setTimer(30);
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: err.message,
+        background: isDarkMode() ? "#1B1F2D" : "#fff",
+        color: isDarkMode() ? "#fff" : "#000",
+      });
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   // ✅ verify OTP
@@ -91,9 +160,9 @@ const RegistrationOtp = () => {
 
         localStorage.removeItem("pendingEmail");
         localStorage.removeItem("pendingFirstName");
-  localStorage.removeItem("pendingLastName");
-  localStorage.removeItem("pendingPhone");
-  localStorage.removeItem("pendingPassword");
+        localStorage.removeItem("pendingLastName");
+        localStorage.removeItem("pendingPhone");
+        localStorage.removeItem("pendingPassword");
 
         if (role === "2") {
           window.location.href = "/upload-license";
@@ -122,7 +191,6 @@ const RegistrationOtp = () => {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-
         className="w-full max-w-2xl bg-white dark:bg-[#1B1F2D] rounded-3xl shadow-2xl p-12 sm:p-14"
       >
         <h2 className="text-2xl font-bold text-center dark:text-white mb-2">
@@ -145,19 +213,15 @@ const RegistrationOtp = () => {
         </div>
 
         {/* OTP */}
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-sm mb-2 dark:text-white">
             كود التفعيل
           </label>
 
-          <div
-            className="flex gap-2 justify-center"
-            onPaste={handlePaste}
-          >
+          <div className="flex gap-2 justify-center" onPaste={handlePaste}>
             {otpArray.map((digit, i) => (
               <input
                 key={i}
-                // ref={(el) => (inputsRef.current[i] = el)}
                 ref={(el) => {
                   inputsRef.current[i] = el;
                 }}
@@ -168,40 +232,47 @@ const RegistrationOtp = () => {
               />
             ))}
           </div>
+
+          {/* ✅ Resend Button Area */}
+          <div className="mt-3 text-center flex justify-center items-center gap-2">
+            {timer > 0 ? (
+              <span className="text-sm text-gray-400 flex items-center gap-1">
+                <FaRegClock /> إعادة الإرسال خلال {timer} ثانية
+              </span>
+            ) : (
+              <button
+                onClick={handleResend}
+                disabled={resendLoading}
+                className="text-sm text-[#137FEC] font-bold hover:underline disabled:opacity-50"
+              >
+                {resendLoading ? "جارِ الإرسال..." : "إعادة إرسال الكود"}
+              </button>
+            )}
+          </div>
         </div>
 
+        <button
+          onClick={handleVerify}
+          disabled={loading}
+          className="w-full bg-[#137FEC] text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-60"
+        >
+          {loading ? "جارٍ التحقق..." : "تأكيد الحساب"}
+        </button>
 
-<button
-  onClick={handleVerify}
-  disabled={loading}
-  className="w-full bg-[#137FEC] text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-60"
->
-  {loading ? "جارٍ التحقق..." : "تأكيد الحساب"}
-</button>
-
-{/* 👇 زرار الرجوع */}
-<p className="text-center mt-4 text-sm">
-
-{/* 👇 زر الرجوع */}
-<div className="w-full flex justify-end mt-6">
-
- <span
-  onClick={() => {
-    // علامة إننا راجعين من الـ OTP
-    localStorage.setItem("fromOtpBack", "true");
-    
-    // اطلعي لصفحة التسجيل
-    window.location.href = "/register";
-  }}
-  className="text-[#137FEC] text-xl font-bold cursor-pointer hover:no-underline transition"
->
-  رجوع
-</span>
-</div>
-</p>
-
-</motion.div>
-</div>
+        {/* زر الرجوع */}
+        <div className="w-full flex justify-end mt-6">
+          <span
+            onClick={() => {
+              localStorage.setItem("fromOtpBack", "true");
+              window.location.href = "/register";
+            }}
+            className="text-[#137FEC] text-xl font-bold cursor-pointer hover:no-underline transition"
+          >
+            رجوع
+          </span>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

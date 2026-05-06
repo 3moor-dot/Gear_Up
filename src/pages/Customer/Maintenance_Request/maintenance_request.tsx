@@ -664,6 +664,7 @@ const MaintenanceRequest = () => {
                       الميكانيكيين الذين قبلوا الطلب
                     </h2>
                     {acceptedMechanics.map((m: any) => (
+                        console.log("MECHANIC ITEM:", m), // 👈 هنا
                       <div
                         key={m.mechanicUserId}
                         className="w-full max-w-md bg-white dark:bg-[#1F2937] rounded-2xl shadow-lg border border-blue-500/10 p-4 transition-all hover:shadow-xl"
@@ -688,20 +689,9 @@ const MaintenanceRequest = () => {
                           </div>
                         </div>
 
-                        {/* Specializations (New) */}
-                        {/* {Array.isArray(m.specializations) && m.specializations.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {m.specializations.map((spec: any, idx: number) => (
-                              <span
-                                key={idx}
-                                className="text-[9px] md:text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800"
-                              >
-                                {typeof spec === 'string' ? spec : spec.name || spec}
-                              </span>
-                            ))}
-                          </div> */}
+             
                           {/* Specializations */}
-<div className="flex flex-wrap gap-1 mt-3">
+{/* <div className="flex flex-wrap gap-1 mt-3">
   {Array.isArray(m.specializations) && m.specializations.length > 0 ? (
     m.specializations.map((spec: any, idx: number) => (
       <span
@@ -717,6 +707,42 @@ const MaintenanceRequest = () => {
       لا يوجد تخصصات محددة
     </span>
   )}
+</div> */}
+{/* Specializations - Updated Logic */}
+<div className="flex flex-wrap gap-1 mt-3">
+  {(() => {
+    // 1. محاولة استخراج البيانات من مصفوفة specializations
+    let specs = Array.isArray(m.specializations) ? m.specializations : [];
+
+    // 2. إذا كانت فارغة، نحاول استخراجها إذا كانت نص String
+    if (specs.length === 0 && m.specializations && typeof m.specializations === 'string') {
+      specs = [m.specializations];
+    }
+
+    // 3. إذا كانت فارغة، نحاول البحث في حقل specialization (بالمفرد) وهو شائع في الـ APIs
+    if (specs.length === 0 && m.specialization) {
+      specs = [m.specialization];
+    }
+
+    // العرض بناءً على النتائج
+    if (specs.length > 0) {
+      return specs.map((spec: any, idx: number) => (
+        <span
+          key={idx}
+          className="text-[9px] md:text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800"
+        >
+          {/* التعامل مع الحالة إذا كان التخصص كائناً فيه name أو مجرد نص */}
+          {typeof spec === 'string' ? spec : (spec.name || spec)}
+        </span>
+      ));
+    } else {
+      return (
+        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+          عام / غير محدد
+        </span>
+      );
+    }
+  })()}
 </div>
                         
 
