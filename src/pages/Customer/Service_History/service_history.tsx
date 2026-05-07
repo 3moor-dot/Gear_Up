@@ -163,19 +163,19 @@ const ServiceHistory = () => {
   const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
-  const renderStars = (ratingStars?: number) => {
-    if (ratingStars === null || ratingStars === undefined) {
-      return <span className="text-gray-400">-</span>;
-    }
-    return (
-      <div className="flex text-yellow-400 gap-0.5 text-sm">
-        {[...Array(5)].map((_, i) => (
-          <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
-        ))}
-        <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
-      </div>
-    );
-  };
+  // const renderStars = (ratingStars?: number) => {
+  //   if (ratingStars === null || ratingStars === undefined) {
+  //     return <span className="text-gray-400">-</span>;
+  //   }
+  //   return (
+  //     <div className="flex text-yellow-400 gap-0.5 text-sm">
+  //       {[...Array(5)].map((_, i) => (
+  //         <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
+  //       ))}
+  //       <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
+  //     </div>
+  //   );
+  // };
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
