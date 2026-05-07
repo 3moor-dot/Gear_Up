@@ -132,6 +132,7 @@ const migrateNotifications = (notifications: NotificationItem[]) => {
   });
 };
 
+
 const readNotificationsFromStorage = (storageKey: string): NotificationItem[] => {
   try {
     const saved = localStorage.getItem(storageKey);
@@ -239,6 +240,15 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     });
 
     setActiveSnoozeIndex(null);
+  };
+
+  // const convertArabicNumbersToEnglish = (value: string) => {
+  //   return value.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString());
+  // };
+  const convertArabicNumbersToEnglish = (value: string) => {
+    return value
+      .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+      .replace(/[^\d.]/g, "");
   };
 
   // --- Handle Rating Submission ---
@@ -579,6 +589,8 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       InProgress: "جاري الإصلاح",
       Completed: "تم الانتهاء",
       Cancelled: "تم الإلغاء",
+
+      SearchingFarther: "جاري البحث عن ميكانيكيين ",
     };
 
     connection.on("RequestStatusChanged", async (data: any) => {
@@ -1100,7 +1112,7 @@ const buildBookingMessage = (eventName: string, data: any) => {
               <label className="block text-sm font-bold mb-2 opacity-80">
               سعر التقدير (جنيه)
               </label>
-              <input
+              {/* <input
                 type="number"
                 value={priceModal.price}
                 onChange={(e) => setPriceModal((prev) => ({ ...prev, price: e.target.value }))}
@@ -1108,7 +1120,29 @@ const buildBookingMessage = (eventName: string, data: any) => {
                 className={`w-full rounded-lg p-3 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-green-500 ${
                   dark ? "bg-slate-700 border-none text-white" : "bg-gray-50 border border-gray-200"
                 }`}
-              />
+              /> */}
+
+
+<input
+  type="text"
+  inputMode="decimal"
+  value={priceModal.price}
+  onChange={(e) => {
+    const englishValue = convertArabicNumbersToEnglish(e.target.value);
+
+    setPriceModal((prev) => ({
+      ...prev,
+      price: englishValue,
+    }));
+  }}
+  placeholder="مثال: 150"
+  className={`w-full rounded-lg p-3 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+    dark
+      ? "bg-slate-700 border-none text-white"
+      : "bg-gray-50 border border-gray-200"
+  }`}
+/>
+
               <span className="text-[10px] opacity-60">سيتم عرض هذا السعر للعميل للموافقة</span>
             </div>
 

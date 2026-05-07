@@ -330,9 +330,36 @@ const ServiceHistory = () => {
                           </span>
                         </td>
 
+                        {/* <td className="p-3">
+                         
+                            {row.rating ? renderStars(row.rating.stars) : <span className="text-gray-400">-</span>}
+                        </td> */}
                         <td className="p-3">
-                            {renderStars(row.rating?.stars)}
-                        </td>
+  {row.rating ? (
+    <div className="relative group inline-block">
+      
+      {/* Stars */}
+      <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
+        {[...Array(5)].map((_, i) => (
+          <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
+        ))}
+      </div>
+
+      {/* Tooltip */}
+      {row.rating.comment && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
+                        hidden group-hover:block 
+                        bg-black text-white text-xs px-2 py-1 rounded-md 
+                        whitespace-nowrap z-50">
+          {row.rating.comment}
+        </div>
+      )}
+
+    </div>
+  ) : (
+    <span className="text-gray-400">-</span>
+  )}
+</td>
 
                         <td className="p-3 font-bold text-gray-800 dark:text-white">
                           {row.price !== null && row.price !== undefined ? (

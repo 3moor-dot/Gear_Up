@@ -225,18 +225,36 @@ const Mrequest_history = () => {
                         </td>
 
                         {/* عمود العميل */}
-                        <td className="p-2 md:p-4">
-                          <div className="flex items-center gap-1 md:gap-3">
-                            <img
-                              src={req.customer.profilePhotoUrl || "/default-avatar.png"}
-                              alt="customer"
-                              className="w-6 h-6 md:w-9 md:h-9 rounded-full object-cover flex-shrink-0"
-                            />
-                            <div className="font-medium text-[10px] md:text-sm leading-tight">
-                              {req.customer.firstName} {req.customer.lastName}
-                            </div>
-                          </div>
-                        </td>
+                   
+            <td className="p-2 md:p-4 relative group overflow-visible">
+              <div className="flex items-center gap-1 md:gap-3">
+                <img
+                  src={req.customer.profilePhotoUrl || "/default-avatar.png"}
+                  alt="customer"
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-full object-cover"
+                />
+                <div className="font-medium text-[10px] md:text-sm leading-tight">
+                  {req.customer.firstName} {req.customer.lastName}
+                </div>
+              </div>
+
+    {req.rating?.comment && (
+  <div
+    className="
+      absolute bottom-full right-1/2 translate-x-1/2
+      mb-1
+      w-56 p-2 rounded-lg shadow-lg
+      bg-white dark:bg-slate-700
+      text-gray-800 dark:text-white
+      text-xs text-center
+      hidden group-hover:block
+      z-[9999]
+    "
+  >
+    {req.rating.comment}
+  </div>
+)}
+    </td>
 
                         {/* عمود السيارة */}
                         <td className="p-2 md:p-4">
