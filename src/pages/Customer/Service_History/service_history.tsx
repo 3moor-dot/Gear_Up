@@ -4,8 +4,10 @@ import Header from "../../../components/Customer/customer_header";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FaCar } from "react-icons/fa"; // استيراد الأيقونة
+import { BsChevronDown } from "react-icons/bs"; // استيراد سهم القائمة
 
-// تحديث الـ Type ليتوافق تماماً مع الـ JSON اللي أرسلته
+// تحديث الـ Type ليشمل id السيارة (لضمان دقة الفلترة)
 type ServiceRequest = {
   requestId: string;
   issueDescription: string;
@@ -19,6 +21,7 @@ type ServiceRequest = {
     createdAt?: string;
   } | null;
   car?: {
+    id?: string; // أضفنا ID للسيارة هنا
     brand?: string;
     model?: string;
   };
@@ -34,6 +37,10 @@ type ServiceRequest = {
 const ServiceHistory = () => {
   const [historyData, setHistoryData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // State للسيارات والسيارة المختارة
+  const [cars, setCars] = useState<any[]>([]);
+  const [selectedCar, setSelectedCar] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -70,9 +77,25 @@ const ServiceHistory = () => {
     "Completed",
   ];
 
-  const filteredHistory = historyData.filter((item) =>
-    allowedStatuses.includes(item.status)
-  );
+  // --- منطق الفلترة المحدث ---
+  const filteredHistory = historyData.filter((item) => {
+    const statusMatch = allowedStatuses.includes(item.status);
+
+    // إيجاد كائن السيارة المطابق للاسم المختار
+    const activeCar = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
+    
+    // إذا لم يتم اختيار سيارة بعد (أثناء التحميل)، نعرض النتائج بناءً على الحالة فقط أو ننتظر
+    if (!activeCar) return statusMatch;
+
+    // محاولة المطابقة عبر الـ ID أولاً (الأدق)
+    // أو عبر الماركة والموديل كخيار بديل إذا لم يكن الـ ID موجوداً في البيانات القادمة
+    const carMatch = item.car?.id 
+      ? item.car.id === activeCar.id 
+      : (item.car?.brand && item.car?.model && 
+         `${item.car.brand} ${item.car.model}` === `${activeCar.brand} ${activeCar.model}`);
+
+    return statusMatch && carMatch;
+  });
 
   const serviceTypeMap = {
     Diagnosis: "تشخيص",
@@ -83,6 +106,35 @@ const ServiceHistory = () => {
 
   const navigate = useNavigate();
 
+  // --- جلب بيانات السيارات ---
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
+        setCars(carsData);
+
+        // تعيين السيارة الافتراضية (أول سيارة أو المحفوظة في الذاكرة)
+        if (carsData.length > 0) {
+          const savedCar = localStorage.getItem("selectedCar");
+          if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
+            setSelectedCar(savedCar);
+          } else {
+            const firstCarString = `${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`;
+            setSelectedCar(firstCarString);
+          }
+        }
+      } catch (error) {
+        console.error("فشل جلب السيارات", error);
+      }
+    };
+    
+    if (token) fetchCars();
+  }, [token]);
+
+  // --- جلب سجل الطلبات ---
   useEffect(() => {
     const fetchHistory = async () => {
       setLoading(true);
@@ -111,19 +163,19 @@ const ServiceHistory = () => {
   const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
-  const renderStars = (ratingStars?: number) => {
-    if (ratingStars === null || ratingStars === undefined) {
-      return <span className="text-gray-400">-</span>;
-    }
-    return (
-      <div className="flex text-yellow-400 gap-0.5 text-sm">
-        {[...Array(5)].map((_, i) => (
-          <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
-        ))}
-        <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
-      </div>
-    );
-  };
+  // const renderStars = (ratingStars?: number) => {
+  //   if (ratingStars === null || ratingStars === undefined) {
+  //     return <span className="text-gray-400">-</span>;
+  //   }
+  //   return (
+  //     <div className="flex text-yellow-400 gap-0.5 text-sm">
+  //       {[...Array(5)].map((_, i) => (
+  //         <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
+  //       ))}
+  //       <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
+  //     </div>
+  //   );
+  // };
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
@@ -133,14 +185,42 @@ const ServiceHistory = () => {
         <Header />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
-          {/* Title Section */}
-          <div className="text-right">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
-              عرض طلبات الصيانة
-            </h2>
-            <p className="text-xs md:text-sm text-slate-400 mt-1">
-              متابعة جميع طلبات الصيانة الخاصة بسيارتك
-            </p>
+          {/* Title Section & Car Selector */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-right w-full md:w-auto">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
+                عرض طلبات الصيانة
+              </h2>
+              <p className="text-xs md:text-sm text-slate-400 mt-1">
+                متابعة جميع طلبات الصيانة الخاصة بسيارتك
+              </p>
+            </div>
+            
+            {/* Car Filter Component */}
+            {cars.length > 0 && (
+              <div className="relative group w-full md:w-64">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                  <FaCar size={14} />
+                </div>
+                <select 
+                  value={selectedCar} 
+                  onChange={(e) => { 
+                    setSelectedCar(e.target.value); 
+                    localStorage.setItem("selectedCar", e.target.value); 
+                  }} 
+                  className="w-full appearance-none bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-sm py-2.5 pr-9 pl-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all shadow-sm"
+                >
+                  {cars.map((car, idx) => (
+                    <option key={idx} value={`${car.year} ${car.brand} ${car.model}`}>
+                      {car.year} {car.brand} {car.model}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                  <BsChevronDown size={10} />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* TABLE CARD */}
@@ -180,7 +260,6 @@ const ServiceHistory = () => {
                 <table className="w-full text-right text-sm">
                   <thead>
                     <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-
                       <th className="p-3"> المشكلة </th>
                       <th className="p-3">السيارة</th>
                       <th className="p-3">الخدمة</th>
@@ -202,7 +281,6 @@ const ServiceHistory = () => {
                         }
                         className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
                       >
-                        {/* تم دمج المشكلة والتاريخ في خلية واحدة */}
                         <td className="p-3 align-top">
                           <div className="font-bold text-gray-900 dark:text-gray-100 mb-1">
                             {row.issueDescription}
@@ -252,9 +330,36 @@ const ServiceHistory = () => {
                           </span>
                         </td>
 
+                        {/* <td className="p-3">
+                         
+                            {row.rating ? renderStars(row.rating.stars) : <span className="text-gray-400">-</span>}
+                        </td> */}
                         <td className="p-3">
-                            {renderStars(row.rating?.stars)}
-                        </td>
+  {row.rating ? (
+    <div className="relative group inline-block">
+      
+      {/* Stars */}
+      <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
+        {[...Array(5)].map((_, i) => (
+          <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
+        ))}
+      </div>
+
+      {/* Tooltip */}
+      {row.rating.comment && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
+                        hidden group-hover:block 
+                        bg-black text-white text-xs px-2 py-1 rounded-md 
+                        whitespace-nowrap z-50">
+          {row.rating.comment}
+        </div>
+      )}
+
+    </div>
+  ) : (
+    <span className="text-gray-400">-</span>
+  )}
+</td>
 
                         <td className="p-3 font-bold text-gray-800 dark:text-white">
                           {row.price !== null && row.price !== undefined ? (

@@ -485,18 +485,42 @@ const MessageBubble = ({
               msg.requires_mechanic === true &&
               msg.is_emergency === false && (
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    let recommendedIds: number[] = [];
+
+                    if (msg.recommended_mechanics?.length) {
+                      const raw = msg.recommended_mechanics;
+
+                      // لو Objects → استخرج id
+                      if (typeof raw[0] === "object") {
+                        recommendedIds = raw.map((m: any) => m.id);
+                      }
+                      // لو IDs جاهزة
+                      else {
+                        recommendedIds = raw;
+                      }
+                    }
+
+                    // أول ميكانيكي فقط (للاختيار الافتراضي)
+                    const firstMechanicId = recommendedIds[0] ?? null;
+
+                    // خزّن الداتا صح
+                    localStorage.setItem("chatbot_prefill", JSON.stringify({
+                      carId: msg.car_id,
+                      recommended_mechanics: recommendedIds, // ⭐️ أهم سطر
+                      mechanicId: firstMechanicId,
+                    }));
+
                     navigate("/customer/maintenancebookings", {
                       state: {
-                        prefillData: {
-                          mechanics: msg.recommended_mechanics,
-                          service: msg.required_service,
-                          carId: msg.car_id,
-                          autoOpen: true,
-                        }
-                      }
-                    })
-                  }
+                        openNewBooking: true,
+                        fromChatbot: true,
+                        carId: msg.car_id,
+                        mechanicId: firstMechanicId,
+                        recommended_mechanics: recommendedIds, // ⭐️ مهم
+                      },
+                    });
+                  }}
                   className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
                 >
                   🛠️ احجز صيانة

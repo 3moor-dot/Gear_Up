@@ -47,7 +47,7 @@ import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 // import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import MRequestTracking from "./pages/Mechanics/request/Mrequest_tracking";
 import Mrequest_history from "./pages/Mechanics/request/request_history";
-import UploadLicense from "./pages/Registration/UploadLicense";
+// import UploadLicense from "./pages/Registration/UploadLicense";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 
@@ -125,7 +125,7 @@ const App: React.FC = () => {
           <Route path="/registration_otp" element={<RegistrationOtp />} />
           {/* <Route path="/verify-otp" element={<VerifyOtp />} /> */}
 
-           <Route path="/upload-license" element={<UploadLicense />} /> 
+           {/* <Route path="/upload-license" element={<UploadLicense />} />  */}
           {/* <Route path="/pending-approval" element={<PendingApproval />} /> */}
           <Route path="/login" element={<LogIn />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

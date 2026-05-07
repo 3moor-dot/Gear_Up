@@ -375,7 +375,7 @@ const CreateReminderModal = ({
               <div className="grid grid-cols-2 gap-2 items-end">
                 <div className="space-y-0.5">
                   <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                    كل (الرقم)
+                    القيمة
                   </label>
                   <input
                     type="number"

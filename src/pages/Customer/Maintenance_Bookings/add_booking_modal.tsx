@@ -300,16 +300,70 @@ const AddBookingModal = ({
   const fetchMechanics = async () => {
     try {
       setLoadingMechanics(true);
-      const response = await axios.get(`${API_BASE_URL}/mechanics`, { headers: { Accept: "*/*" } });
-      const data = response?.data?.data || [];
-      setMechanics(
-        data.filter((item: any) => item.mechanicProfileId)
-            .map((item: any) => ({ id: item.id, name: `${item.firstName} ${item.lastName}` }))
-      );
+
+      const response = await axios.get(`${API_BASE_URL}/mechanics`, {
+        headers: { Accept: "*/*" },
+      });
+
+      let data = response?.data?.data || [];
+
+      const prefill = localStorage.getItem("chatbot_prefill");
+
+      let recommendedIds: string[] | null = null;
+      let preselectedId: string | null = effectivePreselectedId || null;
+      let isFromChatbot = false; // ⭐️ مهم جدا
+
+      if (prefill) {
+        try {
+          const parsed = JSON.parse(prefill);
+
+          if (parsed.recommended_mechanics?.length) {
+            recommendedIds = parsed.recommended_mechanics;
+            isFromChatbot = true; // ⭐️
+          }
+
+          if (parsed.mechanicId) {
+            preselectedId = parsed.mechanicId;
+          }
+
+        } catch (e) {
+          console.error("prefill parse error", e);
+        }
+      }
+      if (isFromChatbot) {
+        data = data.filter((item: any) =>
+          recommendedIds?.includes(item.id)
+        );
+      }
+
+      // ⭐️ فلترة واحدة فقط بالمصفوفة
+      if (recommendedIds && recommendedIds.length > 0) {
+        data = data.filter((item: any) =>
+          recommendedIds!.includes(item.id)
+        );
+      }
+
+      const mapped = data
+        .filter((item: any) => item.mechanicProfileId)
+        .map((item: any) => ({
+          id: item.id,
+          name: `${item.firstName} ${item.lastName}`,
+        }));
+
+      setMechanics(mapped);
+
+      // ⭐️ Auto select mechanic لو موجود
+      if (preselectedId && mapped.some((m: { id: string; }) => m.id === preselectedId)) {
+        setMechanicId(preselectedId);
+        await fetchMechanicServices(preselectedId);
+      }
+
     } catch (error: any) {
       console.error("Fetch mechanics error:", error?.response?.data || error);
       setMechanics([]);
-    } finally { setLoadingMechanics(false); }
+    } finally {
+      setLoadingMechanics(false);
+    }
   };
 
   const fetchMechanicServices = async (selectedMechanicId: string) => {
@@ -337,21 +391,30 @@ const AddBookingModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    fetchCars();
-    fetchMechanics();
-    if (effectivePreselectedId) {
-      setMechanicId(effectivePreselectedId);
-      fetchMechanicServices(effectivePreselectedId);
-    } else {
-      setMechanicId("");
-      setPricedServices([]);
-    }
-    setCarId("");
-    setMechanicServiceId("");
-    setDate("");
-    setSlotStart("");
-    setSlotEnd("");
-  }, [isOpen, effectivePreselectedId]);
+
+    const init = async () => {
+      await fetchCars();
+      await fetchMechanics();
+
+      const data = localStorage.getItem("chatbot_prefill");
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+
+          if (parsed.carId) {
+            setCarId(parsed.carId);
+          }
+
+          localStorage.removeItem("chatbot_prefill");
+        } catch (e) {
+          console.error("prefill error", e);
+        }
+      }
+    };
+
+    init();
+
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -399,9 +462,9 @@ const AddBookingModal = ({
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeModal} />
 
-<div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide">        <button type="button" onClick={closeModal} className="absolute top-6 left-6 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors z-10">
-          <MdClose size={30} />
-        </button>
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide">        <button type="button" onClick={closeModal} className="absolute top-6 left-6 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors z-10">
+        <MdClose size={30} />
+      </button>
 
         <div className="p-8 md:p-12">
           <div className="mb-10 text-center">
