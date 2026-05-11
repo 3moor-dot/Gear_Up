@@ -170,7 +170,8 @@
 //     isOpen: false,
 //     requestId: null,
 //     notificationIndex: null,
-//     stars: 5,
+//     // stars: 5,
+//     stars: 0, 
 //     comment: "",
 //     loading: false,
 //   });
@@ -249,7 +250,7 @@
 //       );
 //       toast.success("شكراً لك! تم إرسال تقييمك بنجاح ⭐");
 //       if (ratingModal.notificationIndex !== null) removeNotificationFromList(ratingModal.notificationIndex);
-//       setRatingModal({ isOpen: false, requestId: null, notificationIndex: null, stars: 5, comment: "", loading: false });
+//       setRatingModal({ isOpen: false, requestId: null, notificationIndex: null, stars: 0, comment: "", loading: false });
 //     } catch (error) {
 //       console.error("Rating Error:", error);
 //       toast.error("فشل إرسال التقييم، حاول مرة أخرى.");
@@ -644,7 +645,7 @@
 //                       {!isRequest && !isBooking && !isReminder && n.message && <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5 mb-2">{n.message}</div>}
 
 //                       {isRequest && role?.toLowerCase() === "customer" && n.status === "Completed" && (
-//                         <button onClick={() => setRatingModal({ isOpen: true, requestId: n.requestId || null, notificationIndex: i, stars: 5, comment: "", loading: false })} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 rounded text-xs font-bold mt-2 transition flex items-center justify-center gap-1">
+//                         <button onClick={() => setRatingModal({ isOpen: true, requestId: n.requestId || null, notificationIndex: i, stars: 0, comment: "", loading: false })} className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-1.5 rounded text-xs font-bold mt-2 transition flex items-center justify-center gap-1">
 //                           <FaStar /> تقييم الميكانيكي
 //                         </button>
 //                       )}
@@ -784,7 +785,7 @@
 //             </div>
 //             <textarea value={ratingModal.comment} onChange={(e) => setRatingModal((prev) => ({ ...prev, comment: e.target.value }))} placeholder="اكتب تعليقك هنا (اختياري)..." className={`w-full rounded-lg p-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 ${dark ? "bg-slate-700 border-none text-white" : "bg-gray-50 border border-gray-200"}`} rows={3} />
 //             <div className="flex gap-3">
-//               <button onClick={() => setRatingModal({ isOpen: false, requestId: null, notificationIndex: null, stars: 5, comment: "", loading: false })} className="flex-1 py-2 rounded-lg text-sm font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 transition">إلغاء</button>
+//               <button onClick={() => setRatingModal({ isOpen: false, requestId: null, notificationIndex: null, stars: 0, comment: "", loading: false })} className="flex-1 py-2 rounded-lg text-sm font-bold bg-gray-200 hover:bg-gray-300 text-gray-800 transition">إلغاء</button>
 //               <button onClick={handleRatingSubmit} disabled={ratingModal.loading} className="flex-1 py-2 rounded-lg text-sm font-bold bg-blue-500 hover:bg-blue-600 text-white transition flex items-center justify-center gap-2 disabled:opacity-50">{ratingModal.loading ? "جاري الإرسال..." : <><FaPaperPlane /> إرسال التقييم</>}</button>
 //             </div>
 //           </div>
@@ -795,6 +796,8 @@
 // };
 
 // export default NotificationBell;
+
+
 
 import { useState, useEffect, useCallback } from "react";
 import { FaBell, FaTimes, FaStar, FaRegStar, FaPaperPlane, FaRegEye } from "react-icons/fa";
@@ -1593,4 +1596,3 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
 };
 
 export default NotificationBell;
-
