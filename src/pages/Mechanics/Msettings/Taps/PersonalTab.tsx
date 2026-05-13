@@ -288,4 +288,3 @@ const PersonalTab = () => {
 
 export default PersonalTab;
 
-

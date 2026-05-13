@@ -43,7 +43,7 @@ const ServiceHistory = () => {
   const [selectedCar, setSelectedCar] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 9;
 
   const token = sessionStorage.getItem("userToken");
 
@@ -257,16 +257,17 @@ const ServiceHistory = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right text-sm">
+                {/* <table className="w-full text-right text-sm"> */}
+                <table className="w-full text-right text-[10px] md:text-sm">
                   <thead>
                     <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-                      <th className="p-3"> المشكلة </th>
-                      <th className="p-3">السيارة</th>
-                      <th className="p-3">الخدمة</th>
-                      <th className="p-3">الحالة</th>
-                      <th className="p-3">الميكانيكي</th>
-                      <th className="p-3">التقييم</th>
-                      <th className="p-3">السعر</th>
+                      <th className="p-2 md:p-3 font-semibold"> المشكلة </th>
+                      <th className="p-2 md:p-3 font-semibold">السيارة</th>
+                      <th className="p-2 md:p-3 font-semibold">الخدمة</th>
+                      <th className="p-2 md:p-3 font-semibold">الحالة</th>
+                      <th className="p-2 md:p-3 font-semibold">الميكانيكي</th>
+                      <th className="p-2 md:p-3 font-semibold">التقييم</th>
+                      <th className="p-2 md:p-3 font-semibold">السعر</th>
                     </tr>
                   </thead>
 

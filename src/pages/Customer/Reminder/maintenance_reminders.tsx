@@ -610,27 +610,47 @@ const MaintenanceReminders = () => {
     setDeleteTargetId(null);
   };
 
-  const hideCompletedReminder = (indexToRemove: number) => {
-    setCompletedReminders(prev => prev.filter((_, idx) => idx !== indexToRemove));
-  };
+  // const hideCompletedReminder = (indexToRemove: number) => {
+  //   setCompletedReminders(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  // };
 
-  const getFrequencyLabel = (r: any) => {
-    const rawType = String(r.frequencyType ?? "").toLowerCase();
-    const val = Number(r.intervalValue ?? 0);
-    const unitKey = String(r.intervalUnit ?? "0");
-    switch (rawType) {
-      case "0": case "once": return "مرة واحدة";
-      case "1": case "daily": return "يومي";
-      case "2": case "weekly": return "أسبوعي";
-      case "3": case "monthly": return "شهري";
-      case "4": case "yearly": return "سنوي";
-      case "5": case "custom": case "custominterval": {
-        const unitMap: Record<string, string> = { "0": "أيام", "1": "أسابيع", "2": "شهور", "3": "سنوات" };
-        return `كل ${val} ${unitMap[unitKey] ?? "أيام"}`;
+    // استبدل دالة getFrequencyLabel الحالية بهذا الكود المعدل
+    const getFrequencyLabel = (r: any) => {
+      const rawType = String(r.frequencyType ?? "").toLowerCase();
+      const val = Number(r.intervalValue ?? 0);
+      const unitKey = r.intervalUnit; // القيمة القادمة من الباك إند (قد تكون رقم أو نص)
+  
+      // تعديل الـ Map ليشمل الأرقام (التي يرسلها الفرونت إند حالياً)
+      // والنصوص الإنجليزية (التي يرجعها الباك إند كما في الصورة المرفقة)
+      const unitMap: Record<string, string> = {
+        // Mapping for Numbers
+        "0": "أيام",
+        "1": "أسابيع",
+        "2": "شهور",
+        "3": "سنوات",
+        // Mapping for String Enum Names (from the C# backend image)
+        "Days": "أيام",
+        "Weeks": "أسابيع",
+        "Months": "شهور",
+        "Years": "سنوات",
+      };
+  
+      // محاولة إيجاد الترجمة المناسبة، وإذا فشل نستخدم "أيام" كقيمة افتراضية
+      const unitLabel = unitMap[String(unitKey)] || "أيام";
+  
+      switch (rawType) {
+        case "0": case "once": return "مرة واحدة";
+        case "1": case "daily": return "يومي";
+        case "2": case "weekly": return "أسبوعي";
+        case "3": case "monthly": return "شهري";
+        case "4": case "yearly": return "سنوي";
+        case "5": case "custom": case "custominterval": {
+          // استخدام التسمية الصحيحة المستخلصة أعلاه
+          return `كل ${val} ${unitLabel}`;
+        }
+        default: return "غير معروف";
       }
-      default: return "غير معروف";
-    }
-  };
+    };
 
   const filteredUpcoming = useMemo(() => {
     const carObj = cars.find(
@@ -694,7 +714,7 @@ const MaintenanceReminders = () => {
           // <div className="flex-1 overflow-y-auto p-4 custom-scroll">
           <div className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scroll">
             <div className="space-y-4 pr-2 pl-2">   
-              {filteredCompleted.length > 0 ? filteredCompleted.map((r, idx) => (
+              {/* {filteredCompleted.length > 0 ? filteredCompleted.map((r, idx) => (
                 <div 
                   key={idx} 
                   className="w-full flex flex-row items-center h-16 px-5 py-3 rounded-[1.5rem] transition-all duration-300 group
@@ -726,7 +746,34 @@ dark:border-slate-700
                 </div>
               )) : (
                 <p className="text-xs text-slate-400 italic text-center py-4">لا يوجد سجلات لهذه السيارة.</p>
-              )}
+              )} */}
+{filteredCompleted.length > 0 ? filteredCompleted.map((r, idx) => (
+  <div key={idx} className="w-full flex flex-row items-center h-16 px-5 py-3 rounded-[1.5rem] transition-all duration-300 group
+       bg-slate-50 dark:bg-slate-800/80
+       hover:bg-slate-100 dark:hover:bg-slate-700/80
+       border border-slate-100 dark:border-slate-700
+       mb-3 shadow-sm"
+    dir="rtl"
+  >
+    
+    <div className="flex flex-col text-right ml-auto overflow-hidden pointer-events-none">
+      <p className="font-bold text-[14px] text-slate-700 dark:text-white">
+        {r.name || r.title || "تذكير مكتمل"}
+      </p>
+      <p className="text-[10px] text-slate-400 dark:text-slate-300 font-bold mt-0.5">
+        {formatToEgyptDate(r.startDate)}
+      </p>
+    </div>
+
+    {/* ❌ تم حذف زر الـ X بالكامل */}
+
+  </div>
+)) : (
+  <p className="text-xs text-slate-400 italic text-center py-4">
+    لا يوجد سجلات لهذه السيارة.
+  </p>
+)}
+
             </div>
           </div>
         )}
