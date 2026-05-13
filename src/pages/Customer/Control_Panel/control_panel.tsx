@@ -421,7 +421,8 @@ const Dashboard = () => {
                   </div>
                   <button
                     onClick={() => setShowAllMechanics(!showAllMechanics)}
-                    className="text-[11px] text-[#137FEC] underline hover:text-blue-400 transition-colors font-bold"
+                    // className="text-[11px] text-[#137FEC] underline hover:text-blue-400 transition-colors font-bold"
+                    className="text-[11px] text-white dark:text-[#137FEC] underline hover:text-gray-200 dark:hover:text-blue-400 transition-colors font-bold"
                   >
                     {showAllMechanics ? "عرض الأعلى" : "عرض الكل"}
                   </button>
