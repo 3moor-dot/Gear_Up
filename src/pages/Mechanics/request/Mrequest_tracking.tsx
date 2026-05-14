@@ -326,8 +326,6 @@ import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 // تم إضافة Wrench للاستخدام كبديل للإيموجي
 import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings, Wrench } from "lucide-react";
-// تم إضافة Wrench للاستخدام كبديل للإيموجي
-import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings, Wrench } from "lucide-react";
 
 
      const statusOptions = [
@@ -422,8 +420,7 @@ const updateStatus = async (newStatus: string) => {
     try {
       await axios.put(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/status`,
-        { newStatus: statusMap[newStatus] }, 
-        { newStatus: statusMap[newStatus] }, 
+        { newStatus: statusMap[newStatus] },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
