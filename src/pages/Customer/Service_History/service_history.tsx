@@ -6,10 +6,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaCar } from "react-icons/fa"; // استيراد الأيقونة
 import { BsChevronDown } from "react-icons/bs"; // استيراد سهم القائمة
-import { FaCar } from "react-icons/fa"; // استيراد الأيقونة
-import { BsChevronDown } from "react-icons/bs"; // استيراد سهم القائمة
 
-// تحديث الـ Type ليشمل id السيارة (لضمان دقة الفلترة)
 // تحديث الـ Type ليشمل id السيارة (لضمان دقة الفلترة)
 type ServiceRequest = {
   requestId: string;
@@ -24,7 +21,6 @@ type ServiceRequest = {
     createdAt?: string;
   } | null;
   car?: {
-    id?: string; // أضفنا ID للسيارة هنا
     id?: string; // أضفنا ID للسيارة هنا
     brand?: string;
     model?: string;
@@ -41,10 +37,6 @@ type ServiceRequest = {
 const ServiceHistory = () => {
   const [historyData, setHistoryData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // State للسيارات والسيارة المختارة
-  const [cars, setCars] = useState<any[]>([]);
-  const [selectedCar, setSelectedCar] = useState("");
 
   // State للسيارات والسيارة المختارة
   const [cars, setCars] = useState<any[]>([]);
@@ -104,26 +96,6 @@ const ServiceHistory = () => {
 
     return statusMatch && carMatch;
   });
-  // --- منطق الفلترة المحدث ---
-  const filteredHistory = historyData.filter((item) => {
-    const statusMatch = allowedStatuses.includes(item.status);
-
-    // إيجاد كائن السيارة المطابق للاسم المختار
-    const activeCar = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
-    
-    // إذا لم يتم اختيار سيارة بعد (أثناء التحميل)، نعرض النتائج بناءً على الحالة فقط أو ننتظر
-    if (!activeCar) return statusMatch;
-
-    // محاولة المطابقة عبر الـ ID أولاً (الأدق)
-    // أو عبر الماركة والموديل كخيار بديل إذا لم يكن الـ ID موجوداً في البيانات القادمة
-    const carMatch = item.car?.id 
-      ? item.car.id === activeCar.id 
-      : (item.car?.brand && item.car?.model && 
-         `${item.car.brand} ${item.car.model}` === `${activeCar.brand} ${activeCar.model}`);
-
-    return statusMatch && carMatch;
-  });
-
   const serviceTypeMap = {
     Diagnosis: "تشخيص",
     Tires: "إطارات",
@@ -290,6 +262,7 @@ const ServiceHistory = () => {
                 </div>
               </div>
             )}
+          </div>
           {/* Title Section & Car Selector */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-right w-full md:w-auto">
@@ -436,65 +409,30 @@ const ServiceHistory = () => {
                           </span>
                         </td>
 
-                        {/* <td className="p-3">
-                         
-                            {row.rating ? renderStars(row.rating.stars) : <span className="text-gray-400">-</span>}
-                        </td> */}
-                        {/* <td className="p-3">
-                         
-                            {row.rating ? renderStars(row.rating.stars) : <span className="text-gray-400">-</span>}
-                        </td> */}
                         <td className="p-3">
-  {row.rating ? (
-    <div className="relative group inline-block">
-      
-      {/* Stars */}
-      <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
-        {[...Array(5)].map((_, i) => (
-          <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
-        ))}
-      </div>
+                          {row.rating ? (
+                            <div className="relative group inline-block">
+                              {/* Stars */}
+                              <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
+                                {[...Array(5)].map((_, i) => (
+                                  <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
+                                ))}
+                              </div>
 
-      {/* Tooltip */}
-      {row.rating.comment && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
-                        hidden group-hover:block 
-                        bg-black text-white text-xs px-2 py-1 rounded-md 
-                        whitespace-nowrap z-50">
-          {row.rating.comment}
-        </div>
-      )}
-
-    </div>
-  ) : (
-    <span className="text-gray-400">-</span>
-  )}
-</td>
-  {row.rating ? (
-    <div className="relative group inline-block">
-      
-      {/* Stars */}
-      <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
-        {[...Array(5)].map((_, i) => (
-          <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
-        ))}
-      </div>
-
-      {/* Tooltip */}
-      {row.rating.comment && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
-                        hidden group-hover:block 
-                        bg-black text-white text-xs px-2 py-1 rounded-md 
-                        whitespace-nowrap z-50">
-          {row.rating.comment}
-        </div>
-      )}
-
-    </div>
-  ) : (
-    <span className="text-gray-400">-</span>
-  )}
-</td>
+                              {/* Tooltip */}
+                              {row.rating.comment && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
+                                                hidden group-hover:block 
+                                                bg-black text-white text-xs px-2 py-1 rounded-md 
+                                                whitespace-nowrap z-50">
+                                  {row.rating.comment}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
 
                         <td className="p-3 font-bold text-gray-800 dark:text-white">
                           {row.price !== null && row.price !== undefined ? (
