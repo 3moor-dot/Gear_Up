@@ -42,7 +42,7 @@ const Mrequest_history = () => {
   const [loading, setLoading] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
 
   const navigate = useNavigate();
 
@@ -171,7 +171,8 @@ const Mrequest_history = () => {
           <div className="flex flex-col">
             <div className="rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-x-auto">
               {/* تم إزالة whitespace-nowrap من هنا ليسمح للنصوص بالنزول لسطر جديد */}
-              <table className="w-full text-right">
+              {/* <table className="w-full text-right"> */}
+              <table className="w-full text-right text-[9px] md:text-xs">
                 {/* HEADER */}
                 <thead
                   className={`${
@@ -179,13 +180,13 @@ const Mrequest_history = () => {
                   } text-[10px] md:text-sm`}
                 >
                   <tr>
-                    <th className="p-2 md:p-4 font-semibold">المشكلة</th>
-                    <th className="p-2 md:p-4 font-semibold">العميل</th>
-                    <th className="p-2 md:p-4 font-semibold">السيارة</th>
-                    <th className="p-2 md:p-4 font-semibold">الخدمة</th>
-                    <th className="p-2 md:p-4 font-semibold">الحالة</th>
-                    <th className="p-2 md:p-4 font-semibold">التقييم</th>
-                    <th className="p-2 md:p-4 font-semibold">السعر</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">المشكلة</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">العميل</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">السيارة</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">الخدمة</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">الحالة</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">التقييم</th>
+                    <th className="p-1.5 md:p-2.5 font-semibold">السعر</th>
                   </tr>
                 </thead>
 
@@ -208,7 +209,7 @@ const Mrequest_history = () => {
                       >
                         {/* عمود المشكلة - تم التعديل هنا لجعل النص ينزل لتحت */}
                         <td
-                          className={`p-2 md:p-4 text-[10px] md:text-sm break-words whitespace-normal max-w-[200px] md:max-w-[350px] ${
+                          className={`p-1.5 md:p-2.5 text-[10px] md:text-sm break-words whitespace-normal max-w-[200px] md:max-w-[350px] ${
                             dark ? "text-gray-300" : "text-gray-600"
                           }`}
                         >
@@ -257,7 +258,7 @@ const Mrequest_history = () => {
     </td>
 
                         {/* عمود السيارة */}
-                        <td className="p-2 md:p-4">
+                        <td className="p-1.5 md:p-2.5">
                           <div className="font-semibold text-[10px] md:text-sm leading-tight">
                             {req.car.brand} {req.car.model}
                           </div>
@@ -271,12 +272,12 @@ const Mrequest_history = () => {
                         </td>
 
                         {/* عمود الخدمة */}
-                        <td className="p-2 md:p-4 text-[10px] md:text-sm whitespace-nowrap">
+                        <td className="p-1.5 md:p-2.5 text-[10px] md:text-sm whitespace-nowrap">
                           {serviceTypeMap[req.serviceType] || "—"}
                         </td>
 
                         {/* عمود الحالة */}
-                        <td className="p-2 md:p-4 whitespace-nowrap">
+                        <td className="p-1.5 md:p-2.5 whitespace-nowrap">
                           <span
                             className={`px-1.5 py-0.5 md:px-3 md:py-1 rounded-full text-[9px] md:text-xs font-medium block w-fit ${
                               statusColorMap[req.status] ||
@@ -288,7 +289,7 @@ const Mrequest_history = () => {
                         </td>
 
                         {/* عمود التقييم */}
-                        <td className="p-2 md:p-4 whitespace-nowrap">
+                        <td className="p-1.5 md:p-2.5 whitespace-nowrap">
                           {req.rating ? (
                             <div className="group relative">
                               <StarRatingDisplay stars={req.rating.stars} />
@@ -312,7 +313,7 @@ const Mrequest_history = () => {
                         </td>
 
                         {/* عمود السعر */}
-                        <td className="p-2 md:p-4 whitespace-nowrap">
+                        <td className=" whitespacp-1.5 md:p-2.5e-nowrap">
                           {req.price !== null && req.price !== undefined ? (
                             <span className="text-green-600 dark:text-green-400 font-semibold">
                               {req.price.toLocaleString()} ج.م
@@ -380,3 +381,5 @@ const Mrequest_history = () => {
 };
 
 export default Mrequest_history;
+
+

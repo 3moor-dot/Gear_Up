@@ -19,7 +19,7 @@ const RegistrationOtp = () => {
 
   // ✅ تأثير العداد الزمني (Timer Effect)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => prev - 1);
@@ -165,7 +165,8 @@ const RegistrationOtp = () => {
         localStorage.removeItem("pendingPassword");
 
         if (role === "2") {
-          window.location.href = "/upload-license";
+          // window.location.href = "/upload-license";
+          window.location.href = "/login";
         } else {
           window.location.href = "/login";
         }

@@ -326,6 +326,8 @@ import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
 // تم إضافة Wrench للاستخدام كبديل للإيموجي
 import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings, Wrench } from "lucide-react";
+// تم إضافة Wrench للاستخدام كبديل للإيموجي
+import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings, Wrench } from "lucide-react";
 
 
      const statusOptions = [
@@ -399,6 +401,7 @@ const fetchRequest = async () => {
       console.log("DATA:", resStatus.data);
   
       setRequest(resStatus.data);   
+      setRequest(resStatus.data);   
       setStatus(resStatus.data.status);
   
     } catch (err: any) {
@@ -419,6 +422,7 @@ const updateStatus = async (newStatus: string) => {
     try {
       await axios.put(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/status`,
+        { newStatus: statusMap[newStatus] }, 
         { newStatus: statusMap[newStatus] }, 
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -555,11 +559,14 @@ const updateStatus = async (newStatus: string) => {
 <p>
   <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
   <strong> طريقة تلقي الخدمة:</strong>{" "}
+  <strong> طريقة تلقي الخدمة:</strong>{" "}
   {serviceModeMap[request?.serviceMode] || request?.serviceMode}
 </p>
  
 {request?.serviceType && (
   <p>
+    <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
+    <strong>الخدمة:</strong>{" "}
     <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
     <strong>الخدمة:</strong>{" "}
     {serviceTypeMap[request.serviceType] || request.serviceType}

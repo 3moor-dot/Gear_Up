@@ -8,7 +8,8 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0", // 🔥 تأكد إن المفتاح شغال
+    // googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0", 
+    googleMapsApiKey: import.meta.env.tst,
   });
 
   if (loadError)
@@ -271,6 +272,13 @@ const AdditionalTab = () => {
 
     if (!data.latitude || !data.longitude) {
       setError("يرجى تحديد الموقع بدقة على الخريطة (انقر على الموقع)");
+      setIsSaving(false);
+      return;
+    }
+
+    // ✅ التعديل الجديد: التحقق من التواريخ
+    if (data.workingHoursFrom >= data.workingHoursTo) {
+      setError("يجب أن يكون تاريخ نهاية العمل قبل تاريخ البداية");
       setIsSaving(false);
       return;
     }

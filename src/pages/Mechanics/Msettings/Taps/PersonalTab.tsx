@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaCamera } from "react-icons/fa";
@@ -286,3 +287,4 @@ const PersonalTab = () => {
 };
 
 export default PersonalTab;
+
