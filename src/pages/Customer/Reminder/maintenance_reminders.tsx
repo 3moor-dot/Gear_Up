@@ -274,7 +274,7 @@ const MaintenanceReminders = () => {
     <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
 
       {/* --- القائمة الجانبية (Drawer) --- */}
-      <div
+      {/* <div
       className={`fixed left-0 top-[185px] sm:top-[145px] md:top-[210px] bottom-4 bg-white dark:bg-[#0f172acc] backdrop-blur-md shadow-2xl z-[60] transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-slate-700 flex flex-col rounded-r-2xl overflow-hidden
         ${isCompletedDrawerOpen ? 'w-[85vw] sm:w-[320px]' : 'w-[42px] sm:w-[56px]'}`}
         dir="rtl"
@@ -305,11 +305,11 @@ const MaintenanceReminders = () => {
                   dir="rtl"
                 >
                   <div className="flex flex-col text-right ml-auto overflow-hidden pointer-events-none">
-                    {/* التعديل: استخدام r.title بدلاً من r.name */}
+                    {/* التعديل: استخدام r.title بدلاً من r.name *
                     <p className="font-bold text-[14px] text-slate-700 dark:text-white">
                       {r.title || r.name || "تذكير مكتمل"}
                     </p>
-                    {/* التعديل: استخدام r.completedDate بدلاً من r.startDate */}
+                    {/* التعديل: استخدام r.completedDate بدلاً من r.startDate *
                     <p className="text-[10px] text-slate-400 dark:text-slate-300 font-bold mt-0.5">
                       {formatToEgyptDate(r.completedDate || r.startDate || "")}
                     </p>
@@ -323,7 +323,83 @@ const MaintenanceReminders = () => {
             </div>
           </div>
         )}
+      </div> */}
+
+
+{/* --- القائمة الجانبية (Drawer) --- */}
+<div
+  className={`
+    fixed left-0
+    /* تحسين الموقع العمودي (Top Positioning) */
+    /* الموبايل: زودنا المسافة عشان ما يغطي العناوين والأزرار اللي فوق بعض */
+    top-[260px] 
+    /* التابلت: مساحة متوسطة */
+    sm:top-[200px] 
+    /* اللابتوب: المسافة اللي كنت شغال بيها */
+    md:top-[210px] 
+    bottom-4
+    
+    bg-white dark:bg-[#0f172acc] 
+    backdrop-blur-md 
+    shadow-2xl 
+    z-[60] 
+    transition-all duration-300 ease-in-out 
+    border-r border-slate-200 dark:border-slate-700 
+    flex flex-col 
+    rounded-r-2xl 
+    overflow-hidden
+    
+    /* تحكم في العرض (Width Control) */
+    ${isCompletedDrawerOpen 
+      ? 'w-[85vw] max-w-[300px] sm:max-w-[320px] sm:w-[320px]' 
+      : 'w-[42px] sm:w-[56px]'}
+  `}
+  dir="rtl"
+>
+  <div
+    className="h-16 sm:h-20 flex flex-col items-center justify-center px-2 sm:px-4 border-b border-slate-100 dark:border-blue-500/30 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-1"
+    onClick={() => setIsCompletedDrawerOpen(!isCompletedDrawerOpen)}
+  >
+    <div className="flex items-center gap-2">
+      <FaClipboardCheck className="text-slate-300 text-[18px]" />
+      {isCompletedDrawerOpen && (
+        <span className="font-black text-slate-900 dark:text-white text-sm whitespace-nowrap leading-tight">
+          المهام المكتملة
+        </span>
+      )}
+    </div>
+  </div>
+
+  {isCompletedDrawerOpen && (
+    <div className="flex-1 overflow-y-auto p-2 sm:p-4 custom-scroll">
+      <div className="space-y-4 pr-2 pl-2">
+        {filteredCompleted.length > 0 ? filteredCompleted.map((r, idx) => (
+          <div key={idx} className="w-full flex flex-row items-center h-16 px-5 py-3 rounded-[1.5rem] transition-all duration-300 group
+     bg-slate-50 dark:bg-slate-800/80
+     hover:bg-slate-100 dark:hover:bg-slate-700/80
+     border border-slate-100 dark:border-slate-700
+     mb-3 shadow-sm"
+            dir="rtl"
+          >
+            <div className="flex flex-col text-right ml-auto overflow-hidden pointer-events-none">
+              <p className="font-bold text-[14px] text-slate-700 dark:text-white">
+                {r.title || r.name || "تذكير مكتمل"}
+              </p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-300 font-bold mt-0.5">
+                {formatToEgyptDate(r.completedDate || r.startDate || "")}
+              </p>
+            </div>
+          </div>
+        )) : (
+          <p className="text-xs text-slate-400 italic text-center py-4">
+            لا يوجد سجلات لهذه السيارة.
+          </p>
+        )}
       </div>
+    </div>
+  )}
+</div>
+
 
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
