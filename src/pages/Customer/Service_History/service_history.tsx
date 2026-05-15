@@ -227,7 +227,7 @@ const ServiceHistory = () => {
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
           {/* Title Section & Car Selector */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-right w-full md:w-auto">
               <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
                 عرض طلبات الصيانة
@@ -237,7 +237,7 @@ const ServiceHistory = () => {
               </p>
             </div>
             
-            {/* Car Filter Component */}
+            {/* Car Filter Component *
             {cars.length > 0 && (
               <div className="relative group w-full md:w-64">
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -262,7 +262,7 @@ const ServiceHistory = () => {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
           {/* Title Section & Car Selector */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-right w-full md:w-auto">
