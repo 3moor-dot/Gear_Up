@@ -2,13 +2,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { FaEdit, FaSave, FaSpinner, FaLocationArrow } from "react-icons/fa";
+import { FaEdit, FaSave, FaSpinner, FaLocationArrow, FaCloudUploadAlt, FaCheckCircle } from "react-icons/fa";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
 // --- Map ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    // googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0", 
     googleMapsApiKey: import.meta.env.tst,
   });
 
@@ -39,7 +38,7 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "100%" }}
         center={center}
-        zoom={latitude ? 17 : 6} 
+        zoom={latitude ? 17 : 6}
         onClick={(e) => {
           if (isEditing && e.latLng) {
             setLocation(e.latLng.lat(), e.latLng.lng());
@@ -73,7 +72,24 @@ interface AdditionalData {
   workingHoursFrom: string;
   workingHoursTo: string;
   experience: string;
+  workshopLicenseUrl?: string; 
 }
+
+const getUserIdFromToken = () => {
+  const token = sessionStorage.getItem("userToken");
+  if (!token) return "";
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    const payload = JSON.parse(jsonPayload);
+    return payload.sub || payload.nameid || "";
+  } catch {
+    return "";
+  }
+};
 
 const getStorageKey = () => {
   const token = sessionStorage.getItem("userToken");
@@ -105,6 +121,7 @@ const defaultData: AdditionalData = {
   workingHoursFrom: "08:00",
   workingHoursTo: "18:00",
   experience: "",
+  workshopLicenseUrl: undefined,
 };
 
 // ---------------- COMPONENT ----------------
@@ -122,7 +139,8 @@ const AdditionalTab = () => {
   const [selectedMain, setSelectedMain] = useState("");
   const [selectedSub, setSelectedSub] = useState("");
 
-  // ---------------- DATA ----------------
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+
   const [data, setData] = useState<AdditionalData>(() => {
     try {
       const saved = localStorage.getItem(getStorageKey());
@@ -132,9 +150,7 @@ const AdditionalTab = () => {
     }
   });
 
-  // تحديث حالة الـ Main/Sub بناءً على الـ Data
   useEffect(() => {
-    // 🔥 تعديل: نتأكد إن القيم مش null قبل ما ناخدها عشان القائمة ماتظهرش فاضية
     if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
       setSelectedMain(String(data.mainSpecialty[0]));
     } else {
@@ -148,7 +164,6 @@ const AdditionalTab = () => {
     }
   }, [data]);
 
-  // ---------------- FETCH SPECIALIZATIONS ----------------
   useEffect(() => {
     const fetchSpecializations = async () => {
       try {
@@ -199,7 +214,6 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, []);
 
-  // ---------------- FETCH MY DATA ----------------
   useEffect(() => {
     const fetchMyData = async () => {
       try {
@@ -210,18 +224,18 @@ const AdditionalTab = () => {
   
         const apiData = res.data;
   
-        setData({
+        setData((prev) => ({
+          ...prev,
           location: apiData.location || "",
           latitude: apiData.latitude,
           longitude: apiData.longitude,
-          // 🔥 تعديل: لو القيمة null هنخلي مصفوفة فاضية عشان مبيظهرش [null] في السلكت
           mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
           subSpecialty: apiData.subSpecializationId || "",
           fieldVisit: apiData.supportsFieldVisit || false,
           workingHoursFrom: apiData.workStartTime || "08:00",
           workingHoursTo: apiData.workEndTime || "18:00",
           experience: "",
-        });
+        }));
   
       } catch (err) {
         console.log(err);
@@ -231,10 +245,31 @@ const AdditionalTab = () => {
     fetchMyData();
   }, []);
 
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+  
+        const apiData = res.data;
+        setData((prev) => ({
+          ...prev,
+          workshopLicenseUrl: apiData.workshopLicenseUrl,
+        }));
+  
+      } catch (err) {
+        console.log("Error fetching summary:", err);
+      }
+    };
+  
+    fetchSummary();
+  }, []);
+
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
 
-  // ---------------- تحديد موقعي ----------------
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
       setError("المتصفح لا يدعم تحديد الموقع");
@@ -257,13 +292,142 @@ const AdditionalTab = () => {
     );
   };
 
-  // ---------------- SAVE ----------------
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setLicenseFile(e.target.files[0]);
+    }
+  };
+
+  // const handleSave = async () => {
+  //   setIsSaving(true);
+  //   setError("");
+  //   setSuccess("");
+
+  //   if (!selectedMain) {
+  //     setError("يرجى اختيار التخصص الرئيسي");
+  //     setIsSaving(false);
+  //     return;
+  //   }
+
+  //   if (!data.latitude || !data.longitude) {
+  //     setError("يرجى تحديد الموقع بدقة على الخريطة (انقر على الموقع)");
+  //     setIsSaving(false);
+  //     return;
+  //   }
+
+  //   if (data.workingHoursFrom >= data.workingHoursTo) {
+  //     setError("يجب أن يكون وقت نهاية العمل بعد وقت البداية");
+  //     setIsSaving(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const payloadLocation = {
+  //       latitude: Number(data.latitude),
+  //       longitude: Number(data.longitude),
+  //       location: data.location || "تم التحديد عبر الخريطة",
+  //     };
+
+  //     const payloadSpecialization = {
+  //       primarySpecializationId: selectedMain,
+  //       subSpecializationId: selectedSub || null,
+  //     };
+
+  //     const payloadFieldVisit = {
+  //       supportsFieldVisit: data.fieldVisit,
+  //     };
+
+  //     const payloadWorkingHours = {
+  //       workStartTime: data.workingHoursFrom,
+  //       workEndTime: data.workingHoursTo,
+  //     };
+
+  //     const requests: any[] = [
+  //       axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //       axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //       axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //       axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //     ];
+
+  //     if (licenseFile) {
+  //       const formData = new FormData();
+  //       formData.append("File", licenseFile);
+  //       formData.append("IsWorkshopLicense", "true");
+
+  //       const isUpdate = !!data.workshopLicenseUrl;
+
+  //       if (isUpdate) {
+  //         requests.push(
+  //           axios.put("https://gearupapp.runasp.net/api/mechanics/documents/workshop-license", formData, {
+  //             headers: { 
+  //               Authorization: `Bearer ${token}`,
+  //               'Content-Type': 'multipart/form-data'
+  //             },
+  //           })
+  //         );
+  //       } else {
+  //         const userId = getUserIdFromToken();
+  //         if (!userId) {
+  //           throw new Error("لا يمكن تحديد معرف المستخدم");
+  //         }
+  //         formData.append("UserId", userId);
+
+  //         requests.push(
+  //           axios.post("https://gearupapp.runasp.net/api/mechanics/documents", formData, {
+  //             headers: { 
+  //               Authorization: `Bearer ${token}`,
+  //               'Content-Type': 'multipart/form-data'
+  //             },
+  //           })
+  //         );
+  //       }
+  //     }
+
+  //     await Promise.all(requests);
+
+  //     localStorage.setItem(
+  //       getStorageKey(),
+  //       JSON.stringify({
+  //         ...data,
+  //         mainSpecialty: [selectedMain],
+  //         subSpecialty: selectedSub,
+  //       })
+  //     );
+
+  //     if (licenseFile) {
+  //        setData(prev => ({
+  //          ...prev,
+  //          workshopLicenseUrl: URL.createObjectURL(licenseFile)
+  //        }));
+  //     }
+
+  //     setSuccess("تم الحفظ بنجاح");
+  //     setIsEditing(false);
+  //     setLicenseFile(null);
+  //     setTimeout(() => setSuccess(""), 2500);
+
+  //   } catch (err: any) {
+  //     console.error("Save Error:", err);
+  //     const serverMessage = err?.response?.data?.message || err?.response?.data || "حصل خطأ أثناء الحفظ";
+  //     setError(typeof serverMessage === 'string' ? serverMessage : "حصل خطأ غير متوقع");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
   const handleSave = async () => {
     setIsSaving(true);
     setError("");
     setSuccess("");
 
-    // 🔥 خطوة 1: التحقق من صحة البيانات قبل الإرسال (Validation)
+    // ... (كود التحقق من المدخلات كما هو - بدون تغيير) ...
     if (!selectedMain) {
       setError("يرجى اختيار التخصص الرئيسي");
       setIsSaving(false);
@@ -276,25 +440,19 @@ const AdditionalTab = () => {
       return;
     }
 
-    // ✅ التعديل الجديد: التحقق من التواريخ
     if (data.workingHoursFrom >= data.workingHoursTo) {
-      setError("يجب أن يكون تاريخ نهاية العمل قبل تاريخ البداية");
-      setIsSaving(false);
-      return;
-    }
-
-    // ✅ التعديل الجديد: التحقق من التواريخ
-    if (data.workingHoursFrom >= data.workingHoursTo) {
-      setError("يجب أن يكون تاريخ نهاية العمل قبل تاريخ البداية");
+      setError("يجب أن يكون وقت نهاية العمل بعد وقت البداية");
       setIsSaving(false);
       return;
     }
 
     try {
-      // 🔥 خطوة 2: تجهيز البيانات والتأكد من الأنواع
+      const token = sessionStorage.getItem("userToken") || "";
+
+      // 1. تجهيز البيانات
       const payloadLocation = {
-        latitude: Number(data.latitude), // تأكد إنه رقم
-        longitude: Number(data.longitude), // تأكد إنه رقم
+        latitude: Number(data.latitude),
+        longitude: Number(data.longitude),
         location: data.location || "تم التحديد عبر الخريطة",
       };
 
@@ -312,23 +470,61 @@ const AdditionalTab = () => {
         workEndTime: data.workingHoursTo,
       };
 
-      // إرسال الطلبات
-      await Promise.all([
-        axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+      // 2. إرسال الطلبات بشكل متتابع (Sequential) بدلاً من Promise.all
+      // هذا يمنع الـ Deadlock لأننا لا نعدل نفس المستخدم في نفس الوقت
+      
+      // تحديث الموقع
+      await axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      // 🔥 خطوة 3: الحفظ في LocalStorage فقط بعد النجاح
+      // تحديث التخصصات
+      await axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // تحديث الزيارات الميدانية
+      await axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // تحديث ساعات العمل
+      await axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // رفع الملف (إن وجد)
+      if (licenseFile) {
+        const formData = new FormData();
+        formData.append("File", licenseFile);
+        formData.append("IsWorkshopLicense", "true");
+
+        const isUpdate = !!data.workshopLicenseUrl;
+
+        if (isUpdate) {
+          await axios.put("https://gearupapp.runasp.net/api/mechanics/documents/workshop-license", formData, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            },
+          });
+        } else {
+          const userId = getUserIdFromToken();
+          if (!userId) {
+            throw new Error("لا يمكن تحديد معرف المستخدم");
+          }
+          formData.append("UserId", userId);
+
+          await axios.post("https://gearupapp.runasp.net/api/mechanics/documents", formData, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            },
+          });
+        }
+      }
+
+      // 3. حفظ في الـ LocalStorage وعرض رسالة النجاح
       localStorage.setItem(
         getStorageKey(),
         JSON.stringify({
@@ -338,13 +534,21 @@ const AdditionalTab = () => {
         })
       );
 
+      if (licenseFile) {
+         setData(prev => ({
+           ...prev,
+           workshopLicenseUrl: URL.createObjectURL(licenseFile)
+         }));
+      }
+
       setSuccess("تم الحفظ بنجاح");
       setIsEditing(false);
+      setLicenseFile(null);
       setTimeout(() => setSuccess(""), 2500);
 
     } catch (err: any) {
       console.error("Save Error:", err);
-      // 🔥 خطوة 4: عرض رسالة الخطأ من السيرفر لو موجودة
+      // ملاحظة: إذا حدث Deadlock مرة أخرى (نادر جداً بعد هذا التعديل)، السيرفر يجب أن يعيد المحاولة
       const serverMessage = err?.response?.data?.message || err?.response?.data || "حصل خطأ أثناء الحفظ";
       setError(typeof serverMessage === 'string' ? serverMessage : "حصل خطأ غير متوقع");
     } finally {
@@ -352,9 +556,9 @@ const AdditionalTab = () => {
     }
   };
 
-  // ---------------- إلغاء ----------------
   const handleCancel = () => {
     setIsEditing(false);
+    setLicenseFile(null);
     try {
       const saved = localStorage.getItem(getStorageKey());
       if (saved) {
@@ -365,7 +569,8 @@ const AdditionalTab = () => {
     }
   };
 
-  // ---------------- UI ----------------
+  const displayImage = licenseFile ? URL.createObjectURL(licenseFile) : data.workshopLicenseUrl;
+
   return (
     <div
       className={`rounded-2xl border p-6 space-y-6 ${
@@ -397,6 +602,91 @@ const AdditionalTab = () => {
       {/* messages */}
       {success && <div className="p-3 bg-green-500/10 text-green-500 text-center text-sm font-medium">{success}</div>}
       {error && <div className="p-3 bg-red-500/10 text-red-500 text-center text-sm font-medium">{error}</div>}
+
+      {/* ================= WORKSHOP LICENSE (New UI) ================= */}
+      <div className={`p-4 rounded-xl border ${!dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-700"}`}>
+        <div className="flex items-center justify-between mb-4">
+          <label className="text-sm font-bold flex items-center gap-2">
+            رخصة الورشة <span className="text-red-500">*</span>
+          </label>
+          {/* Status Badge */}
+          {data.workshopLicenseUrl && !isEditing && (
+            <span className="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded-full flex items-center gap-1">
+              <FaCheckCircle /> مرفقة
+            </span>
+          )}
+        </div>
+
+        {/* Modern Upload Area */}
+        <div
+          className={`relative w-full flex flex-col items-center justify-center min-h-[240px] rounded-xl transition-all duration-300 border-2 overflow-hidden group
+            ${displayImage
+              ? "border-solid border-gray-200 dark:border-gray-600 bg-transparent"
+              : "border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#1a253a]"
+            }
+            ${!isEditing && !displayImage ? "opacity-60 cursor-not-allowed" : isEditing && !displayImage ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "cursor-default"}
+          `}
+        >
+          {displayImage ? (
+            // --- Image State ---
+            <>
+              <img
+                src={displayImage}
+                alt="Workshop License"
+                className="max-h-[300px] w-full object-contain"
+              />
+              
+              {/* Overlay on Hover for Editing */}
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]">
+                  <label
+                    htmlFor="license-upload"
+                    className="bg-white text-gray-900 px-5 py-2.5 rounded-lg font-bold cursor-pointer hover:bg-gray-100 shadow-lg transform transition-transform hover:scale-105 flex items-center gap-2"
+                  >
+                    <FaCloudUploadAlt /> تغيير الصورة
+                  </label>
+                </div>
+              )}
+            </>
+          ) : (
+            // --- Empty State ---
+            isEditing ? (
+              <label htmlFor="license-upload" className="cursor-pointer flex flex-col items-center gap-3 p-6">
+                <div className={`p-4 rounded-full transition-transform duration-300 group-hover:scale-110 ${dark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                  <FaCloudUploadAlt className="text-4xl" />
+                </div>
+                <div className="text-center">
+                  <span className="text-sm font-bold block mb-1">اضغط لرفع صورة الرخصة</span>
+                  {/* <span className="text-xs text-gray-400">JPG, PNG (Max 5MB)</span> */}
+                </div>
+              </label>
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-gray-400">
+                <FaCloudUploadAlt className="text-3xl opacity-50" />
+                <span className="text-sm">لا توجد صورة مرفقة</span>
+              </div>
+            )
+          )}
+        </div>
+
+        {/* Instruction Text (Below) */}
+        {isEditing && (
+          <div className="mt-3 text-center">
+             <p className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
+              يرجى إرفاق صورة واضحة لرخصة ورشة العمل الخاصة بك.
+            </p>
+          </div>
+        )}
+
+        {/* Hidden Input */}
+        <input
+          type="file"
+          id="license-upload"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
 
       {/* ================= LOCATION ================= */}
       <div className="space-y-4">
