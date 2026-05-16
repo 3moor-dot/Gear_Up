@@ -453,7 +453,7 @@ const MaintenanceReminders = () => {
 
               <div className="space-y-6 max-h-[700px] overflow-y-auto overflow-x-hidden pr-2 pl-4 custom-scroll pb-4">
                 {filteredActive.length > 0 ? filteredActive.map((r) => {
-                  const dateToShow = r.nextScheduledAt ? formatToEgyptDate(r.nextScheduledAt) : formatToEgyptDate(r.startDate || "");
+                  // const dateToShow = r.nextScheduledAt ? formatToEgyptDate(r.nextScheduledAt) : formatToEgyptDate(r.startDate || "");
 
                   return (
                     <div key={r.id || r.reminderId} className="p-4 sm:p-6 md:p-4 rounded-2xl sm:rounded-[2.5rem] shadow-lg border transition-all dark:bg-[#0f172acc] dark:border-slate-600 border-slate-200 hover:shadow-xl md:hover:scale-105 transform-gpu duration-300">
@@ -552,9 +552,12 @@ const MaintenanceReminders = () => {
     <FaCalendarAlt className="text-red-400 shrink-0" />
     <span className="leading-relaxed">
       تاريخ النهاية:{" "}
-      {isValidEndDate(r.endDate)
+      {/* {isValidEndDate(r.endDate)
         ? formatToEgyptDate(r.endDate)
-        : "—"}
+        : "—"} */}
+        {isValidEndDate(r.endDate) 
+  ? formatToEgyptDate(r.endDate!) 
+  : "—"}
     </span>
   </div>
 

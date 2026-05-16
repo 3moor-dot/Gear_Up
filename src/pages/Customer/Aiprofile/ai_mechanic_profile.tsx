@@ -78,7 +78,7 @@ const AiMechanicProfile = () => {
         );
 
         setMechanic(response.data);
-      } catch (err: any) {
+      } catch {
         setError("فشل في تحميل بيانات الميكانيكي.");
       } finally {
         setLoading(false);
