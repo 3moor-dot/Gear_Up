@@ -652,24 +652,8 @@ const MaintenanceRequest = () => {
                         </div>
 
              
-                          {/* Specializations */}
-{/* <div className="flex flex-wrap gap-1 mt-3">
-  {Array.isArray(m.specializations) && m.specializations.length > 0 ? (
-    m.specializations.map((spec: any, idx: number) => (
-      <span
-        key={idx}
-        className="text-[9px] md:text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800"
-      >
-        {typeof spec === 'string' ? spec : spec.name || spec}
-      </span>
-    ))
-  ) : (
-    // هذا الجزء سيظهر فقط إذا لم تكن هناك تخصصات
-    <span className="text-[10px] text-gray-400 dark:text-gray-500">
-      لا يوجد تخصصات محددة
-    </span>
-  )}
-</div> */}
+                  
+
 {/* Specializations - Updated Logic */}
 <div className="flex flex-wrap gap-1 mt-3">
   {(() => {

@@ -441,9 +441,7 @@ const MaintenanceReminders = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
         
-        {/* --- تم التعديل هنا: --- */}
-        {/* 1. إزالة overflow-y-auto من main وإضافته للداخل */}
-        {/* 2. إضافة flex flex-col لتوزيع الارتفاع */}
+    
         <main className="flex-1 overflow-hidden flex flex-col p-4 md:p-8">
           <style>{`
             .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -465,7 +463,6 @@ const MaintenanceReminders = () => {
           </div>
 
           {/* --- تم التعديل هنا: --- */}
-          {/* إضافة flex-1 min-h-0 للـ Grid عشان ياخد المساحة المتبقية */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0 order-1">
             <div className="lg:col-span-9 space-y-6 flex flex-col h-full min-h-0">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
@@ -496,11 +493,35 @@ const MaintenanceReminders = () => {
               </div>
 
               {/* --- تم التعديل هنا: --- */}
-              {/* تحويل max-h-[700px] إلى flex-1 لتمليء المساحة المتاحة، والسكرول هيفصل هنا */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 pl-4 custom-scroll pb-4 space-y-6">
                 {filteredActive.length > 0 ? filteredActive.map((r) => {
                   return (
-                    <div key={r.id || r.reminderId} className="p-4 sm:p-6 md:p-4 rounded-2xl sm:rounded-[2.5rem] shadow-lg border transition-all dark:bg-[#0f172acc] dark:border-slate-600 border-slate-200 hover:shadow-xl md:hover:scale-105 transform-gpu duration-300">
+
+<div
+  key={r.id || r.reminderId}
+  className={`
+    p-4 sm:p-6 md:p-4
+    rounded-2xl sm:rounded-[2.5rem]
+    shadow-lg border transition-all
+    hover:shadow-xl md:hover:scale-105
+    transform-gpu duration-300
+    dark:bg-[#0f172acc]
+
+    ${
+      filter === "missed"
+        ? `
+          border-red-300
+          dark:border-red-500/60
+        `
+        : `
+          border-slate-200
+          dark:border-slate-600
+        `
+    }
+  `}
+>
+
+
                       <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 items-start sm:items-center">
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-lg shadow-inner bg-blue-50 text-blue-500 dark:bg-blue-500/10">

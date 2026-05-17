@@ -191,32 +191,6 @@ const ServiceHistory = () => {
   const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
-  // const renderStars = (ratingStars?: number) => {
-  //   if (ratingStars === null || ratingStars === undefined) {
-  //     return <span className="text-gray-400">-</span>;
-  //   }
-  //   return (
-  //     <div className="flex text-yellow-400 gap-0.5 text-sm">
-  //       {[...Array(5)].map((_, i) => (
-  //         <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
-  //       ))}
-  //       <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
-  //     </div>
-  //   );
-  // };
-  // const renderStars = (ratingStars?: number) => {
-  //   if (ratingStars === null || ratingStars === undefined) {
-  //     return <span className="text-gray-400">-</span>;
-  //   }
-  //   return (
-  //     <div className="flex text-yellow-400 gap-0.5 text-sm">
-  //       {[...Array(5)].map((_, i) => (
-  //         <span key={i}>{i < ratingStars ? "★" : "☆"}</span>
-  //       ))}
-  //       <span className="text-gray-600 dark:text-gray-300 text-xs mr-1">({ratingStars})</span>
-  //     </div>
-  //   );
-  // };
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
@@ -226,43 +200,7 @@ const ServiceHistory = () => {
         <Header />
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
-          {/* Title Section & Car Selector */}
-          {/* <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-right w-full md:w-auto">
-              <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
-                عرض طلبات الصيانة
-              </h2>
-              <p className="text-xs md:text-sm text-slate-400 mt-1">
-                متابعة جميع طلبات الصيانة الخاصة بسيارتك
-              </p>
-            </div>
-            
-            {/* Car Filter Component *
-            {cars.length > 0 && (
-              <div className="relative group w-full md:w-64">
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                  <FaCar size={14} />
-                </div>
-                <select 
-                  value={selectedCar} 
-                  onChange={(e) => { 
-                    setSelectedCar(e.target.value); 
-                    localStorage.setItem("selectedCar", e.target.value); 
-                  }} 
-                  className="w-full appearance-none bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-sm py-2.5 pr-9 pl-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all shadow-sm"
-                >
-                  {cars.map((car, idx) => (
-                    <option key={idx} value={`${car.year} ${car.brand} ${car.model}`}>
-                      {car.year} {car.brand} {car.model}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                  <BsChevronDown size={10} />
-                </div>
-              </div>
-            )}
-          </div> */}
+       
           {/* Title Section & Car Selector */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-right w-full md:w-auto">
