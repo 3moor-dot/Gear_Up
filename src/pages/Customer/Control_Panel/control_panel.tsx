@@ -292,38 +292,45 @@ const Dashboard = () => {
   const displayedMechanics = showAllMechanics ? mechanics : mechanics.slice(0, 2);
 
   return (
+    // Container: استخدم flex و h-screen لضمان ملء الشاشة
     <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* منطقة المحتوى الرئيسية */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <Header />
-        {/* مسافات مريحة واحترافية */}
-        <main className="flex-1 overflow-hidden p-6 flex flex-col gap-6">
-          <div className="text-right shrink-0">
-            <h2 className="text-2xl font-bold dark:text-white">
+        {/* 
+          تم تغيير overflow-hidden إلى overflow-y-auto 
+          للسماح بالتمرير على الشاشات الصغيرة بدلاً من اختفاء المحتوى
+        */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 md:gap-6 scroll-smooth">
+          
+          <div className="text-right shrink-0 mb-2">
+            <h2 className="text-xl md:text-2xl font-bold dark:text-white leading-tight">
               أهلاً بعودتك{userName ? ` يا ${userName}` : ""}!
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-xs md:text-sm mt-1">
               إليك نظرة عامة سريعة على حالة سيارتك.
             </p>
           </div>
 
-          {/* التخطيط الشبكي الرئيسي */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+          {/* الشبكة المتجاوبة: عمود واحد في الموبايل، 12 عمود في الشاشات الكبيرة */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 pb-6">
             
             {/* العمود الأيسر (الكبير) */}
-            <div className="col-span-1 lg:col-span-8 flex flex-col gap-6 h-full min-h-0">
+            <div className="col-span-1 lg:col-span-8 flex flex-col gap-4 md:gap-6">
+              
               {/* كارت السيارة */}
-              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 flex flex-col md:flex-row items-center justify-between border border-blue-100 dark:border-blue-900/40 gap-6 shadow-sm shrink-0 min-h-[200px]">
+              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[20px] md:rounded-[30px] p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-blue-100 dark:border-blue-900/40 gap-4 md:gap-6 shadow-sm shrink-0">
                 {cars.length === 0 ? (
                   <div className="flex-1 text-center text-gray-400 dark:text-gray-500 py-8">
-                    <p className="text-5xl mb-3">🚗</p>
-                    <p className="font-bold text-lg dark:text-gray-300">لا توجد سيارات مضافة بعد</p>
-                    <p className="text-sm mt-1">قم بإضافة سيارتك من الملف الشخصي</p>
+                    <p className="text-4xl md:text-5xl mb-3">🚗</p>
+                    <p className="font-bold text-base md:text-lg dark:text-gray-300">لا توجد سيارات مضافة بعد</p>
+                    <p className="text-xs md:text-sm mt-1">قم بإضافة سيارتك من الملف الشخصي</p>
                   </div>
                 ) : (
                   <>
-                    <div className="text-center md:text-right w-full md:w-auto">
-                      <h3 className="text-xl md:text-2xl font-bold dark:text-white">
+                    <div className="text-center md:text-right w-full md:w-auto flex flex-col items-center md:items-start">
+                      <h3 className="text-lg md:text-2xl font-bold dark:text-white text-center md:text-right">
                         {cars[selectedCarIndex]?.year || "----"}{" "}
                         {cars[selectedCarIndex]?.brand || ""}{" "}
                         {cars[selectedCarIndex]?.model || ""}
@@ -336,34 +343,35 @@ const Dashboard = () => {
                       {cars.length > 1 && (
                         <button
                           onClick={handleSwitchCar}
-                          className="bg-[#137FEC] text-white w-full md:w-auto px-8 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors active:scale-95 mt-4"
+                          className="bg-[#137FEC] text-white w-full md:w-auto px-6 md:px-8 py-2.5 md:py-3 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors active:scale-95 mt-3 md:mt-4"
                         >
                           <span>تبديل المركبة ({selectedCarIndex + 1}/{cars.length})</span> ⇅
                         </button>
                       )}
                     </div>
-                    <div className="h-40 flex items-center justify-center">
+                    {/* تعديل ارتفاع الصورة لتكون أقل في الموبايل */}
+                    <div className="h-32 md:h-40 flex items-center justify-center w-full md:w-auto">
                       {cars[selectedCarIndex]?.carPhotoUrl ? (
                         <img
                           src={cars[selectedCarIndex].carPhotoUrl}
-                          className="h-full object-contain"
+                          className="h-full object-contain max-w-full"
                           alt="Car"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = "none";
                           }}
                         />
                       ) : (
-                        <span className="text-8xl opacity-50">🚙</span>
+                        <span className="text-6xl md:text-8xl opacity-50">🚙</span>
                       )}
                     </div>
                   </>
                 )}
               </div>
 
-              {/* كارت التذكيرات - تم التعديل: إزالة flex-1 وتقليل المسافات */}
-              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 shadow-sm border border-blue-100 dark:border-blue-900/40 flex flex-col shrink-0">
-                <div className="flex justify-between items-center mb-4 shrink-0">
-                  <h4 className="text-[#137FEC] font-bold border-b-2 border-[#137FEC] inline-block pb-1 text-lg">
+              {/* كارت التذكيرات */}
+              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[20px] md:rounded-[30px] p-4 md:p-6 shadow-sm border border-blue-100 dark:border-blue-900/40 flex flex-col shrink-0">
+                <div className="flex justify-between items-center mb-3 md:mb-4 shrink-0">
+                  <h4 className="text-[#137FEC] font-bold border-b-2 border-[#137FEC] inline-block pb-1 text-base md:text-lg">
                     التذكيرات القادمة
                   </h4>
                   <button
@@ -373,7 +381,7 @@ const Dashboard = () => {
                     عرض الكل
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-3 md:gap-3">
                   {remindersLoading ? (
                     <div className="col-span-full flex items-center justify-center py-4 gap-3">
                       <div className="w-5 h-5 border-2 border-[#137FEC] border-t-transparent rounded-full animate-spin" />
@@ -383,7 +391,7 @@ const Dashboard = () => {
                     displayedReminders.map((r) => (
                       <div
                         key={r.id}
-                        className="bg-[#93C5FD] dark:bg-[#1e2d4d] p-3 rounded-2xl flex items-center gap-3 text-white border border-blue-200 dark:border-blue-800/30 hover:bg-[#7BB8FC] dark:hover:bg-[#253a5e] transition-all cursor-pointer group"
+                        className="bg-[#93C5FD] dark:bg-[#1e2d4d] p-3 md:p-3 rounded-2xl flex items-center gap-3 text-white border border-blue-200 dark:border-blue-800/30 hover:bg-[#7BB8FC] dark:hover:bg-[#253a5e] transition-all cursor-pointer group"
                         onClick={() => navigate("/customer/reminders")}
                       >
                         <div className="bg-[#137FEC] dark:bg-[#0d6dd6] p-2 rounded-full shrink-0 shadow-md group-hover:scale-110 transition-transform">
@@ -402,14 +410,14 @@ const Dashboard = () => {
                           </svg>
                         </div>
                         <div className="text-right flex-1 min-w-0">
-                          <p className="font-bold text-sm truncate">
+                          <p className="font-bold text-xs md:text-sm truncate">
                             {r.name || r.title || "تذكير صيانة"}
                           </p>
-                          <p className="text-[10px] opacity-80 mt-0.5">
+                          <p className="text-[10px] md:text-xs opacity-80 mt-0.5">
                             {formatToEgyptDate(r.nextScheduledAt || r.startDate)}
                           </p>
                           {getFrequencyLabel(r) && (
-                            <span className="inline-block mt-1 text-[9px] bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full opacity-70">
+                            <span className="inline-block mt-1 text-[9px] md:text-[10px] bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full opacity-70">
                               {getFrequencyLabel(r)}
                             </span>
                           )}
@@ -417,7 +425,7 @@ const Dashboard = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-full text-center py-8">
+                    <div className="col-span-full text-center py-6 md:py-8">
                       <p className="text-3xl mb-2 opacity-40">📋</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">لا توجد صيانات قادمة لهذه السيارة</p>
                     </div>
@@ -427,16 +435,17 @@ const Dashboard = () => {
             </div>
 
             {/* العمود الأيمن (الصغير) */}
-            <div className="col-span-1 lg:col-span-4 flex flex-col gap-6 h-full min-h-0">
+            <div className="col-span-1 lg:col-span-4 flex flex-col gap-4 md:gap-6">
+              
               {/* كارت الميكانيكيين */}
-              <div className="bg-[#137FECE5] dark:bg-[#162240] rounded-[30px] p-6 text-white border border-blue-300 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
+              <div className="bg-[#137FECE5] dark:bg-[#162240] rounded-[20px] md:rounded-[30px] p-4 md:p-6 text-white border border-blue-300 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 text-center md:text-right shrink-0">
                   <div>
-                    <h4 className="font-bold text-lg">
+                    <h4 className="font-bold text-base md:text-lg">
                       {showAllMechanics ? "كل الميكانيكيين" : "العثور على ميكانيكي"}
                     </h4>
                     {!showAllMechanics && (
-                      <p className="text-sm text-white/80 mt-1">
+                      <p className="text-xs md:text-sm text-white/80 mt-1">
                         الأعلى تقييماً
                       </p>
                     )}
@@ -449,8 +458,8 @@ const Dashboard = () => {
                   </button>
                 </div>
 
-                {/* التعديل هنا: max-h-[185px] عشان يخفي الثالث تماماً */}
-                <div className="space-y-3 overflow-y-auto pr-2 max-h-[185px] min-h-0 custom-scrollbar">
+                {/* تعديل الارتفاع الأقصى ليكون أكثر مرونة على الموبايل */}
+                <div className="space-y-3 overflow-y-auto pr-2 max-h-[300px] md:max-h-[185px] min-h-0 custom-scrollbar">
                   {mechanicsLoading ? (
                     <div className="flex items-center justify-center py-6 gap-3">
                       <div className="w-6 h-6 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
@@ -525,10 +534,10 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* كارت تاريخ الخدمة - تم التعديل: تقليل المسافات والأحجام */}
-              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 border border-blue-100 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
+              {/* كارت تاريخ الخدمة */}
+              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[20px] md:rounded-[30px] p-4 md:p-6 border border-blue-100 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
                 <div className="flex justify-between items-center mb-4 shrink-0">
-                  <h4 className="font-bold text-gray-700 dark:text-white text-lg">تاريخ الخدمة</h4>
+                  <h4 className="font-bold text-gray-700 dark:text-white text-base md:text-lg">تاريخ الخدمة</h4>
                   <button
                     onClick={() => navigate("/customer/servicehistory")}
                     className="text-xs text-[#137FEC] underline hover:text-blue-400 transition-colors font-medium"

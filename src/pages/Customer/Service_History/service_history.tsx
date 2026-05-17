@@ -4,10 +4,10 @@ import Header from "../../../components/Customer/customer_header";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaCar } from "react-icons/fa"; // استيراد الأيقونة
-import { BsChevronDown } from "react-icons/bs"; // استيراد سهم القائمة
+import { FaCar } from "react-icons/fa";
+import { BsChevronDown } from "react-icons/bs";
+import { FaUser } from "react-icons/fa";
 
-// تحديث الـ Type ليشمل id السيارة (لضمان دقة الفلترة)
 type ServiceRequest = {
   requestId: string;
   issueDescription: string;
@@ -21,7 +21,7 @@ type ServiceRequest = {
     createdAt?: string;
   } | null;
   car?: {
-    id?: string; // أضفنا ID للسيارة هنا
+    id?: string;
     brand?: string;
     model?: string;
   };
@@ -38,7 +38,6 @@ const ServiceHistory = () => {
   const [historyData, setHistoryData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State للسيارات والسيارة المختارة
   const [cars, setCars] = useState<any[]>([]);
   const [selectedCar, setSelectedCar] = useState("");
 
@@ -59,14 +58,14 @@ const ServiceHistory = () => {
   };
 
   const statusColorMap = {
-    Submitted: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
-    Dispatching: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    Accepted: "bg-blue-200 text-blue-900 dark:bg-blue-800 dark:text-blue-100",
-    OnTheWay: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    Arrived: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
-    InProgress: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    Completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    Cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    Submitted: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600",
+    Dispatching: "bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-800",
+    Accepted: "bg-blue-100 text-blue-900 dark:bg-blue-800 dark:text-blue-100",
+    OnTheWay: "bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-100 dark:border-purple-800",
+    Arrived: "bg-cyan-50 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300 border border-cyan-100 dark:border-cyan-800",
+    InProgress: "bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-100 dark:border-yellow-800",
+    Completed: "bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300 border border-green-100 dark:border-green-800",
+    Cancelled: "bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300 border border-red-100 dark:border-red-800",
   };
 
   const allowedStatuses = [
@@ -77,18 +76,12 @@ const ServiceHistory = () => {
     "Completed",
   ];
 
-  // --- منطق الفلترة المحدث ---
   const filteredHistory = historyData.filter((item) => {
     const statusMatch = allowedStatuses.includes(item.status);
-
-    // إيجاد كائن السيارة المطابق للاسم المختار
     const activeCar = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
     
-    // إذا لم يتم اختيار سيارة بعد (أثناء التحميل)، نعرض النتائج بناءً على الحالة فقط أو ننتظر
     if (!activeCar) return statusMatch;
 
-    // محاولة المطابقة عبر الـ ID أولاً (الأدق)
-    // أو عبر الماركة والموديل كخيار بديل إذا لم يكن الـ ID موجوداً في البيانات القادمة
     const carMatch = item.car?.id 
       ? item.car.id === activeCar.id 
       : (item.car?.brand && item.car?.model && 
@@ -96,6 +89,7 @@ const ServiceHistory = () => {
 
     return statusMatch && carMatch;
   });
+
   const serviceTypeMap = {
     Diagnosis: "تشخيص",
     Tires: "إطارات",
@@ -115,36 +109,6 @@ const ServiceHistory = () => {
         const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
         setCars(carsData);
 
-        // تعيين السيارة الافتراضية (أول سيارة أو المحفوظة في الذاكرة)
-        if (carsData.length > 0) {
-          const savedCar = localStorage.getItem("selectedCar");
-          if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
-            setSelectedCar(savedCar);
-          } else {
-            const firstCarString = `${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`;
-            setSelectedCar(firstCarString);
-          }
-        }
-      } catch (error) {
-        console.error("فشل جلب السيارات", error);
-      }
-    };
-    
-    if (token) fetchCars();
-  }, [token]);
-
-  // --- جلب سجل الطلبات ---
-  // --- جلب بيانات السيارات ---
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
-        setCars(carsData);
-
-        // تعيين السيارة الافتراضية (أول سيارة أو المحفوظة في الذاكرة)
         if (carsData.length > 0) {
           const savedCar = localStorage.getItem("selectedCar");
           if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
@@ -191,19 +155,18 @@ const ServiceHistory = () => {
   const currentItems = filteredHistory.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
 
-
   return (
     <div className="flex min-h-screen bg-white dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-white dark:bg-primary_BGD">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6 bg-white dark:bg-primary_BGD">
        
           {/* Title Section & Car Selector */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-right w-full md:w-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="text-right w-full">
               <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
                 عرض طلبات الصيانة
               </h2>
@@ -214,7 +177,7 @@ const ServiceHistory = () => {
             
             {/* Car Filter Component */}
             {cars.length > 0 && (
-              <div className="relative group w-full md:w-64">
+              <div className="relative group w-auto min-w-[160px] md:w-48 shrink-0"> {/* تم التعديل هنا: w-full -> w-auto min-w-[160px] */}
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
                   <FaCar size={14} />
                 </div>
@@ -224,7 +187,7 @@ const ServiceHistory = () => {
                     setSelectedCar(e.target.value); 
                     localStorage.setItem("selectedCar", e.target.value); 
                   }} 
-                  className="w-full appearance-none bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-sm py-2.5 pr-9 pl-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all shadow-sm"
+                  className="w-full appearance-none bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white font-bold text-sm py-1.5 pr-9 pl-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all shadow-sm" 
                 >
                   {cars.map((car, idx) => (
                     <option key={idx} value={`${car.year} ${car.brand} ${car.model}`}>
@@ -239,8 +202,8 @@ const ServiceHistory = () => {
             )}
           </div>
 
-          {/* TABLE CARD */}
-          <div className="rounded-xl overflow-hidden shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+          {/* CONTENT AREA */}
+          <div className="flex-1">
             {loading ? (
               <div className="flex items-center justify-center p-12 min-h-[300px]">
                 <span className="text-gray-500 dark:text-gray-300 text-lg">جاري التحميل...</span>
@@ -272,141 +235,275 @@ const ServiceHistory = () => {
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                {/* <table className="w-full text-right text-sm"> */}
-                <table className="w-full text-right text-[10px] md:text-sm">
-                  <thead>
-                    <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-                      <th className="p-3"> المشكلة </th>
-                      <th className="p-3">السيارة</th>
-                      <th className="p-3">الخدمة</th>
-                      <th className="p-3">الحالة</th>
-                      <th className="p-3">الميكانيكي</th>
-                      <th className="p-3">التقييم</th>
-                      <th className="p-3">السعر</th>
-                    </tr>
-                  </thead>
+              <div className="space-y-6">
+                
+                {/* 1. DESKTOP TABLE VIEW (Compact) */}
+                <div className="hidden md:block rounded-xl overflow-hidden shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right text-xs"> {/* Line size reduced to text-xs */}
+                      <thead>
+                        <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+                          <th className="p-2.5 whitespace-nowrap font-semibold"> المشكلة </th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">السيارة</th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">الخدمة</th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">الحالة</th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">الميكانيكي</th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">التقييم</th>
+                          <th className="p-2.5 whitespace-nowrap font-semibold">السعر</th>
+                        </tr>
+                      </thead>
 
-                  <tbody className="text-gray-700 dark:text-gray-200">
-                    {currentItems.map((row) => (
-                      <tr
-                        key={row.requestId}
-                        onClick={() =>
-                          navigate(
-                            `/customer/maintenance_request/request_tracking/${row.requestId}`
-                          )
-                        }
-                        className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
-                      >
-                        <td className="p-3 align-top">
-                          <div className="font-bold text-gray-900 dark:text-gray-100 mb-1">
-                            {row.issueDescription}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                             {row.createdAt
-                              ? new Date(row.createdAt).toLocaleDateString("ar-EG")
-                              : "-"}
-                          </div>
-                        </td>
-
-                        <td className="p-3">
-                          {row.car?.brand} {row.car?.model}
-                        </td>
-
-                        <td className="p-3">
-                          {serviceTypeMap[row.serviceType as keyof typeof serviceTypeMap] ||
-                            "—"}
-                        </td>
-
-                        <td className="p-3">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                              statusColorMap[
-                                row.status as keyof typeof statusColorMap
-                              ] ||
-                              "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                            }`}
-                          >
-                            {statusMap[row.status as keyof typeof statusMap] || "—"}
-                          </span>
-                        </td>
-
-                        <td className="p-3 flex items-center gap-2">
-                          <img
-                            src={
-                              row.assignedMechanic?.profilePhotoUrl ||
-                              "https://via.placeholder.com/32" 
+                      <tbody className="text-gray-700 dark:text-gray-200 divide-y divide-gray-200 dark:divide-gray-700">
+                        {currentItems.map((row) => (
+                          <tr
+                            key={row.requestId}
+                            onClick={() =>
+                              navigate(
+                                `/customer/maintenance_request/request_tracking/${row.requestId}`
+                              )
                             }
-                            className="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-                            alt="mechanic"
-                          />
-                          <span>
-                            {row.assignedMechanic?.firstName}{" "}
-                            {row.assignedMechanic?.lastName}
-                          </span>
-                        </td>
-
-                        <td className="p-3">
-                          {row.rating ? (
-                            <div className="relative group inline-block">
-                              {/* Stars */}
-                              <div className="flex text-yellow-400 gap-0.5 text-sm cursor-pointer">
-                                {[...Array(5)].map((_, i) => (
-                                  <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
-                                ))}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                          >
+                            <td className="p-2.5 align-top">
+                              <div className="font-bold text-gray-900 dark:text-gray-100 mb-0.5 max-w-[180px] truncate">
+                                {row.issueDescription}
                               </div>
+                              <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                 </svg>
+                                <span>
+                                  {row.createdAt
+                                    ? new Date(row.createdAt + "Z").toLocaleString("ar-EG", {
+                                        timeZone: "Africa/Cairo",
+                                        year: "numeric",
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      })
+                                    : "-"}
+                                </span>
+                              </div>
+                            </td>
 
-                              {/* Tooltip */}
-                              {row.rating.comment && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 
-                                                hidden group-hover:block 
-                                                bg-black text-white text-xs px-2 py-1 rounded-md 
-                                                whitespace-nowrap z-50">
-                                  {row.rating.comment}
+                            <td className="p-2.5">
+                              {row.car?.brand} {row.car?.model}
+                            </td>
+
+                            <td className="p-2.5">
+                              <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-medium">
+                                {serviceTypeMap[row.serviceType as keyof typeof serviceTypeMap] || "—"}
+                              </span>
+                            </td>
+
+                            <td className="p-2.5">
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                                  statusColorMap[
+                                    row.status as keyof typeof statusColorMap
+                                  ] ||
+                                  "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                }`}
+                              >
+                                {statusMap[row.status as keyof typeof statusMap] || "—"}
+                              </span>
+                            </td>
+
+                            <td className="p-2.5">
+                              <div className="flex items-center gap-2">
+                                {row.assignedMechanic?.profilePhotoUrl ? (
+                                  <img
+                                    src={row.assignedMechanic.profilePhotoUrl}
+                                    className="w-6 h-6 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                                    alt="mechanic"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
+                                     <FaUser size={10} />
+                                  </div>
+                                )}
+                                <span className="text-xs truncate max-w-[90px]">
+                                  {row.assignedMechanic?.firstName} {row.assignedMechanic?.lastName}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="p-2.5">
+                              {row.rating ? (
+                                <div className="relative group inline-block">
+                                  <div className="flex text-yellow-400 gap-0.5 text-xs cursor-pointer">
+                                    {[...Array(5)].map((_, i) => (
+                                      <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
+                                    ))}
+                                  </div>
+                                  {row.rating.comment && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-black text-white text-[10px] px-2 py-1 rounded-md whitespace-nowrap z-50">
+                                      {row.rating.comment}
+                                    </div>
+                                  )}
                                 </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
                               )}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
+                            </td>
 
-                        <td className="p-3 font-bold text-gray-800 dark:text-white">
+                            <td className="p-2.5 font-bold text-gray-800 dark:text-white">
+                              {row.price !== null && row.price !== undefined ? (
+                                <span className="text-green-600 dark:text-green-400 text-xs">
+                                  {row.price.toLocaleString()} ج.م
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-xs">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 2. MOBILE CARD VIEW (Readable) */}
+                <div className="block md:hidden space-y-4">
+                  {currentItems.map((row) => (
+                    <div
+                      key={row.requestId}
+                      onClick={() =>
+                        navigate(
+                          `/customer/maintenance_request/request_tracking/${row.requestId}`
+                        )
+                      }
+                      className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm active:scale-[0.99] transition-transform cursor-pointer"
+                    >
+                      {/* Top Row: Title + Status */}
+                      <div className="flex justify-between items-start mb-3 gap-2">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 leading-relaxed">
+                          {row.issueDescription}
+                        </h3>
+                        <span
+                          className={`shrink-0 inline-block px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                            statusColorMap[
+                              row.status as keyof typeof statusColorMap
+                            ] || "bg-gray-200 text-gray-800"
+                          }`}
+                        >
+                          {statusMap[row.status as keyof typeof statusMap] || "—"}
+                        </span>
+                      </div>
+
+                      {/* Middle Section: Details Grid */}
+                      <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs mb-3">
+                        
+                        {/* Service Type */}
+                        <div>
+                          <span className="text-gray-400 block mb-0.5">نوع الخدمة</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            {serviceTypeMap[row.serviceType as keyof typeof serviceTypeMap] || "—"}
+                          </span>
+                        </div>
+
+                        {/* Car */}
+                        <div>
+                          <span className="text-gray-400 block mb-0.5">السيارة</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            {row.car?.brand} {row.car?.model}
+                          </span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="col-span-2">
+                          <span className="text-gray-400 block mb-0.5">تاريخ الطلب</span>
+                          <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span className="font-medium">
+                              {row.createdAt
+                                ? new Date(row.createdAt + "Z").toLocaleString("ar-EG", {
+                                    timeZone: "Africa/Cairo",
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })
+                                : "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Section: Mechanic + Price/Rating */}
+                      <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                        
+                        {/* Mechanic */}
+                        <div className="flex items-center gap-2">
+                          {row.assignedMechanic?.profilePhotoUrl ? (
+                            <img
+                              src={row.assignedMechanic.profilePhotoUrl}
+                              className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                              alt="mech"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-200 dark:border-gray-700">
+                              <FaUser size={12} />
+                            </div>
+                          )}
+                          <div className="text-right">
+                            <p className="text-[10px] text-gray-400">الميكانيكي</p>
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                              {row.assignedMechanic?.firstName} {row.assignedMechanic?.lastName}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Price & Rating */}
+                        <div className="flex flex-col items-end gap-1">
                           {row.price !== null && row.price !== undefined ? (
-                            <span className="text-green-600 dark:text-green-400">
+                            <span className="text-xs font-bold text-green-600 dark:text-green-400">
                               {row.price.toLocaleString()} ج.م
                             </span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-xs text-gray-400">-</span>
                           )}
-                        </td>
+                          
+                          {row.rating ? (
+                            <div className="flex text-yellow-400 text-[10px] gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <span key={i}>{i < row.rating!.stars ? "★" : "☆"}</span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
 
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {/* PAGINATION */}
           {filteredHistory.length > itemsPerPage && (
-            <div className="flex justify-center items-center gap-3 text-gray-700 dark:text-gray-200">
+            <div className="flex justify-center items-center gap-4 text-gray-700 dark:text-gray-200 mt-6 pb-4">
               <button
-                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-colors"
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
               >
                 السابق
               </button>
 
-              <span>
-                {currentPage} / {totalPages || 1}
+              <span className="text-xs font-medium">
+                صفحة {currentPage} من {totalPages || 1}
               </span>
 
               <button
-                className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-800 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-colors"
                 onClick={() =>
                   setCurrentPage((p) => Math.min(p + 1, totalPages || 1))
                 }

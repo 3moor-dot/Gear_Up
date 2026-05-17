@@ -186,16 +186,42 @@ const updateStatus = async (newStatus: string) => {
     <hr className="my-3" />
 
     {/* 🧑 customer */}
-    <div className="flex items-center gap-3">
-      <img
-        src={request.customer?.profilePhotoUrl}
-        className="w-12 h-12 rounded-full object-cover"
-      />
-      <div>
-        <p><strong>👤 العميل:</strong> {request.customer?.firstName} {request.customer?.lastName}</p>
-        <p>📞 {request.customer?.phoneNumber}</p>
-      </div>
+
+{/* 🧑 customer - تم التعديل هنا */}
+<div className="flex items-center gap-3">
+  {request.customer?.profilePhotoUrl ? (
+    <img
+      src={request.customer.profilePhotoUrl}
+      className="w-12 h-12 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+      alt="customer"
+      onError={(e) => {
+        // لو الرابط موجود بس الصورة تالفة، نخفيها
+        (e.target as HTMLImageElement).style.display = 'none';
+      }}
+    />
+  ) : (
+    // الأيقونة اللي بتظهر لو مفيش صورة
+    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
+      <svg
+        className="w-6 h-6"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+          clipRule="evenodd"
+        />
+      </svg>
     </div>
+  )}
+
+  <div>
+    <p><strong>👤 العميل:</strong> {request.customer?.firstName} {request.customer?.lastName}</p>
+    <p>📞 {request.customer?.phoneNumber}</p>
+  </div>
+</div>
 
     <hr className="my-3" />
 
@@ -238,7 +264,6 @@ const updateStatus = async (newStatus: string) => {
 
 <p>
   <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
-  <strong> طريقة تلقي الخدمة:</strong>{" "}
   <strong> طريقة تلقي الخدمة:</strong>{" "}
   {serviceModeMap[request?.serviceMode] || request?.serviceMode}
 </p>
