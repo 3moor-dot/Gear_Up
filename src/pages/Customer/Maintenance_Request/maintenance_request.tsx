@@ -392,56 +392,17 @@ const MaintenanceRequest = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+    // <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+    <div className="flex min-h-screen dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        {/* <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6"> */}
+        <main className="flex-1 p-4 md:p-8 space-y-6">
           {currentStep === 1 ? (
             <div className="space-y-10 animate-in fade-in duration-500">
               {/* 1. اختيار السيارة */}
-              {/* <section>
-                <h3 className={sectionTitleStyle}>اختر مركبة</h3>
-                <div className="relative">
-                  <button onClick={() => !carsLoading && setIsOpen(!isOpen)} className={`${inputStyle} flex items-center justify-between p-5 border-2 ${isOpen ? 'border-blue-500' : 'border-blue-500/20'}`}>
-                    <div className="flex items-center gap-4">
-                      {selectedCar ? (
-                        <div className="flex items-center gap-4">
-                          <img
-                            src={selectedCar.carPhotoUrl}
-                            className="w-16 h-12 object-cover rounded-xl"
-                            alt=""
-                          />
-                          <div className="flex flex-col text-right">
-                            <span className="text-xl font-black dark:text-white">
-                              {selectedCar.brand} {selectedCar.model}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {selectedCar.plateNumber}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">اختر سيارة...</span>
-                      )}
-                    </div>
-                    <FaChevronDown className="text-blue-500 text-xl" />
-                  </button>
-                  {isOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1F2937] border-2 border-blue-500/20 rounded-[25px] shadow-2xl overflow-hidden">
-                      {cars.map(car => (
-                        <div key={car.id} onClick={() => { setSelectedCarId(car.id); setIsOpen(false); }} className="flex items-center gap-4 p-4 hover:bg-blue-50 dark:hover:bg-blue-600/10 cursor-pointer border-b border-gray-100 dark:border-gray-700">
-                          <img src={car.carPhotoUrl} className="w-12 h-10 object-cover rounded-lg" alt="" />
-                          <div className="text-right flex-1">
-                            <p className="font-bold dark:text-white">{car.brand} {car.model}</p>
-                            <p className="text-xs text-gray-500">{car.plateNumber}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section> */}
+             
               <section>
   <h3 className={sectionTitleStyle}>اختر مركبة</h3>
 

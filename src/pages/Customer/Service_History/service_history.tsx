@@ -43,7 +43,7 @@ const ServiceHistory = () => {
   const [selectedCar, setSelectedCar] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 8;
 
   const token = sessionStorage.getItem("userToken");
 

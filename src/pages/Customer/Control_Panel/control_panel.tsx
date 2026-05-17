@@ -360,9 +360,9 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* كارت التذكيرات */}
-              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 shadow-sm border border-blue-100 dark:border-blue-900/40 flex flex-col min-h-0 overflow-hidden flex-1">
-                <div className="flex justify-between items-center mb-6 shrink-0">
+              {/* كارت التذكيرات - تم التعديل: إزالة flex-1 وتقليل المسافات */}
+              <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 shadow-sm border border-blue-100 dark:border-blue-900/40 flex flex-col shrink-0">
+                <div className="flex justify-between items-center mb-4 shrink-0">
                   <h4 className="text-[#137FEC] font-bold border-b-2 border-[#137FEC] inline-block pb-1 text-lg">
                     التذكيرات القادمة
                   </h4>
@@ -373,23 +373,23 @@ const Dashboard = () => {
                     عرض الكل
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
                   {remindersLoading ? (
-                    <div className="col-span-full flex items-center justify-center py-8 gap-3">
-                      <div className="w-6 h-6 border-2 border-[#137FEC] border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm text-gray-400">جاري تحميل التذكيرات...</span>
+                    <div className="col-span-full flex items-center justify-center py-4 gap-3">
+                      <div className="w-5 h-5 border-2 border-[#137FEC] border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs text-gray-400">جاري تحميل التذكيرات...</span>
                     </div>
                   ) : displayedReminders.length > 0 ? (
                     displayedReminders.map((r) => (
                       <div
                         key={r.id}
-                        className="bg-[#93C5FD] dark:bg-[#1e2d4d] p-4 rounded-2xl flex items-center gap-4 text-white border border-blue-200 dark:border-blue-800/30 hover:bg-[#7BB8FC] dark:hover:bg-[#253a5e] transition-all cursor-pointer group"
+                        className="bg-[#93C5FD] dark:bg-[#1e2d4d] p-3 rounded-2xl flex items-center gap-3 text-white border border-blue-200 dark:border-blue-800/30 hover:bg-[#7BB8FC] dark:hover:bg-[#253a5e] transition-all cursor-pointer group"
                         onClick={() => navigate("/customer/reminders")}
                       >
-                        <div className="bg-[#137FEC] dark:bg-[#0d6dd6] p-3 rounded-full shrink-0 shadow-md group-hover:scale-110 transition-transform">
+                        <div className="bg-[#137FEC] dark:bg-[#0d6dd6] p-2 rounded-full shrink-0 shadow-md group-hover:scale-110 transition-transform">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5 text-white"
+                            className="w-4 h-4 text-white"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -402,14 +402,14 @@ const Dashboard = () => {
                           </svg>
                         </div>
                         <div className="text-right flex-1 min-w-0">
-                          <p className="font-bold text-base truncate">
+                          <p className="font-bold text-sm truncate">
                             {r.name || r.title || "تذكير صيانة"}
                           </p>
-                          <p className="text-xs opacity-80 mt-1">
+                          <p className="text-[10px] opacity-80 mt-0.5">
                             {formatToEgyptDate(r.nextScheduledAt || r.startDate)}
                           </p>
                           {getFrequencyLabel(r) && (
-                            <span className="inline-block mt-2 text-[10px] bg-white/20 dark:bg-white/10 px-2 py-1 rounded-full opacity-70">
+                            <span className="inline-block mt-1 text-[9px] bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full opacity-70">
                               {getFrequencyLabel(r)}
                             </span>
                           )}
@@ -417,9 +417,9 @@ const Dashboard = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-full text-center py-12">
-                      <p className="text-5xl mb-3 opacity-40">📋</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">لا توجد صيانات قادمة لهذه السيارة</p>
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-3xl mb-2 opacity-40">📋</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">لا توجد صيانات قادمة لهذه السيارة</p>
                     </div>
                   )}
                 </div>
@@ -428,9 +428,9 @@ const Dashboard = () => {
 
             {/* العمود الأيمن (الصغير) */}
             <div className="col-span-1 lg:col-span-4 flex flex-col gap-6 h-full min-h-0">
-              {/* كارت الميكانيكيين - تصغير الارتفاع لإخفاء العنصر الثالث تماماً */}
+              {/* كارت الميكانيكيين */}
               <div className="bg-[#137FECE5] dark:bg-[#162240] rounded-[30px] p-6 text-white border border-blue-300 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
-                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-2 text-center md:text-right shrink-0">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 text-center md:text-right shrink-0">
                   <div>
                     <h4 className="font-bold text-lg">
                       {showAllMechanics ? "كل الميكانيكيين" : "العثور على ميكانيكي"}
@@ -450,7 +450,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* التعديل هنا: max-h-[185px] عشان يخفي الثالث تماماً */}
-                <div className="space-y-4 overflow-y-auto pr-2 max-h-[185px] min-h-0 custom-scrollbar">
+                <div className="space-y-3 overflow-y-auto pr-2 max-h-[185px] min-h-0 custom-scrollbar">
                   {mechanicsLoading ? (
                     <div className="flex items-center justify-center py-6 gap-3">
                       <div className="w-6 h-6 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
@@ -460,10 +460,10 @@ const Dashboard = () => {
                     displayedMechanics.map((m) => (
                       <div
                         key={m.id}
-                        className="bg-white/20 dark:bg-[#1e2d4d] p-4 rounded-2xl flex items-center gap-4 hover:bg-white/30 dark:hover:bg-[#253656] transition-all cursor-pointer border border-white/10 dark:border-blue-800/30"
+                        className="bg-white/20 dark:bg-[#1e2d4d] p-3 rounded-2xl flex items-center gap-3 hover:bg-white/30 dark:hover:bg-[#253656] transition-all cursor-pointer border border-white/10 dark:border-blue-800/30"
                         onClick={() => navigate(`/ai_mechanic_profile/${m.id}`)}
                       >
-                        <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden border-2 border-white/40 dark:border-blue-700 shadow-sm flex items-center justify-center bg-white/10">
+                        <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden border-2 border-white/40 dark:border-blue-700 shadow-sm flex items-center justify-center bg-white/10">
                           {m.profilePhotoUrl ? (
                             <img
                               src={m.profilePhotoUrl}
@@ -472,14 +472,14 @@ const Dashboard = () => {
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = "none";
                                 (e.target as HTMLImageElement).parentElement!.innerHTML = `
-                                   <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                   <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                      <circle cx="12" cy="7" r="4"></circle>
                                    </svg>`;
                               }}
                             />
                           ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                               <circle cx="12" cy="7" r="4"></circle>
                             </svg>
@@ -489,24 +489,24 @@ const Dashboard = () => {
                         <div className="text-right flex-1 min-w-0">
                           <div className="flex justify-between items-start">
                             <div className="flex flex-col min-w-0">
-                              <p className="text-sm font-bold truncate text-white">
+                              <p className="text-xs font-bold truncate text-white">
                                 {m.firstName} {m.lastName}
                               </p>
-                              <p className="text-xs text-white/70 mt-1 font-medium tracking-wide flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <p className="text-[10px] text-white/70 mt-1 font-medium tracking-wide flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                                 </svg>
                                 {m.phoneNumber}
                               </p>
                             </div>
-                            <div className="flex items-center gap-1 bg-yellow-400/20 px-2 py-1 rounded-md shrink-0 mr-2">
-                              <span className="text-xs font-bold text-yellow-300">{m.avgRating}</span>
-                              <span className="text-xs">⭐</span>
+                            <div className="flex items-center gap-1 bg-yellow-400/20 px-1.5 py-0.5 rounded-md shrink-0 mr-2">
+                              <span className="text-[10px] font-bold text-yellow-300">{m.avgRating}</span>
+                              <span className="text-[10px]">⭐</span>
                             </div>
                           </div>
                         </div>
 
-                        <button className="text-white/50 hover:text-white transition-colors mt-1 shrink-0">
+                        <button className="text-white/50 hover:text-white transition-colors shrink-0">
                           ←
                         </button>
                       </div>
@@ -525,9 +525,9 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* كارت تاريخ الخدمة - لا يوجد سكرول، يظهر المحتوى فقط */}
+              {/* كارت تاريخ الخدمة - تم التعديل: تقليل المسافات والأحجام */}
               <div className="bg-[#137FEC1A] dark:bg-[#162240] rounded-[30px] p-6 border border-blue-100 dark:border-blue-900/40 shadow-sm flex flex-col shrink-0">
-                <div className="flex justify-between items-center mb-6 shrink-0">
+                <div className="flex justify-between items-center mb-4 shrink-0">
                   <h4 className="font-bold text-gray-700 dark:text-white text-lg">تاريخ الخدمة</h4>
                   <button
                     onClick={() => navigate("/customer/servicehistory")}
@@ -536,7 +536,7 @@ const Dashboard = () => {
                     عرض الكل
                   </button>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {loading ? (
                     <p className="text-center text-gray-400 text-sm py-4">جاري التحميل...</p>
                   ) : dashboardHistory.length === 0 ? (
@@ -548,16 +548,16 @@ const Dashboard = () => {
                         onClick={() =>
                           navigate(`/customer/maintenance_request/request_tracking/${service.requestId}`)
                         }
-                        className="bg-[#0F132312] dark:bg-[#1e2d4d] rounded-xl flex items-center gap-4 p-4 border border-gray-100 dark:border-blue-800/30 cursor-pointer hover:bg-[#0F132320] dark:hover:bg-[#253656] transition-all group"
+                        className="bg-[#0F132312] dark:bg-[#1e2d4d] rounded-xl flex items-center gap-3 p-3 border border-gray-100 dark:border-blue-800/30 cursor-pointer hover:bg-[#0F132320] dark:hover:bg-[#253656] transition-all group"
                       >
-                        <div className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-[#0d6dd6]/20 text-xl group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 shrink-0 rounded-lg flex items-center justify-center bg-blue-50 dark:bg-[#0d6dd6]/20 text-lg group-hover:scale-110 transition-transform">
                           {serviceIconMap[service.serviceType] || "🔧"}
                         </div>
-                        <div className="flex flex-col gap-1 flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-700 dark:text-gray-100 truncate">
+                        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                          <p className="text-xs font-bold text-gray-700 dark:text-gray-100 truncate leading-tight">
                             {service.issueDescription}
                           </p>
-                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
                             {service.createdAt
                               ? new Date(service.createdAt).toLocaleDateString("ar-EG")
                               : "-"}{" "}

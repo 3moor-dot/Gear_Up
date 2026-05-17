@@ -246,9 +246,7 @@ const updateStatus = async (newStatus: string) => {
 {request?.serviceType && (
   <p>
     <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
-    <strong>الخدمة:</strong>{" "}
-    <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
-    <strong>الخدمة:</strong>{" "}
+    <strong>الخدمة:</strong>{" "} 
     {serviceTypeMap[request.serviceType] || request.serviceType}
   </p>
 )}
