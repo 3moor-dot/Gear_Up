@@ -303,6 +303,32 @@ const CreateReminderModal = ({
               />
             </div>
 
+
+            <div className="space-y-0.5">
+  <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
+    وصف التذكير
+  </label>
+
+  {/* <textarea
+    className={inputStyle}
+    rows={2}
+    placeholder="اكتب وصف التذكير..."
+    value={formData.description}
+    onChange={(e) =>
+      setFormData({ ...formData, description: e.target.value })
+    }
+  /> */}
+<textarea
+  className={inputStyle + " min-h-[70px] resize-none"}
+  placeholder="اكتب وصف التذكير..."
+  value={formData.description}
+  onChange={(e) =>
+    setFormData({ ...formData, description: e.target.value })
+  }
+/>
+
+</div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="space-y-0.5">
                 <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">

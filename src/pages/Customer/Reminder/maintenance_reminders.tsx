@@ -69,6 +69,25 @@ const formatToEgyptDate = (dateString: string) => {
   return new Intl.DateTimeFormat("ar-EG", { year: "numeric", month: "long", day: "numeric" }).format(date);
 };
 
+const translateReminderDescription = (text: string) => {
+  if (!text) return "";
+
+  return text
+    // حذف اسم العربية فقط من أول السطر
+    .replace(/-.*?\n/, "\n")
+
+    // حذف سطر الموديل
+    .replace(/Model:\s*\d+\s*\n?/gi, "")
+
+    // تحويل باقي النص
+  
+    .replace(/Every/gi, "كل")
+    .replace(/months/gi, "شهور")
+    .replace(/month/gi, "شهر")
+    .replace(/or/gi, "أو")
+    .replace(/km/gi, "كم");
+};
+
 const formatToEgyptTime = (timeString: string) => {
   if (!timeString) return "";
   const [hours, minutes] = timeString.split(":");
@@ -106,6 +125,8 @@ const MaintenanceReminders = () => {
   const [upcomingReminders, setUpcomingReminders] = useState<Reminder[]>([]);
   const [daysAhead] = useState<number>(7);
 
+  const [missedReminders, setMissedReminders] = useState<Reminder[]>([]);
+
   const fetchUpcoming = useCallback(async () => {
     try {
       const res = await axios.get(
@@ -140,34 +161,101 @@ const MaintenanceReminders = () => {
     }
   }, [token]);
 
+
+
+  const fetchMissed = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        "https://gearupapp.runasp.net/api/Reminder/Missed",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const data = res.data?.value || [];
+  
+      setMissedReminders(
+        Array.isArray(data) ? data : []
+      );
+    } catch {
+      console.error("فشل جلب التذكيرات الفائتة");
+    }
+  }, [token]);
+
   const refreshAll = useCallback(() => {
     fetchReminders();
     fetchCompleted();
     fetchUpcoming();
-  }, [fetchReminders, fetchCompleted, fetchUpcoming]);
+    fetchMissed();
+  }, [fetchReminders, fetchCompleted, fetchUpcoming, fetchMissed]);
 
+  // useEffect(() => {
+  //   const fetchCars = async () => {
+  //     try {
+  //       const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
+  //       const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
+  //       setCars(carsData);
+  //       if (carsData.length > 0) {
+  //         const savedCar = localStorage.getItem("selectedCar");
+  //         if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
+  //           setSelectedCar(savedCar);
+  //         } else {
+  //           setSelectedCar(`${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`);
+  //         }
+  //       }
+  //     } catch {
+  //       console.error("فشل جلب السيارات");
+  //     }
+  //   };
+  //   fetchCars();
+  //   fetchCompleted();
+  //   fetchUpcoming();
+  // }, [token, fetchCompleted, fetchUpcoming]);
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const res = await axios.get("https://gearupapp.runasp.net/api/customers/cars", { headers: { Authorization: `Bearer ${token}` } });
-        const carsData = Array.isArray(res.data) ? res.data : (res.data.cars || []);
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/customers/cars",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        const carsData = Array.isArray(res.data)
+          ? res.data
+          : (res.data.cars || []);
+  
         setCars(carsData);
+  
         if (carsData.length > 0) {
           const savedCar = localStorage.getItem("selectedCar");
-          if (savedCar && carsData.some((c: any) => `${c.year} ${c.brand} ${c.model}` === savedCar)) {
+  
+          if (
+            savedCar &&
+            carsData.some(
+              (c: any) =>
+                `${c.year} ${c.brand} ${c.model}` === savedCar
+            )
+          ) {
             setSelectedCar(savedCar);
           } else {
-            setSelectedCar(`${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`);
+            setSelectedCar(
+              `${carsData[0].year} ${carsData[0].brand} ${carsData[0].model}`
+            );
           }
         }
       } catch {
         console.error("فشل جلب السيارات");
       }
     };
+  
     fetchCars();
     fetchCompleted();
     fetchUpcoming();
-  }, [token, fetchCompleted, fetchUpcoming]);
+    fetchMissed(); // ضيفي دي
+  }, [token, fetchCompleted, fetchUpcoming, fetchMissed]);
 
   useEffect(() => {
     fetchReminders();
@@ -249,20 +337,63 @@ const MaintenanceReminders = () => {
     return filtered;
   }, [upcomingReminders, selectedCar, cars]);
 
+  // const filteredActive = useMemo(() => {
+  //   const carObj = cars.find(
+  //     (c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim()
+  //   );
+  //   if (!carObj) return [];
+  //   if (filter === "upcoming") {
+  //     return filteredUpcoming.filter((r) => r.status !== "Completed");
+  //   }
+  //   let list = reminders.filter((r) => String(r.carId) === String(carObj.id) && r.status !== "Completed");
+  //   if (filter !== "all") {
+  //     list = list.filter((r) => r.status === filter);
+  //   }
+  //   return list;
+  // }, [reminders, filter, selectedCar, cars, filteredUpcoming]);
   const filteredActive = useMemo(() => {
     const carObj = cars.find(
-      (c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim()
+      (c) =>
+        `${c.year} ${c.brand} ${c.model}`.trim() ===
+        selectedCar.trim()
     );
+  
     if (!carObj) return [];
+  
+    // القادمة
     if (filter === "upcoming") {
-      return filteredUpcoming.filter((r) => r.status !== "Completed");
+      return filteredUpcoming.filter(
+        (r) => r.status !== "Completed"
+      );
     }
-    let list = reminders.filter((r) => String(r.carId) === String(carObj.id) && r.status !== "Completed");
+  
+    // الفائتة
+    if (filter === "missed") {
+      return missedReminders.filter(
+        (r) => String(r.carId) === String(carObj.id)
+      );
+    }
+  
+    // العادي
+    let list = reminders.filter(
+      (r) =>
+        String(r.carId) === String(carObj.id) &&
+        r.status !== "Completed"
+    );
+  
     if (filter !== "all") {
       list = list.filter((r) => r.status === filter);
     }
+  
     return list;
-  }, [reminders, filter, selectedCar, cars, filteredUpcoming]);
+  }, [
+    reminders,
+    filter,
+    selectedCar,
+    cars,
+    filteredUpcoming,
+    missedReminders,
+  ]);
 
   const filteredCompleted = useMemo(() => {
     const carObj = cars.find((c) => `${c.year} ${c.brand} ${c.model}`.trim() === selectedCar.trim());
@@ -431,15 +562,25 @@ const MaintenanceReminders = () => {
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl shadow-inner">
                   <div className="flex bg-white dark:bg-slate-700 p-0.5 rounded-xl">
-                    {["upcoming", "all", "Active", "Paused"].map((f) => (
+                    {/* {["upcoming", "all", "Active", "Paused"].map((f) => ( */}
+                    {["upcoming", "all", "Active", "Paused", "missed"].map((f) => (
                       <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${filter === f ? "bg-blue-600 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:text-slate-700"}`}>
-                        {f === "upcoming"
+                        {/* {f === "upcoming"
                           ? "القادمة"
                           : f === "all"
                             ? "الكل"
                             : f === "Active"
                               ? "نشط"
-                              : "متوقفة"}
+                              : "متوقفة"} */}
+                              {f === "upcoming"
+  ? "القادمة"
+  : f === "all"
+    ? "الكل"
+    : f === "Active"
+      ? "النشطة"
+      : f === "Paused"
+        ? "المتوقفة"
+        : "الفائتة"}
                       </button>
                     ))}
                   </div>
@@ -467,49 +608,16 @@ const MaintenanceReminders = () => {
                               {r.status === "Active" ? "نشط" : "متوقفة"}
                             </span>
                             <h1 className="text-lg sm:text-2xl font-black text-slate-700 dark:text-slate-200">{r.name || r.title}</h1>
-                            {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>}
+                            {/* {r.description && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">"{r.description}"</p>} */}
+                            {r.description && (
+  // <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic whitespace-pre-line">
+  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic leading-relaxed">
+    "{translateReminderDescription(r.description)}"
+  </p>
+)}
                           </div>
                         </div>
-                        {/* <div className="grid grid-cols-2 md:flex md:flex-col gap-3 text-xs font-bold border-r-2 border-slate-200 dark:border-slate-600 pr-0 md:pr-6 min-w-[150px]">
-                        
-                          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-  <FaClock className="text-blue-500" />
-  <span>وقت التذكير: </span>
-  <span>
-    {r.preferredNotificationTime
-      ? formatToEgyptTime(r.preferredNotificationTime)
-      : "غير محدد"}
-  </span>
-</div>
-
-
-<div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-  <FaSync className="text-blue-500" />
-  <span>نوع التكرار: </span>
-  <span>{getFrequencyLabel(r)}</span>
-</div>
-
-
-                          <div className="flex flex-col gap-1 text-slate-700 dark:text-slate-200">
-  <div className="flex items-center gap-2">
-    <FaCalendarAlt className="text-blue-500" />
-    <span>تاريخ البداية: {formatToEgyptDate(r.startDate || "")}</span>
-  </div>
-
-
-<div className="flex items-center gap-2">
-  <FaCalendarAlt className="text-red-400" />
-  <span>
-    تاريخ النهاية:{" "}
-    {isValidEndDate(r.endDate)
-      ? formatToEgyptDate(r.endDate)
-      : "—"}
-  </span>
-</div>
-
-</div>
-
-                        </div> */}
+                 
 
 <div className="
   grid grid-cols-2
