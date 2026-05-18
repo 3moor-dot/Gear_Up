@@ -7,6 +7,7 @@ import { GiCarWheel } from "react-icons/gi";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { User } from "lucide-react";
 import Swal from "sweetalert2";
 import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
 
@@ -161,19 +162,16 @@ const MaintenanceRequest = () => {
 
   const [gettingLocation, setGettingLocation] = useState(false);
 
-  const inputStyle = "w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border-2 border-blue-500/20 rounded-2xl p-4 text-right outline-none dark:text-white focus:border-blue-500 transition-all";
-  const sectionTitleStyle = "text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
-
+  // const inputStyle = "w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border-2 border-blue-500/20 rounded-2xl p-4 text-right outline-none dark:text-white focus:border-blue-500 transition-all";
+  const inputStyle ="w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border border-blue-500/20 rounded-xl p-2.5 text-sm text-right outline-none dark:text-white focus:border-blue-500 transition-all";
+  // const sectionTitleStyle = "text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
+  const sectionTitleStyle ="text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
   const { isLoaded } = useLoadScript({
     // googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
     googleMapsApiKey: import.meta.env.tst,
   });
 
-  // const isStepOneValid =
-  //   selectedCarId &&
-  //   issueDescription.trim() &&
-  //   location &&
-  //   (requestType === 1 || (scheduledDate && scheduledTime));
+
   const isStepOneValid =
   cars.length > 0 && // 👈 مهم جداً
   selectedCarId &&
@@ -393,14 +391,16 @@ const MaintenanceRequest = () => {
 
   return (
     // <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
-    <div className="flex min-h-screen dark:bg-primary_BGD" dir="rtl">
+    <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* <div className="flex-1 flex flex-col min-w-0 overflow-hidden"> */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
         {/* <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6"> */}
-        <main className="flex-1 p-4 md:p-8 space-y-6">
+        <main className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
           {currentStep === 1 ? (
-            <div className="space-y-10 animate-in fade-in duration-500">
+            // <div className="space-y-10 animate-in fade-in duration-500">
+            <div className="space-y-5 animate-in fade-in duration-500">
               {/* 1. اختيار السيارة */}
              
               <section>
@@ -493,8 +493,8 @@ const MaintenanceRequest = () => {
                         : 'bg-white dark:bg-[#1F2937] border-gray-200 dark:border-transparent text-gray-600 dark:text-gray-300 hover:border-blue-300 hover:shadow-md dark:hover:border-blue-400 dark:hover:shadow-lg'
                       }`}
                   >
-                    <FaExclamationTriangle size={20} />
-                    <p className="font-black text-sm">طارئة</p>
+                    <FaExclamationTriangle size={16} />
+                    <p className="font-black text-xs">طارئة</p>
                     <p className="text-[10px] font-medium">إصلاح في الحال</p>
                   </button>
                   <button
@@ -513,7 +513,7 @@ const MaintenanceRequest = () => {
               </section>
 
               {/* 3. الصندوق المتغير + الخريطة */}
-              <div className="bg-white dark:bg-[#137FEC0D] p-6 rounded-[30px] border border-blue-500/10 shadow-sm space-y-8">
+             <div className="bg-white dark:bg-[#137FEC0D] p-3 rounded-2xl border border-blue-500/10 shadow-sm space-y-8">
                 {requestType === 1 ? (
                   <section className="animate-in slide-in-from-right duration-300">
                     <h3 className={sectionTitleStyle}>أين الميكانيكي؟</h3>
@@ -534,7 +534,7 @@ const MaintenanceRequest = () => {
 
                 <section>
                   <h3 className={sectionTitleStyle}>تحديد الموقع</h3>
-                  <div className={`relative w-full h-64 rounded-[25px] overflow-hidden border-2 transition-all duration-500 ${location ? 'border-blue-500 shadow-lg' : 'border-dashed border-blue-500/20 bg-gray-50 dark:bg-gray-800'}`}>
+                  <div className={`relative w-full h-40 rounded-[25px] overflow-hidden border-2 transition-all duration-500 ${location ? 'border-blue-500 shadow-lg' : 'border-dashed border-blue-500/20 bg-gray-50 dark:bg-gray-800'}`}>
                     {location ? (
                       <>
                         {isLoaded && location && (
@@ -569,7 +569,7 @@ const MaintenanceRequest = () => {
               {/* وصف المشكلة */}
               <section className="space-y-4">
                 <h3 className={sectionTitleStyle}>تفاصيل العطل</h3>
-                <textarea value={issueDescription} onChange={(e) => setIssueDescription(e.target.value)} placeholder="اكتب وصفاً للمشكلة..." className={inputStyle + " min-h-[100px]"} />
+                <textarea value={issueDescription} onChange={(e) => setIssueDescription(e.target.value)} placeholder="اكتب وصفاً للمشكلة..." className={inputStyle + " min-h-[70px]"} />
                 <div className="flex justify-between items-center bg-white dark:bg-[#1F2937] p-4 rounded-2xl border border-blue-500/10">
                   <label htmlFor="imgUp" className="flex items-center gap-2 cursor-pointer text-blue-500 font-bold text-sm">
                     <MdImage size={20} /> إرفاق صورة
@@ -582,7 +582,8 @@ const MaintenanceRequest = () => {
               {/* تصنيف العطل - Updated Section with Dark Hover */}
               <section>
                 <h3 className={sectionTitleStyle}>تصنيف العطل</h3>
-                <div className="grid grid-cols-4 gap-3">
+                {/* <div className="grid grid-cols-4 gap-3"> */}
+                <div className="grid grid-cols-4 gap-2">
                   {[
                     { t: "تشخيص", icon: <FaWrench size={24} />, v: 1 },
                     { t: "إطارات", icon: <GiCarWheel size={24} />, v: 2 },
@@ -633,11 +634,20 @@ const MaintenanceRequest = () => {
                       >
                         {/* Header: Image + Name */}
                         <div className="flex items-center gap-3">
-                          <img
-                            src={m.profilePhotoUrl || "/default-avatar.png"}
-                            alt="mechanic"
-                            className="w-14 h-14 rounded-full object-cover border border-gray-200"
-                          />
+                        {m.profilePhotoUrl ? (
+  <img
+    src={m.profilePhotoUrl}
+    alt="mechanic"
+    className="w-14 h-14 rounded-full object-cover border border-gray-200"
+  />
+) : (
+  <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border border-gray-300 dark:border-gray-600">
+    <User className="text-gray-500 dark:text-gray-300" size={24} />
+  </div>
+)}
+
+
+
                           <div className="text-right flex-1">
                             <p className="dark:text-white font-bold text-base">
                               👨‍🔧 {m.firstName} {m.lastName}

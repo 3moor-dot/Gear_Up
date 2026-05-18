@@ -662,7 +662,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                             isOpen: true,
                             requestId: n.requestId || null,
                             notificationIndex: i,
-                            stars: 5,
+                            stars: 0,
                             comment: "",
                             loading: false
                           })}

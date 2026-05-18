@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
-import {  Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle } from "lucide-react";
+import {  Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle ,User  } from "lucide-react";
 
  const statusMap: any = {
    Accepted: "تم القبول",
@@ -258,10 +258,17 @@ const RequestTracking = () => {
 {request?.mechanic && (
   <div className="flex items-center gap-3 pt-3 border-t">
 
-    <img
-      src={request.mechanic.profilePhotoUrl}
-      className="w-12 h-12 rounded-full object-cover"
-    />
+ 
+    {request.mechanic.profilePhotoUrl ? (
+  <img
+    src={request.mechanic.profilePhotoUrl}
+    className="w-12 h-12 rounded-full object-cover"
+  />
+) : (
+  <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border border-gray-300 dark:border-gray-600">
+    <User className="text-gray-500 dark:text-gray-300" size={20} />
+  </div>
+)}
 
     <div>
       <p className="font-bold flex items-center gap-1">
