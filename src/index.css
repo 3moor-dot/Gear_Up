@@ -53,3 +53,21 @@ body {
   transform: scaleX(-1);
   display: inline-block;
 }
+/* تخصيص شكل الاسكرول بار التلقائي للمتصفح بالكامل في وضع الدارك مود */
+.dark ::-webkit-scrollbar {
+  width: 6px; /* جعل شريط الاسكرول نحيف وأنيق جداً */
+  height: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: transparent; /* إخفاء الخلفية البيضاء تماماً لجعلها شفافة ومتماشية مع الخلفية الداكنة */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #374151; /* لون رمادي داكن (gray-700) يتناسب مع مظهر الدارك مود */
+  border-radius: 9999px; /* حواف دائرية للشريط */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #4b5563; /* تفتيح بسيط للون الشريط عند مرور الماوس فوقه */
+}

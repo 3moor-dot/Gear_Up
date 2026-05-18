@@ -96,7 +96,7 @@ const Login = () => {
           }
         });
       }
-    } catch  {
+    } catch {
       Swal.fire({
         icon: "error",
         title: "خطأ في الاتصال",
@@ -111,9 +111,9 @@ const Login = () => {
   return (
     // ... باقي الـ JSX الخاص بك بدون تغيير ...
     <div className="min-h-screen flex flex-col bg-white dark:bg-primary_BGD text-gray-900 dark:text-white transition-colors duration-500" dir="rtl">
-       {/* الكود الأصلي للـ Form هنا */}
-       {/* ... */}
-       <div className="flex-1 flex items-center justify-center px-6">
+      {/* الكود الأصلي للـ Form هنا */}
+      {/* ... */}
+      <div className="flex-1 flex items-center justify-center px-6">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
           {/* RIGHT – IMAGE */}
           <div className="hidden lg:flex flex-col items-center text-center space-y-6">
@@ -125,7 +125,13 @@ const Login = () => {
           </div>
 
           {/* LEFT – FORM */}
-          <div className="space-y-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            className="space-y-8"
+          >
             <div>
               <h1 className="text-3xl font-bold text-center">مرحباً بعودتك 👋</h1>
               <p className="text-gray-500 dark:text-gray-400 mt-2 text-center">تسجيل الدخول إلى حسابك</p>
@@ -137,7 +143,7 @@ const Login = () => {
               <div className="relative">
                 <input
                   value={formData.emailOrPhone}
-                  onChange={(e) => setFormData({...formData, emailOrPhone: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, emailOrPhone: e.target.value })}
                   className="w-full h-12 rounded-xl bg-[#8EC1F5] dark:bg-[#137FEC1A] text-white placeholder-gray-200 dark:placeholder-gray-400 pr-12 pl-4 outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ادخل البريد الإلكتروني أو رقم الهاتف"
                 />
@@ -157,7 +163,7 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full h-12 rounded-xl bg-[#8EC1F5] dark:bg-[#137FEC1A] text-white placeholder-gray-200 dark:placeholder-gray-400 pr-12 pl-12 outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ادخل كلمة المرور"
                 />
@@ -175,6 +181,7 @@ const Login = () => {
             </div>
 
             <button
+              type="submit"
               onClick={handleLogin}
               disabled={loading}
               className="w-full h-12 bg-[#137FEC] rounded-xl text-white font-semibold disabled:bg-gray-400 transition-all active:scale-[0.98]"
@@ -186,10 +193,10 @@ const Login = () => {
               ليس لديك حساب؟
               <Link to="/register" className="text-blue-600 mr-1 font-bold hover:underline">إنضم إلينا الآن</Link>
             </p>
-          </div>
+          </form>
         </div>
       </div>
-    
+
     </div>
   );
 };
