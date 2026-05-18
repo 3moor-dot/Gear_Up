@@ -966,7 +966,7 @@ const ChatbotPage = () => {
 
   return (
     <>
-      <div className="flex min-h-screen bg-[#f3f7fb] dark:bg-[#0B1120]" dir="rtl">
+      <div className="w-full h-screen max-h-screen overflow-hidden bg-[#f3f7fb] dark:bg-[#0B1120] flex" dir="rtl">
         <div className="flex min-h-screen">
           <Sidebar />
         </div>
@@ -974,8 +974,8 @@ const ChatbotPage = () => {
         <div className="flex flex-col flex-1 min-w-0 min-h-screen">
           <Header />
 
-          <main className="flex-1 min-h-0 p-2 md:p-5">
-            <div className="h-full max-w-5xl mx-auto flex flex-col gap-4 overflow-hidden min-w-0">
+          <main className="flex-1 h-[calc(100vh-64px)] p-2 md:p-5 overflow-hidden">
+            <div className="h-full max-w-5xl mx-auto flex flex-col min-w-0">
               <div className="rounded-3xl bg-gradient-to-l from-[#137FEC] via-[#1992f3] to-[#0EA5E9] p-4 md:p-5 shadow-xl shadow-[#137FEC]/15 text-white shrink-0">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="relative w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20">
@@ -1008,8 +1008,8 @@ const ChatbotPage = () => {
                 </div>
               </div>
 
-              <section className="flex-1 flex flex-col min-h-0">
-                <div className="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#111827]/95 sticky top-0 z-10 shrink-0">
+              <section className="flex-1 flex flex-col h-0 min-h-0 bg-white dark:bg-[#111827] rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden my-4">
+                <div className="mt-2 rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111827] shadow-lg p-2 md:p-3 shrink-0">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h2 className="font-bold text-gray-800 dark:text-white">المحادثة</h2>
@@ -1024,7 +1024,14 @@ const ChatbotPage = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 md:py-5 space-y-4 bg-[linear-gradient(to_bottom,_rgba(19,127,236,0.03),_transparent)]">
+                <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 md:py-5 space-y-4 bg-[linear-gradient(to_bottom,_rgba(19,127,236,0.03),_transparent)] 
+  scrollbar-thin 
+  scrollbar-track-transparent 
+  dark:scrollbar-track-transparent
+  scrollbar-thumb-gray-300 
+  dark:scrollbar-thumb-gray-700
+  [scrollbar-color:theme(colors.gray.300)_transparent]
+  dark:[scrollbar-color:theme(colors.gray.700)_transparent]">
                   {messages.map((msg, index) => {
                     const previousUserMessage =
                       msg.role === "bot"
