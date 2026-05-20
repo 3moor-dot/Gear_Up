@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import Header from "../../../components/Customer/customer_header";
 import Sidebar from "../../../components/Customer/customer_sidebar";
 import CreateReminderModal from "../Reminder/create_reminder_modal";
+import { HiMiniUser } from "react-icons/hi2";
 import { useNavigate } from "react-router-dom";
 // ===== الأنواع =====
 interface ReminderData {
@@ -433,7 +434,7 @@ const MessageBubble = ({
             : "bg-gradient-to-br from-slate-900 to-slate-700 text-white"
             }`}
         >
-          {isUser ? <span className="text-sm font-bold">أ</span> : <MdSmartToy size={18} />}
+          {isUser ? <HiMiniUser size={18} /> : <MdSmartToy size={18} />}
         </div>
 
         <div className={`flex flex-col min-w-0 ${isUser ? "items-start" : "items-end"}`}>
