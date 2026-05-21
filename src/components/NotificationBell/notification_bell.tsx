@@ -547,7 +547,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
   };
 
   const snoozeOptions = [
-    { label: "دقيقتين", value: 5 },
+    // { label: "دقيقتين", value: 5 },
     { label: "ساعة واحدة", value: 0 },
     { label: "3 ساعات", value: 1 },
     { label: "يوم واحد", value: 2 },

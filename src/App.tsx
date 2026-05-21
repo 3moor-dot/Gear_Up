@@ -47,7 +47,6 @@ import Mprofile from "./pages/Mechanics/Msettings/Mprofile";
 // import Mechine_profile from "./pages/Mechanics/Msettings/Mechine_profile";
 import MRequestTracking from "./pages/Mechanics/request/Mrequest_tracking";
 import Mrequest_history from "./pages/Mechanics/request/request_history";
-// import UploadLicense from "./pages/Registration/UploadLicense";
 import Notification from "./pages/Notification/Notification";
 import Chatbot from "./pages/Customer/Chatbot/chatbot";
 
@@ -56,7 +55,7 @@ import AiMechanicProfile from "./pages/Customer/Aiprofile/ai_mechanic_profile";
 // import AddBookingModel from "./pages/Customer/Maintenance_Bookings/add_booking_modal";
 import AddBookingWrapper from "./pages/Customer/Maintenance_Bookings/addBookingWrapper";
  
-import RegistrationOtp from "./pages/Registration/registration_otp"; // أو المسار الصح
+import RegistrationOtp from "./pages/Registration/registration_otp"; 
 
 const App: React.FC = () => {
   useEffect(() => {
