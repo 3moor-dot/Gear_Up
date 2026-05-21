@@ -76,7 +76,6 @@ const CustomYearSelect = ({ value, onChange, years }: { value: string, onChange:
         <MdKeyboardArrowDown className="text-gray-400" size={20} />
       </div>
       
-      {/* تم تغيير z-50 إلى z-[9999] للتأكد من ظهورها فوق الكروت */}
       {isOpen && (
         <ul className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
           {years.map((y) => (
@@ -89,6 +88,51 @@ const CustomYearSelect = ({ value, onChange, years }: { value: string, onChange:
               {value === y.toString() && <MdKeyboardArrowDown className="text-[#137FEC] transform rotate-0" size={16} />}
             </li>
           ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+// --- مكون اختيار الموديل ---
+const CustomModelSelect = ({ value, onChange, models, disabled, placeholder }: { value: string, onChange: (model: string) => void, models: string[], disabled?: boolean, placeholder: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`${FIELD_CLASS} !pr-10 ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} flex items-center justify-between`}
+      >
+        <span className={!value ? "text-gray-400 font-normal" : ""}>{value || placeholder}</span>
+        <MdKeyboardArrowDown className="text-gray-400" size={20} />
+      </div>
+      
+      {isOpen && !disabled && (
+        <ul className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+          {models.length > 0 ? models.map((m) => (
+            <li
+              key={m}
+              onClick={() => { onChange(m); setIsOpen(false); }}
+              className={`px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-gray-800 dark:text-gray-200 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors flex justify-between items-center ${value === m ? "bg-blue-50 dark:bg-blue-900/20 text-[#137FEC]" : ""}`}
+            >
+              <span>{m}</span>
+              {value === m && <MdKeyboardArrowDown className="text-[#137FEC] transform rotate-0" size={16} />}
+            </li>
+          )) : (
+             <li className="px-4 py-3 text-center text-sm text-gray-400">لا توجد موديلات</li>
+          )}
         </ul>
       )}
     </div>
@@ -168,7 +212,6 @@ const SearchableBrandSelect = ({ value, onSelect, token }: { value: string, onSe
         <MdSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
       </div>
       
-      {/* تم تغيير z-50 إلى z-[9999] للتأكد من ظهورها فوق الكروت */}
       {isOpen && (brands.length > 0 || loading) && (
         <ul className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
           {loading ? (
@@ -269,7 +312,43 @@ export const MyCars = ({}: MyCarsProps) => {
     return trimmed.length > 0 && /^[\u0600-\u06FF0-9\s]+$/.test(trimmed);
   };
 
+  // دالة مساعدة للتحقق من صحة الصورة
+  const validateImage = (file: File | null) => {
+    if (!file) return true; // قد تكون الصورة اختيارية في التعديل
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'نوع ملف غير صالح',
+        text: 'الملفات المسموح بها هي: JPG, JPEG, PNG فقط',
+        confirmButtonColor: '#d33',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // دالة مساعدة للتحقق من السنة
+  const validateYear = (yearStr: string) => {
+    const yearNum = parseInt(yearStr);
+    if (isNaN(yearNum) || yearNum < 1900 || yearNum > new Date().getFullYear() + 1) {
+      Swal.fire({
+        icon: 'error',
+        title: 'سنة الصنع غير صحيحة',
+        text: 'يجب أن تكون سنة الصنع 1900 أو أحدث',
+        confirmButtonColor: '#d33',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleAddCar = async () => {
+    // 1. التحقق من الحقول الفارغة
     if (!newCar.brand || !newCar.model || !newCarPhoto || !newCar.plateNumber) {
       return Swal.fire({
         icon: 'warning', title: 'بيانات ناقصة', text: 'يرجى ملء كافة البيانات وصورة السيارة',
@@ -278,6 +357,14 @@ export const MyCars = ({}: MyCarsProps) => {
         color: isDarkMode() ? '#fff' : '#000',
       });
     }
+
+    // 2. التحقق من نوع الملف (Image Validation)
+    if (!validateImage(newCarPhoto)) return;
+
+    // 3. التحقق من السنة (Year Validation)
+    if (!validateYear(newCar.year)) return;
+
+    // 4. التحقق من صحة اللوحة
     if (!validatePlate(newCar.plateNumber)) {
       return Swal.fire({
         icon: 'error',
@@ -288,11 +375,25 @@ export const MyCars = ({}: MyCarsProps) => {
         color: isDarkMode() ? '#fff' : '#000',
       });
     }
+
+    // 5. التحقق من أن الموديل ينتمي للماركة (Model Validation)
+    // نتأكد أن الموديل المختار موجود ضمن القائمة التي تم جلبها لهذه الماركة
+    if (newCar.brand && newCar.model && models.length > 0 && !models.includes(newCar.model)) {
+      return Swal.fire({
+        icon: 'error',
+        title: 'خطأ في البيانات',
+        text: 'الموديل المختار لا ينتمي لهذه الماركة. يرجى الاختيار من القائمة.',
+        confirmButtonColor: '#d33',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+    }
+
     setLoading(true);
     const fd = new FormData();
     fd.append("Brand", newCar.brand);
     fd.append("Model", newCar.model);
-    fd.append("Year", newCar.year);
+    fd.append("Year", newCar.year); // API يقبل String غالباً أو يتم تحويله
     fd.append("PlateNumber", newCar.plateNumber.trim());
     fd.append("CarPhoto", newCarPhoto);
 
@@ -307,13 +408,37 @@ export const MyCars = ({}: MyCarsProps) => {
         setShowAddForm(false);
         fetchCars();
         showToast('success', 'تمت إضافة السيارة بنجاح');
-      } else { showToast('error', 'فشل إضافة السيارة'); }
+      } else { 
+        // محاولة قراءة خطأ السيرفر إذا فشل التحقق المحلي
+        const errData = await res.json().catch(() => ({}));
+        console.error("Server Error:", errData);
+        showToast('error', 'فشل إضافة السيارة'); 
+      }
     } catch { showToast('error', 'فشل الاتصال بالسيرفر'); }
     finally { setLoading(false); }
   };
 
   const handleUpdateCar = async () => {
     if (!editData) return;
+
+    // 1. التحقق من الصورة إذا تم تغييرها
+    if (editCarPhoto && !validateImage(editCarPhoto)) return;
+
+    // 2. التحقق من السنة
+    if (!validateYear(editData.year.toString())) return;
+
+    // 3. التحقق من الموديل
+    if (editData.brand && editData.model && models.length > 0 && !models.includes(editData.model)) {
+      return Swal.fire({
+        icon: 'error',
+        title: 'خطأ في البيانات',
+        text: 'الموديل المختار لا ينتمي لهذه الماركة.',
+        confirmButtonColor: '#d33',
+        background: isDarkMode() ? '#1B1F2D' : '#fff',
+        color: isDarkMode() ? '#fff' : '#000',
+      });
+    }
+
     setLoading(true);
     const fd = new FormData();
     fd.append("Brand", editData.brand);
@@ -393,15 +518,13 @@ export const MyCars = ({}: MyCarsProps) => {
 
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل (Model)</label>
-                <select 
-                  className={FIELD_CLASS} 
-                  value={newCar.model} 
+                <CustomModelSelect 
+                  value={newCar.model}
                   disabled={!newCar.brand || loadingModels}
-                  onChange={(e) => setNewCar({ ...newCar, model: e.target.value })}
-                >
-                  <option value="">{newCar.brand ? "اختر الموديل" : "يرجى اختيار الماركة أولاً"}</option>
-                  {models.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
+                  onChange={(model) => setNewCar({ ...newCar, model })}
+                  models={models}
+                  placeholder={newCar.brand ? "اختر الموديل" : "يرجى اختيار الماركة أولاً"}
+                />
                 {loadingModels && <p className="text-xs text-blue-400 mt-1">جاري تحميل الموديلات...</p>}
               </div>
 
@@ -445,7 +568,8 @@ export const MyCars = ({}: MyCarsProps) => {
             const isEditMode = editModeId === car.id;
 
             return (
-               <div key={car.id} className="border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm">                <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+               <div key={car.id} className="border border-gray-100 dark:border-gray-700/70 rounded-2xl sm:rounded-3xl bg-white dark:bg-gray-800/30 shadow-sm">
+                <div className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-2 sm:gap-3 cursor-pointer flex-1 min-w-0" onClick={() => !isEditMode && setExpandedCarId(isExpanded ? null : car.id)}>
                     <div className="w-12 h-9 sm:w-16 sm:h-11 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 flex-shrink-0">
                       <img src={car.carPhotoUrl} alt={car.brand} className="w-full h-full object-cover" />
@@ -498,15 +622,13 @@ export const MyCars = ({}: MyCarsProps) => {
 
           <div className="space-y-1.5">
             <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">الموديل</label>
-            <select 
-              className={FIELD_CLASS} 
-              value={editData?.model} 
+            <CustomModelSelect 
+              value={editData?.model || ""}
               disabled={!editData?.brand || loadingModels}
-              onChange={(e) => setEditData({ ...editData!, model: e.target.value })}
-            >
-              <option value="">{editData?.brand ? "اختر الموديل" : "اختر الماركة أولاً"}</option>
-              {models.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
+              onChange={(model) => setEditData({ ...editData!, model })}
+              models={models}
+              placeholder={editData?.brand ? "اختر الموديل" : "اختر الماركة أولاً"}
+            />
             {loadingModels && <p className="text-xs text-blue-400 mt-1">جاري تحميل الموديلات...</p>}
           </div>
 

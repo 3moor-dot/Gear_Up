@@ -428,7 +428,7 @@ const AddBookingModal = ({
 
   const handleSubmit = async () => {
     if (!mechanicId || !carId || !mechanicServiceId || !date || !slotStart || !slotEnd) {
-      Swal.fire({ icon: "warning", title: "تنبيه", text: "من فضلك املي كل البيانات المطلوبة.", confirmButtonColor: "#f59e0b", confirmButtonText: "حسنًا" });
+      Swal.fire({ icon: "warning", title: "تنبيه", text: "من فضلك إملأ كل البيانات المطلوبة.", confirmButtonColor: "#f59e0b", confirmButtonText: "حسنًا" });
       return;
     }
     if (slotEnd <= slotStart) {

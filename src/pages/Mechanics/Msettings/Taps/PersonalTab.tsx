@@ -193,7 +193,7 @@ const PersonalTab = () => {
           </div>
 
           <div>
-            <h3 className="text-xl md:text-2xl font-black mb-1 text-gray-900 dark:text-white">
+            <h3 className="text-lg md:text-xl font-medium mb-1 text-gray-900 dark:text-white">
               {data.firstName} {data.lastName}
             </h3>
             <p className="text-sm font-bold text-gray-500 dark:text-gray-400">ميكانيكي محترف</p>

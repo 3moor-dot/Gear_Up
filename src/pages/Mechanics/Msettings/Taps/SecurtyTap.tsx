@@ -158,10 +158,10 @@ const SecuritySettings = () => {
   return (
     <div
       dir="rtl"
-      className="bg-white dark:bg-[#0d1629] rounded-3xl border border-[#D7E7FF] dark:border-[#24324A] shadow-sm p-5 md:p-6 space-y-6 md:space-y-8"
+      className="bg-white dark:bg-[#0d1629] rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-5 md:p-6 space-y-6 md:space-y-8"
     >
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-[#D7E7FF] dark:border-[#24324A]">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full border-4 border-[#BFD8FF] dark:border-[#1E3A5F] bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shadow-sm">
             <FaLock className="text-[#137FEC] text-2xl sm:text-3xl" />
