@@ -504,14 +504,15 @@ const AdditionalTab = () => {
             ${!isEditing && !displayImage ? "opacity-60 cursor-not-allowed" : isEditing && !displayImage ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "cursor-default"}
           `}
         >
-          {displayImage ? (
+          {/* {displayImage ? ( */}
+          {displayImage && displayImage.trim() !== "" ? (
             // --- Image State ---
             <>
-              <img
-                src={displayImage}
-                alt="Workshop License"
-                className="max-h-[300px] w-full object-contain"
-              />
+<img
+  src={displayImage}
+  alt=""
+  className="max-h-[300px] w-full object-contain"
+/>
               
               {/* Overlay on Hover for Editing */}
               {isEditing && (

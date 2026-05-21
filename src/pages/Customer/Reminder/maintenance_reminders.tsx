@@ -493,7 +493,8 @@ const MaintenanceReminders = () => {
               </div>
 
               {/* --- تم التعديل هنا: --- */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 pl-4 custom-scroll pb-4 space-y-6">
+              {/* <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 pl-4 custom-scroll pb-4 space-y-6"> */}
+              <div className="flex-1 overflow-y-auto pr-2 pl-4 custom-scroll pb-4 space-y-6">
                 {filteredActive.length > 0 ? filteredActive.map((r) => {
                   return (
 
@@ -503,7 +504,7 @@ const MaintenanceReminders = () => {
     p-4 sm:p-6 md:p-4
     rounded-2xl sm:rounded-[2.5rem]
     shadow-lg border transition-all
-    hover:shadow-xl md:hover:scale-105
+  hover:shadow-2xl hover:-translate-y-1
     transform-gpu duration-300
     dark:bg-[#0f172acc]
 
@@ -594,9 +595,12 @@ const MaintenanceReminders = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
 
-                        {r.status === "Active" && (
+                        {/* {r.status === "Active" && (
                           <button
-                            onClick={() => handleStatusAction(r.id || r.reminderId || "", "complete")}
+                            onClick={() => handleStatusAction(r.id || r.reminderId || "", "complete")} */}
+                            {r.status === "Active" && (
+  <button
+    onClick={() => handleStatusAction(r.id || r.reminderId || "", "complete")}
                             className="
                               w-full sm:w-auto
                               sm:min-w-[120px]
