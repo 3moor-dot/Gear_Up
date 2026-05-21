@@ -2076,7 +2076,7 @@ const MechanicsManagement: React.FC = () => {
                 >
                   <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
                     <FaShieldAlt className="text-blue-500" />
-                    توثيق المستندات (AI)
+                   توثيق المستند بالذكاء الاصطناعي
                   </h3>
                   <p className="text-xs text-gray-500 mb-3">
                     سيقوم النظام بالتحقق من صورة رخصة الورشة المرفقة.

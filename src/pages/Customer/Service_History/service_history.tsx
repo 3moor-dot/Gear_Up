@@ -177,7 +177,7 @@ const ServiceHistory = () => {
             
             {/* Car Filter Component */}
             {cars.length > 0 && (
-              <div className="relative group w-auto min-w-[160px] md:w-48 shrink-0"> {/* تم التعديل هنا: w-full -> w-auto min-w-[160px] */}
+              <div className="relative group w-auto min-w-[160px] md:w-48 shrink-0">
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
                   <FaCar size={14} />
                 </div>
@@ -240,7 +240,7 @@ const ServiceHistory = () => {
                 {/* 1. DESKTOP TABLE VIEW (Compact) */}
                 <div className="hidden md:block rounded-xl overflow-hidden shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-right text-xs"> {/* Line size reduced to text-xs */}
+                    <table className="w-full text-right text-xs">
                       <thead>
                         <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
                           <th className="p-2.5 whitespace-nowrap font-semibold"> المشكلة </th>
@@ -265,9 +265,11 @@ const ServiceHistory = () => {
                             className="hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
                           >
                             <td className="p-2.5 align-top">
-                              <div className="font-bold text-gray-900 dark:text-gray-100 mb-0.5 max-w-[180px] truncate">
+                              {/* --- تم التعديل هنا: إزالة truncate وإضافة break-words --- */}
+                              <div className="font-bold text-gray-900 dark:text-gray-100 mb-0.5 max-w-[240px] break-words whitespace-normal leading-relaxed">
                                 {row.issueDescription}
                               </div>
+                              {/* ---------------------------------------------- */}
                               <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -324,7 +326,8 @@ const ServiceHistory = () => {
                                      <FaUser size={10} />
                                   </div>
                                 )}
-                                <span className="text-xs truncate max-w-[90px]">
+                                {/* --- تم التعديل هنا: السماح لاسم الميكانيكي بالنزول لسطر جديد إن لزم --- */}
+                                <span className="text-xs max-w-[90px] break-words">
                                   {row.assignedMechanic?.firstName} {row.assignedMechanic?.lastName}
                                 </span>
                               </div>
@@ -379,9 +382,11 @@ const ServiceHistory = () => {
                     >
                       {/* Top Row: Title + Status */}
                       <div className="flex justify-between items-start mb-3 gap-2">
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 leading-relaxed">
+                        {/* --- تم التعديل هنا: إزالة line-clamp-2 للسماح للنص بالظهور كاملاً --- */}
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white break-words whitespace-normal leading-relaxed">
                           {row.issueDescription}
                         </h3>
+                        {/* ---------------------------------------------------------------- */}
                         <span
                           className={`shrink-0 inline-block px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
                             statusColorMap[
@@ -454,7 +459,8 @@ const ServiceHistory = () => {
                           )}
                           <div className="text-right">
                             <p className="text-[10px] text-gray-400">الميكانيكي</p>
-                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                            {/* --- تم التعديل هنا: السماح للاسم بالتفاف --- */}
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 break-words max-w-[100px]">
                               {row.assignedMechanic?.firstName} {row.assignedMechanic?.lastName}
                             </p>
                           </div>

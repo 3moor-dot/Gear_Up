@@ -369,27 +369,41 @@ const MaintenanceReminders = () => {
 
       {/* --- القائمة الجانبية (Drawer) --- */}
       <div
+        // className={`
+        //   fixed left-0
+        //   top-[260px] 
+        //   sm:top-[200px] 
+        //   md:top-[210px] 
+        //   bottom-4
+          
+        //   bg-white dark:bg-[#0f172acc] 
+        //   backdrop-blur-md 
+        //   shadow-2xl 
+        //   z-[60] 
+        //   transition-all duration-300 ease-in-out 
+        //   border-r border-slate-200 dark:border-slate-700 
+        //   flex flex-col 
+        //   rounded-r-2xl 
+        //   overflow-hidden
+          
+        //   ${isCompletedDrawerOpen 
+        //     ? 'w-[85vw] max-w-[300px] sm:max-w-[320px] sm:w-[320px]' 
+        //     : 'w-[42px] sm:w-[56px]'}
+        // `}
         className={`
-          fixed left-0
-          top-[260px] 
-          sm:top-[200px] 
-          md:top-[210px] 
-          bottom-4
-          
-          bg-white dark:bg-[#0f172acc] 
-          backdrop-blur-md 
-          shadow-2xl 
-          z-[60] 
-          transition-all duration-300 ease-in-out 
-          border-r border-slate-200 dark:border-slate-700 
-          flex flex-col 
-          rounded-r-2xl 
-          overflow-hidden
-          
+          fixed left-0 top-[260px] sm:top-[200px] md:top-[210px]
+          bottom-4 z-[60]
+          bg-white dark:bg-[#0f172acc]
+          backdrop-blur-md shadow-2xl
+          transition-all duration-300 ease-in-out
+          border-r border-slate-200 dark:border-slate-700
+          flex flex-col rounded-r-2xl overflow-hidden
+        
           ${isCompletedDrawerOpen 
-            ? 'w-[85vw] max-w-[300px] sm:max-w-[320px] sm:w-[320px]' 
+            ? 'w-[260px]' 
             : 'w-[42px] sm:w-[56px]'}
         `}
+
         dir="rtl"
       >
         <div
@@ -595,57 +609,68 @@ const MaintenanceReminders = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 mt-5 pt-4 border-t border-slate-200 dark:border-slate-600 px-2">
 
-                        {/* {r.status === "Active" && (
-                          <button
-                            onClick={() => handleStatusAction(r.id || r.reminderId || "", "complete")} */}
-                            {r.status === "Active" && (
-  <button
-    onClick={() => handleStatusAction(r.id || r.reminderId || "", "complete")}
-                            className="
-                              w-full sm:w-auto
-                              sm:min-w-[120px]
-                              h-[44px] sm:h-[38px]
-                              bg-emerald-100 text-emerald-700
-                              dark:bg-emerald-500/10 dark:text-emerald-300
-                              rounded-2xl text-sm font-bold
-                              flex items-center justify-center gap-2
-                              hover:bg-emerald-200 dark:hover:bg-emerald-500/20
-                              transition
-                            "
-                          >
-                            <FaCheck size={12} />
-                            إتمام
-                          </button>
-                        )}
+                        {filter !== "missed" && (
+  <>
+    {r.status === "Active" && (
+      <button
+        onClick={() =>
+          handleStatusAction(
+            r.id || r.reminderId || "",
+            "complete"
+          )
+        }
+        className="
+          w-full sm:w-auto
+          sm:min-w-[120px]
+          h-[44px] sm:h-[38px]
+          bg-emerald-100 text-emerald-700
+          dark:bg-emerald-500/10 dark:text-emerald-300
+          rounded-2xl text-sm font-bold
+          flex items-center justify-center gap-2
+          hover:bg-emerald-200 dark:hover:bg-emerald-500/20
+          transition
+        "
+      >
+        <FaCheck size={12} />
+        إتمام
+      </button>
+    )}
 
-                        <button
-                          onClick={() =>
-                            handleStatusAction(r.id || r.reminderId || "", r.status === "Active" ? "pause" : "activate")
-                          }
-                          className="
-                            w-full sm:w-auto
-                            sm:min-w-[120px]
-                            h-[44px] sm:h-[38px]
-                            bg-amber-100 text-amber-700
-                            dark:bg-amber-500/10 dark:text-amber-300
-                            rounded-2xl text-sm font-bold
-                            flex items-center justify-center gap-2
-                            hover:bg-amber-200 dark:hover:bg-amber-500/20
-                            transition
-                          "
-                        >
-                          {r.status === "Active" ? (
-                            <>
-                              <FaPause size={11} />
-                              إيقاف
-                            </>
-                          ) : (
-                            <>
-                              <FaPlay size={11} />
-                              تنشيط
-                            </>
-                          )}
-                        </button>
+    <button
+      onClick={() =>
+        handleStatusAction(
+          r.id || r.reminderId || "",
+          r.status === "Active"
+            ? "pause"
+            : "activate"
+        )
+      }
+      className="
+        w-full sm:w-auto
+        sm:min-w-[120px]
+        h-[44px] sm:h-[38px]
+        bg-amber-100 text-amber-700
+        dark:bg-amber-500/10 dark:text-amber-300
+        rounded-2xl text-sm font-bold
+        flex items-center justify-center gap-2
+        hover:bg-amber-200 dark:hover:bg-amber-500/20
+        transition
+      "
+    >
+      {r.status === "Active" ? (
+        <>
+          <FaPause size={11} />
+          إيقاف
+        </>
+      ) : (
+        <>
+          <FaPlay size={11} />
+          تنشيط
+        </>
+      )}
+    </button>
+  </>
+)}
 
                         <button
                           onClick={() => {
