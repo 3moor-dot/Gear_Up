@@ -36,30 +36,22 @@ interface DashboardItem {
   registeredAt: string;
 }
 
+interface MonthlyRegistration {
+  month: string;
+  users: number;
+  mechanics: number;
+}
+
+interface MonthlyBooking {
+  month: string;
+  bookings: number;
+}
+
 interface ApiResponse {
   stats: DashboardStats;
   recentUsers: DashboardItem[];
   recentMechanics: DashboardItem[];
 }
-
-// Static chart data (replace with real API data if available)
-const barData = [
-  { name: "يناير", مستخدمون: 40, ميكانيكيون: 12 },
-  { name: "فبراير", مستخدمون: 55, ميكانيكيون: 18 },
-  { name: "مارس", مستخدمون: 70, ميكانيكيون: 22 },
-  { name: "أبريل", مستخدمون: 90, ميكانيكيون: 30 },
-  { name: "مايو", مستخدمون: 110, ميكانيكيون: 40 },
-  { name: "يونيو", مستخدمون: 95, ميكانيكيون: 35 },
-];
-
-const lineData = [
-  { name: "يناير", حجوزات: 20 },
-  { name: "فبراير", حجوزات: 35 },
-  { name: "مارس", حجوزات: 28 },
-  { name: "أبريل", حجوزات: 50 },
-  { name: "مايو", حجوزات: 45 },
-  { name: "يونيو", حجوزات: 60 },
-];
 
 const AdminDashboard: React.FC = () => {
   const { dark } = useTheme();
@@ -68,13 +60,17 @@ const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentUsers, setRecentUsers] = useState<DashboardItem[]>([]);
   const [recentMechanics, setRecentMechanics] = useState<DashboardItem[]>([]);
+  const [monthlyRegistrations, setMonthlyRegistrations] = useState<MonthlyRegistration[]>([]);
+  const [monthlyBookings, setMonthlyBookings] = useState<MonthlyBooking[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
       const token = sessionStorage.getItem("userToken");
+      
       try {
-        const response = await fetch(
+        // Fetch main dashboard data
+        const dashboardResponse = await fetch(
           "https://gearupapp.runasp.net/api/admin/dashboard",
           {
             method: "GET",
@@ -84,20 +80,66 @@ const AdminDashboard: React.FC = () => {
             },
           }
         );
-        if (response.ok) {
-          const data: ApiResponse = await response.json();
+
+        if (dashboardResponse.ok) {
+          const data: ApiResponse = await dashboardResponse.json();
           setStats(data.stats);
           setRecentUsers(data.recentUsers);
           setRecentMechanics(data.recentMechanics);
-        } else {
-          console.error("Failed to fetch dashboard data");
         }
+
+        // Fetch monthly registrations
+        const registrationsResponse = await fetch(
+          "https://gearupapp.runasp.net/api/admin/dashboard/monthly-registrations",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (registrationsResponse.ok) {
+          const data = await registrationsResponse.json();
+          // Transform data to match chart format
+          const transformedData = data.monthlyRegistrations.map((item: any) => ({
+            name: item.month,
+            مستخدمون: item.users,
+            ميكانيكيون: item.mechanics,
+          }));
+          setMonthlyRegistrations(transformedData);
+        }
+
+        // Fetch monthly bookings
+        const bookingsResponse = await fetch(
+          "https://gearupapp.runasp.net/api/admin/dashboard/monthly-bookings",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (bookingsResponse.ok) {
+          const data = await bookingsResponse.json();
+          // Transform data to match chart format
+          const transformedData = data.monthlyBookings.map((item: any) => ({
+            name: item.month,
+            حجوزات: item.bookings,
+          }));
+          setMonthlyBookings(transformedData);
+        }
+
       } catch (error) {
         console.error("Error fetching dashboard:", error);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchDashboardData();
   }, []);
 
@@ -253,40 +295,46 @@ const AdminDashboard: React.FC = () => {
             >
               مقارنة بين المستخدمين والميكانيكيين
             </p>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={barData} barGap={4}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={gridColor}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: axisColor, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: axisColor, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: dark ? "#1f2d4520" : "#f0f4ff" }} />
-                <Legend
-                  wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                />
-                <Bar
-                  dataKey="مستخدمون"
-                  fill="#3B82F6"
-                  radius={[6, 6, 0, 0]}
-                />
-                <Bar
-                  dataKey="ميكانيكيون"
-                  fill="#10B981"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {monthlyRegistrations.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={monthlyRegistrations} barGap={4}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={gridColor}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: axisColor, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: axisColor, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: dark ? "#1f2d4520" : "#f0f4ff" }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+                  />
+                  <Bar
+                    dataKey="مستخدمون"
+                    fill="#3B82F6"
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="ميكانيكيون"
+                    fill="#10B981"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-60 flex items-center justify-center text-gray-400 text-sm">
+                لا توجد بيانات متاحة
+              </div>
+            )}
           </div>
 
           {/* Donut Chart - توزيع الإحصائيات */}
@@ -311,32 +359,38 @@ const AdminDashboard: React.FC = () => {
             >
               نظرة عامة على حالة المنصة
             </p>
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {donutData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-                <Legend
-                  wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                  formatter={(value) => (
-                    <span style={{ color: dark ? "#e5e7eb" : "#374151" }}>
-                      {value}
-                    </span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {donutData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {donutData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend
+                    wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+                    formatter={(value) => (
+                      <span style={{ color: dark ? "#e5e7eb" : "#374151" }}>
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-60 flex items-center justify-center text-gray-400 text-sm">
+                لا توجد بيانات متاحة
+              </div>
+            )}
           </div>
 
           {/* Line Chart - نشاط الحجوزات */}
@@ -361,35 +415,41 @@ const AdminDashboard: React.FC = () => {
             >
               عدد الحجوزات على مدار الأشهر الماضية
             </p>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={lineData}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={gridColor}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: axisColor, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: axisColor, fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Line
-                  type="monotone"
-                  dataKey="حجوزات"
-                  stroke="#3B82F6"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: "#3B82F6" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {monthlyBookings.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={monthlyBookings}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={gridColor}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: axisColor, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: axisColor, fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Line
+                    type="monotone"
+                    dataKey="حجوزات"
+                    stroke="#3B82F6"
+                    strokeWidth={2.5}
+                    dot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }}
+                    activeDot={{ r: 6, fill: "#3B82F6" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-52 flex items-center justify-center text-gray-400 text-sm">
+                لا توجد بيانات متاحة
+              </div>
+            )}
           </div>
 
         </div>

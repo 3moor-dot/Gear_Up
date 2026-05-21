@@ -476,12 +476,12 @@ const FormInput = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className={`w-full bg-white dark:bg-[#137FEC1A] border pr-11 py-3 rounded-xl outline-none text-sm text-gray-800 dark:text-gray-200 transition-all ${
+          className={`w-full h-12 bg-[#f1f5fd] dark:bg-[#137FEC1A] border pr-11 rounded-2xl outline-none text-sm text-gray-900 dark:text-white transition-all placeholder-gray-400 dark:placeholder-gray-500 ${
             isPassword ? "pl-11" : ""
           } ${
             error
               ? "border-red-400 ring-2 ring-red-200 dark:ring-red-900/40"
-              : "border-gray-200 dark:border-transparent focus:ring-2 focus:ring-blue-500"
+              : "border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-[#2563EB]"
           }`}
         />
         {isPassword && (
@@ -679,131 +679,219 @@ localStorage.setItem("pendingPassword", password);
 
   return (
     <div
-      className="min-h-screen py-10 flex items-center justify-center px-4 bg-gradient-to-br from-[#EAF4FF] to-white dark:from-[#0F1323] dark:to-[#101922] transition-colors duration-500"
       dir="rtl"
+      className="min-h-screen flex flex-col bg-[#f7f9fd] dark:bg-primary_BGD text-gray-900 dark:text-white transition-colors duration-500 relative"
     >
-      <div className="dark:bg-[#1B1F2D] max-w-xl w-full bg-[#EAF4FF] rounded-3xl p-8 sm:p-10 shadow-xl border border-white/20">
-
-        <h1 className="text-3xl font-bold text-center mb-2 dark:text-white">إنشاء حسابك</h1>
-        <p className="text-center text-gray-500 mb-8 text-sm">
-          {step === 1 ? "بياناتك الأساسية" : "اختر نوع الحساب لإتمام العملية"}
-        </p>
-
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2].map((s) => (
-            <div key={s} className={`h-2 rounded-full transition-all duration-300 ${
-              s === step ? "w-8 bg-[#137FEC]" : "w-4 bg-gray-300 dark:bg-gray-600"
-            }`} />
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormInput
-                  label="الاسم الأول" icon={<FaUser />} placeholder="الاسم الأول"
-                  value={firstName} error={fieldErrors.firstName}
-                  onChange={(e) => { setFirstName(e.target.value); clearErr("firstName"); }}
-                />
-                <FormInput
-                  label="اسم العائلة" icon={<FaUser />} placeholder="اسم العائلة"
-                  value={lastName} error={fieldErrors.lastName}
-                  onChange={(e) => { setLastName(e.target.value); clearErr("lastName"); }}
-                />
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          
+          {/* FORM SECTION */}
+          <div className="w-full flex flex-col justify-center order-1 lg:order-2">
+            <div className="bg-white dark:bg-[#131A2E] rounded-[32px] p-6 sm:p-8 lg:p-10 shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="text-center space-y-4 mb-8">
+                <span className="inline-flex rounded-full bg-blue-50 dark:bg-blue-900/20 text-[#2563EB] text-xs sm:text-sm font-bold px-4 py-2 mb-4">
+                  منصة GearUp
+                </span>
+                <h1 className="text-3xl font-bold">إنشاء حسابك</h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  {step === 1 ? "بياناتك الأساسية" : "اختر نوع الحساب لإتمام العملية"}
+                </p>
               </div>
-              <FormInput
-                label="رقم الهاتف" icon={<FaPhone />} placeholder="+20xxxxxxxx"
-                value={phone} error={fieldErrors.phone}
-                // onChange={(e) => { setPhone(e.target.value); clearErr("phone"); }}
-                onChange={(e) => {
-                  const cleanValue = normalizePhone(e.target.value);
-                  setPhone(cleanValue);
-                  clearErr("phone");
+
+              <div className="flex items-center justify-center gap-2 mb-8">
+                {[1, 2].map((s) => (
+                  <div key={s} className={`h-2 rounded-full transition-all duration-300 ${
+                    s === step ? "w-8 bg-[#2563EB]" : "w-4 bg-gray-200 dark:bg-gray-700"
+                  }`} />
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait">
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormInput
+                        label="الاسم الأول" icon={<FaUser />} placeholder="الاسم الأول"
+                        value={firstName} error={fieldErrors.firstName}
+                        onChange={(e) => { setFirstName(e.target.value); clearErr("firstName"); }}
+                      />
+                      <FormInput
+                        label="اسم العائلة" icon={<FaUser />} placeholder="اسم العائلة"
+                        value={lastName} error={fieldErrors.lastName}
+                        onChange={(e) => { setLastName(e.target.value); clearErr("lastName"); }}
+                      />
+                    </div>
+                    <FormInput
+                      label="رقم الهاتف" icon={<FaPhone />} placeholder="+20xxxxxxxx"
+                      value={phone} error={fieldErrors.phone}
+                      onChange={(e) => {
+                        const cleanValue = normalizePhone(e.target.value);
+                        setPhone(cleanValue);
+                        clearErr("phone");
+                      }}
+                    />
+                    <FormInput
+                      label="البريد الإلكتروني" icon={<FaEnvelope />} placeholder="example@mail.com"
+                      value={email} error={fieldErrors.email}
+                      onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
+                    />
+                    <FormInput
+                      label="كلمة المرور" icon={<FaLock />} placeholder="8 أحرف على الأقل"
+                      type="password" value={password} error={fieldErrors.password}
+                      onChange={(e) => { setPassword(e.target.value); clearErr("password"); }}
+                    />
+                  </motion.div>
+                )}
+
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="py-6"
+                  >
+                    <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                      <button
+                        type="button"
+                        onClick={() => setRole("client")}
+                        className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
+                          role === "client"
+                            ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black shadow-lg scale-105"
+                            : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        <FaUserTie size={36} />
+                        <span className="font-bold text-base sm:text-lg">سجل كعميل</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole("mechanic")}
+                        className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
+                          role === "mechanic"
+                            ? "border-[#2563EB] bg-[#2563EB] text-white shadow-lg scale-105"
+                            : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        <FaTools size={36} />
+                        <span className="font-bold text-base sm:text-lg">سجل كميكانيكي</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex gap-3 mt-8">
+                {step === 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex-1 h-12 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                  >
+                    السابق
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={step === 1 ? handleNext : handleSubmit}
+                  disabled={loading}
+                  className="flex-[2] h-12 bg-[#2563EB] text-white rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? "جارٍ الإنشاء..." : step === 1 ? "متابعة" : "إنشاء الحساب الآن"}
+                </button>
+              </div>
+
+              <p className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+                لديك حساب؟{" "}
+                <span
+                  onClick={() => (window.location.href = "/login")}
+                  className="text-[#2563EB] font-bold cursor-pointer hover:underline"
+                >
+                  تسجيل الدخول
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* IMAGE SECTION */}
+          <div className="flex flex-col justify-center items-center order-2 lg:order-1 mt-8 lg:mt-0 w-full">
+            <motion.div
+              className="relative w-full flex-1 min-h-[500px] flex flex-col items-center justify-center overflow-hidden rounded-[32px]"
+              initial={{ opacity: 0, x: 140 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1.1, ease: "easeOut" }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-[360px] h-[220px] rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-400/10" />
+              </div>
+
+              {/* Benefits Card */}
+              <motion.div
+                className="absolute top-4 sm:top-8 right-4 sm:right-8 z-20 bg-white/95 dark:bg-[#0d1629]/95 backdrop-blur rounded-[20px] p-4 shadow-lg border border-gray-100 dark:border-gray-800"
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: { staggerChildren: 0.18, delayChildren: 0.6 },
+                  },
+                }}
+                initial="hidden"
+                animate="visible"
+              >
+                <div className="space-y-3 text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  {["تشخيص ذكي", "حجز سريع", "متابعة آلية", "دعم متواصل"].map((text, index) => (
+                    <motion.div
+                      key={index}
+                      variants={{
+                        hidden: { opacity: 0, x: 16 },
+                        visible: {
+                          opacity: 1,
+                          x: 0,
+                          transition: { duration: 0.35, ease: "easeOut" },
+                        },
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-[#2563EB] text-base">✓</span>
+                      <span>{text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.img
+                src="/02_car_systems_cutaway.png"
+                alt="GearUp Car Systems"
+                className="relative z-10 w-full max-w-[520px] object-contain object-center"
+                animate={{
+                  x: [0, -8, 0],
+                  y: [0, -3, 0],
+                  rotate: [0, -0.4, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
                 }}
               />
-              <FormInput
-                label="البريد الإلكتروني" icon={<FaEnvelope />} placeholder="example@mail.com"
-                value={email} error={fieldErrors.email}
-                onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
-              />
-              <FormInput
-                label="كلمة المرور" icon={<FaLock />} placeholder="8 أحرف على الأقل"
-                type="password" value={password} error={fieldErrors.password}
-                onChange={(e) => { setPassword(e.target.value); clearErr("password"); }}
-              />
-            </motion.div>
-          )}
 
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="py-6"
-            >
-              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                <button
-                  onClick={() => setRole("client")}
-                  className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
-                    role === "client"
-                      ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black shadow-2xl scale-105"
-                      : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
-                  }`}
-                >
-                  <FaUserTie size={36} />
-                  <span className="font-bold text-base sm:text-lg">سجل كعميل</span>
-                </button>
-                <button
-                  onClick={() => setRole("mechanic")}
-                  className={`flex flex-col items-center justify-center gap-4 p-7 sm:p-8 rounded-3xl border-2 transition-all duration-300 ${
-                    role === "mechanic"
-                      ? "border-[#137FEC] bg-[#137FEC] text-white shadow-2xl scale-105"
-                      : "border-gray-200 dark:border-gray-700 text-gray-400 bg-transparent"
-                  }`}
-                >
-                  <FaTools size={36} />
-                  <span className="font-bold text-base sm:text-lg">سجل كميكانيكي</span>
-                </button>
-              </div>
+              <motion.p
+                className="relative z-10 mt-12 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              >
+                منصة GearUp — العناية الذكية بالسيارة، بشكل مبسط
+              </motion.p>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
 
-        <div className="flex gap-3 mt-8">
-          {step === 2 && (
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white py-3 rounded-xl font-semibold hover:bg-gray-300 transition"
-            >
-              السابق
-            </button>
-          )}
-          <button
-            onClick={step === 1 ? handleNext : handleSubmit}
-            disabled={loading}
-            className="flex-[2] bg-[#137FEC] text-white py-4 rounded-xl text-base sm:text-lg font-bold hover:bg-blue-700 transition shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? "جارٍ الإنشاء..." : step === 1 ? "متابعة" : "إنشاء الحساب الآن"}
-          </button>
         </div>
-
-        <p className="text-center mt-6 dark:text-white text-sm">
-          لديك حساب؟{" "}
-          <span
-            onClick={() => (window.location.href = "/login")}
-            className="text-[#137FEC] font-bold cursor-pointer hover:underline"
-          >
-            تسجيل الدخول
-          </span>
-        </p>
       </div>
     </div>
   );

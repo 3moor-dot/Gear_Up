@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { FaEdit, FaSave, FaSpinner } from "react-icons/fa";
+import { FaEdit, FaSave, FaSpinner, FaChevronDown } from "react-icons/fa";
+
+// --- 1. تعريف الواجهات (Interfaces) في البداية ---
+
+interface SubSpecialization {
+  id: string;
+  name: string;
+}
 
 interface ServiceData {
   id?: string;
@@ -10,10 +17,108 @@ interface ServiceData {
   isNew?: boolean;
 }
 
-interface SubSpecialization {
-  id: string;
-  name: string;
+// --- 2. المكون المخصص (Custom Component) ---
+
+interface CustomSelectProps {
+  options: SubSpecialization[];
+  value: string;
+  onChange: (id: string, name: string) => void; // تمرير الاسم والمعرف معاً
+  placeholder: string;
+  dark: boolean;
 }
+
+const CustomServiceSelect = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  dark,
+}: CustomSelectProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  // تحديد نوع الـ ref بشكل صحيح لتجنب الأخطاء
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // إغلاق القائمة عند النقر خارجها
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((opt) => opt.id === value);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      {/* زر العرض */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border outline-none flex items-center justify-between
+          ${
+            !dark
+              ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900 shadow-sm"
+              : "bg-gray-800 border-blue-400 ring-2 ring-blue-900/40 text-white"
+          }`}
+      >
+        <span className={selectedOption ? "text-current" : "text-gray-400"}>
+          {selectedOption ? selectedOption.name : placeholder}
+        </span>
+        <FaChevronDown
+          className={`text-[#137FEC] transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* القائمة المنسدلة */}
+      {isOpen && (
+        <div
+          className={`absolute z-50 w-full mt-2 rounded-2xl border shadow-xl overflow-hidden transition-all duration-200 origin-top
+            ${
+              !dark
+                ? "bg-white border-gray-200 shadow-gray-200/50"
+                : "bg-[#1a253a] border-gray-700 shadow-black/50"
+            }`}
+        >
+          <ul className="max-h-[340px] overflow-y-auto custom-scrollbar">
+            {options && options.length > 0 ? (
+              options.map((item) => (
+                <li
+                  key={item.id}
+                  onClick={() => {
+                    onChange(item.id, item.name); // تمرير البيانات للكبار
+                    setIsOpen(false);
+                  }}
+                  className={`px-4 py-3 cursor-pointer text-sm font-semibold transition-colors hover:bg-[#137FEC] hover:text-white
+                    ${
+                      value === item.id
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-[#137FEC]"
+                        : !dark
+                        ? "text-gray-700"
+                        : "text-gray-300"
+                    }`}
+                >
+                  {item.name}
+                </li>
+              ))
+            ) : (
+              <li className="px-4 py-3 text-gray-500 text-sm">لا توجد خدمات متاحة</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- 3. المكون الرئيسي (Main Component) ---
 
 const ServicesTab = () => {
   const { dark } = useTheme();
@@ -31,6 +136,7 @@ const ServicesTab = () => {
 
   const fetchSubSpecializations = async () => {
     setIsLoadingOptions(true);
+    setError(""); // مسح أي أخطاء سابقة
 
     try {
       if (!token) throw new Error("No token found");
@@ -52,7 +158,7 @@ const ServicesTab = () => {
 
       const data = await response.json();
 
-      const items = Array.isArray(data)
+      const items: SubSpecialization[] = Array.isArray(data)
         ? data
         : Array.isArray(data?.data)
         ? data.data
@@ -69,7 +175,6 @@ const ServicesTab = () => {
 
   const fetchMyServices = async () => {
     setIsLoadingServices(true);
-
     try {
       if (!token) throw new Error("No token found");
 
@@ -91,7 +196,7 @@ const ServicesTab = () => {
       const data = await response.json();
 
       setServices(
-        data.map((item: any) => ({
+        (Array.isArray(data) ? data : []).map((item: any) => ({
           id: item.id,
           subSpecializationId: item.subSpecializationId,
           subSpecializationName: item.subSpecializationName,
@@ -264,32 +369,32 @@ const ServicesTab = () => {
   };
 
   const inputClass = (extra = "") =>
-    `w-full px-4 py-3 rounded-xl border outline-none transition-all ${
-      !dark
-        ? "bg-white border-gray-300 text-black"
-        : "bg-[#0B1220] border-gray-600 text-white"
-    } ${
+    `w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border outline-none ${
       isEditing
-        ? "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-        : "cursor-not-allowed"
+        ? !dark
+          ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900 shadow-sm"
+          : "bg-gray-800 border-blue-400 ring-2 ring-blue-900/40 text-white"
+        : !dark
+          ? "bg-gray-50 border-gray-200 text-gray-700 cursor-not-allowed select-none ring-0"
+          : "bg-[#131c2f] border-gray-700 text-gray-300 cursor-not-allowed select-none ring-0"
     } ${extra}`;
 
   return (
     <div
-      className={`rounded-2xl border p-6 space-y-6 ${
-        !dark
-          ? "bg-white border-gray-200 shadow-md"
-          : "bg-[#0d1629] border-blue-900/30"
-      }`}
+      dir="rtl"
+      className="bg-white dark:bg-[#0d1629] rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-5 md:p-6"
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">الخدمات والأسعار</h3>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-gray-200 dark:border-gray-800 mb-6">
+        <div>
+          <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white">الخدمات والأسعار</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">إدارة الخدمات التي تقدمها وتحديد أسعارها</p>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
           {isEditing && (
             <button
               onClick={addService}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition shadow-md active:scale-95"
             >
               <span className="text-lg">＋</span>
               إضافة خدمة
@@ -297,7 +402,7 @@ const ServicesTab = () => {
           )}
 
           {isEditing ? (
-            <>
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={() => {
                   setIsEditing(false);
@@ -305,11 +410,7 @@ const ServicesTab = () => {
                   setSuccess("");
                   fetchMyServices();
                 }}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  !dark
-                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
+                className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 dark:bg-[#131c2f] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:bg-gray-200 dark:hover:bg-gray-800"
               >
                 إلغاء
               </button>
@@ -317,7 +418,7 @@ const ServicesTab = () => {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition disabled:opacity-50"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none disabled:bg-gray-400"
               >
                 {isSaving ? (
                   <>
@@ -327,11 +428,11 @@ const ServicesTab = () => {
                 ) : (
                   <>
                     <FaSave />
-                    <span>حفظ</span>
+                    <span>حفظ التغييرات</span>
                   </>
                 )}
               </button>
-            </>
+            </div>
           ) : (
             <button
               onClick={() => {
@@ -339,7 +440,7 @@ const ServicesTab = () => {
                 setError("");
                 setSuccess("");
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20"
             >
               <FaEdit />
               <span>تعديل الخدمات</span>
@@ -380,53 +481,38 @@ const ServicesTab = () => {
     services.map((service, index) => (
       <div
         key={service.id || `${service.subSpecializationId}-${index}`}
-        className={`p-4 rounded-xl border ${
+        className={`p-4 sm:p-6 rounded-2xl border transition-all ${
           !dark
-            ? "bg-gray-50 border-gray-200"
-            : "bg-[#131c2f] border-gray-700"
+            ? "bg-white border-gray-100 shadow-sm"
+            : "bg-[#131c2f] border-gray-800"
         }`}
       >
-        <div className="flex items-end gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row items-end gap-4">
+          <div className="w-full flex-1">
             <label
-              className={`block text-sm mb-2 ${
-                !dark ? "text-gray-600" : "text-gray-400"
-              }`}
+              className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-2"
             >
               الخدمة
             </label>
 
+            {/* استخدام المكون المخصص مع تمرير البيانات بشكل مبسط */}
             {isEditing && (service.isNew || !service.id) ? (
-              <select
+              <CustomServiceSelect
+                options={subSpecializations}
                 value={service.subSpecializationId}
-                onChange={(e) => {
-                  const selectedId = e.target.value;
-                  const selectedService = subSpecializations.find(
-                    (item) => item.id === selectedId
-                  );
-
-                  setServices((prev) =>
-                    prev.map((s, i) =>
-                      i === index
-                        ? {
-                            ...s,
-                            subSpecializationId: selectedId,
-                            subSpecializationName:
-                              selectedService?.name || "",
-                          }
-                        : s
-                    )
-                  );
+                onChange={(id, name) => {
+                  updateService(index, "subSpecializationId", id);
+                  updateService(index, "subSpecializationName", name);
                 }}
-                className={inputClass()}
-              >
-                <option value="">اختر خدمة</option>
-                {subSpecializations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="اختر خدمة"
+                dark={dark}
+              />
+            ) : !isEditing ? (
+              <div className="rounded-2xl bg-gray-50 dark:bg-[#131c2f] border border-gray-200 dark:border-gray-800 px-4 py-3">
+                <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                  {service.subSpecializationName || "—"}
+                </p>
+              </div>
             ) : (
               <input
                 type="text"
@@ -437,28 +523,37 @@ const ServicesTab = () => {
             )}
           </div>
 
-          <div className="w-40 relative">
-            <label
-              className={`block text-sm mb-2 ${
-                !dark ? "text-gray-600" : "text-gray-400"
-              }`}
-            >
-              السعر
-            </label>
+        <div className="w-full sm:w-48">
+          <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-2">
+            السعر
+          </label>
 
-            <input
-              type="number"
-              value={service.price}
-              onChange={(e) => updateService(index, "price", e.target.value)}
-              readOnly={!isEditing}
-              placeholder="0"
-              className={inputClass("pr-14")}
-            />
+          {!isEditing ? (
+            <div className="relative rounded-2xl bg-gray-50 dark:bg-[#131c2f] border border-gray-200 dark:border-gray-800 px-4 py-3 pl-14">
+              <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white text-right">
+                {service.price || "0"}
+              </p>
 
-            <span className="absolute right-4 top-[42px] text-xs font-bold text-blue-500">
-              EGP
-            </span>
-          </div>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#137FEC] pointer-events-none">
+                EGP
+              </span>
+            </div>
+          ) : (
+            <div className="relative">
+              <input
+                type="number"
+                value={service.price}
+                onChange={(e) => updateService(index, "price", e.target.value)}
+                placeholder="0"
+                className={`${inputClass()} !pl-14 text-right`}
+              />
+
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-xs font-bold text-[#137FEC] pointer-events-none">
+                EGP
+              </span>
+            </div>
+          )}
+        </div>
         </div>
 
         {isEditing && (

@@ -3,14 +3,12 @@ import AdminSidebar from "../../../components/AdminSidebar/AdminSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import {
-  FaEye,
   FaSearch,
   FaWrench,
   FaPlus,
-  FaEllipsisV,
+  FaEllipsisH,
   FaEdit,
   FaTrash,
-  FaPlusCircle,
 } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -621,9 +619,9 @@ const ServicesManagement: React.FC = () => {
         {/* SEARCH & ADD BUTTON */}
         <div className="flex flex-col md:flex-row gap-4">
           <div
-            className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl ${
+            className={`flex-1 flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${
               !dark
-                ? "bg-white shadow-sm border border-gray-200"
+                ? "bg-white shadow-md border border-gray-200"
                 : "bg-[#0d1629] border border-gray-800"
             }`}
           >
@@ -648,7 +646,7 @@ const ServicesManagement: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAddMainModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-[#137FEC] hover:bg-blue-600 text-white rounded-2xl font-bold text-sm md:text-base transition shadow-lg shadow-blue-500/20 active:scale-95"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm md:text-base transition shadow-lg shadow-blue-500/20 active:scale-95"
           >
             <FaPlus /> إضافة خدمة رئيسية
           </button>
@@ -662,9 +660,9 @@ const ServicesManagement: React.FC = () => {
               setActiveTab("all");
               setCurrentPage(1);
             }}
-            className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all ${
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               activeTab === "all"
-                ? "bg-[#137FEC] text-white shadow-lg shadow-blue-500/20"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                 : !dark
                 ? "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                 : "bg-[#0d1629] text-gray-400 hover:bg-[#1a2332] border border-gray-800"
@@ -693,27 +691,15 @@ const ServicesManagement: React.FC = () => {
 
         {/* TABLE - Desktop */}
         {filteredServices.length > 0 && (
-          <div
-            className={`hidden md:block rounded-3xl overflow-hidden ${
-              !dark
-                ? "bg-white shadow-lg border border-gray-100"
-                : "bg-[#0d1629] border border-gray-800"
-            }`}
-          >
+          <div className={`hidden md:block rounded-xl overflow-hidden ${!dark ? "bg-white shadow-xl" : "bg-[#0d1629]"}`}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
                 <thead>
-                  <tr
-                    className={`text-right text-sm font-bold border-b ${
-                      !dark
-                        ? "bg-gray-50/50 text-gray-600 border-gray-100"
-                        : "bg-[#131c2f] text-gray-400 border-gray-800"
-                    }`}
-                  >
-                    <th className="p-5">الخدمة الرئيسية</th>
-                    <th className="p-5 text-center">الخدمات الفرعية</th>
-                    <th className="p-5 text-center">الحالة</th>
-                    <th className="p-5">الإجراءات</th>
+                  <tr className={`text-right text-xs lg:text-sm ${!dark ? "bg-gray-50 text-gray-700" : "bg-[#131c2f] text-gray-300"}`}>
+                    <th className="p-3 lg:p-4 font-semibold">الخدمة الرئيسية</th>
+                    <th className="p-3 lg:p-4 font-semibold text-center">الخدمات الفرعية</th>
+                    <th className="p-3 lg:p-4 font-semibold text-center">الحالة</th>
+                    <th className="p-3 lg:p-4 font-semibold">الإجراءات</th>
                   </tr>
                 </thead>
 
@@ -721,13 +707,9 @@ const ServicesManagement: React.FC = () => {
                   {paginatedServices.map((service) => (
                     <tr
                       key={service.id}
-                      className={`border-b transition-colors ${
-                        !dark
-                          ? "border-gray-100 hover:bg-blue-50/30"
-                          : "border-gray-800 hover:bg-[#137FEC5]"
-                      }`}
+                      className={`border-b transition-colors ${!dark ? "border-gray-200 hover:bg-gray-50" : "border-gray-800 hover:bg-[#131c2f]"}`}
                     >
-                      <td className="p-5 font-medium text-sm flex items-center gap-3">
+                      <td className="p-3 lg:p-4 font-medium text-xs lg:text-sm flex items-center gap-3">
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                             !dark
@@ -737,83 +719,63 @@ const ServicesManagement: React.FC = () => {
                         >
                           <FaWrench size={14} />
                         </div>
-
                         {service.name}
                       </td>
-
-                      <td className="p-5 text-center text-sm font-bold text-[#137FEC]">
+                      <td className={`p-3 lg:p-4 text-center text-xs lg:text-sm font-semibold text-blue-600 dark:text-blue-400`}>
                         {service.count}
                       </td>
-
-                      <td className="p-5 text-center">{getStatusBadge()}</td>
-
-                      <td className="p-5">
-                        <div className="relative" ref={menuRef}>
+                      <td className="p-3 lg:p-4 text-center">
+                        {getStatusBadge()}
+                      </td>
+                      <td className="p-3 lg:p-4">
+                        <div className="relative inline-block text-left" ref={menuRef}>
                           <button
                             type="button"
                             onMouseDown={(e) => e.stopPropagation()}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActionMenuId(
-                                actionMenuId === service.id ? null : service.id
-                              );
+                              setActionMenuId(actionMenuId === service.id ? null : service.id);
                             }}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-colors"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                           >
-                            <FaEllipsisV
-                              size={18}
-                              color={dark ? "#9CA3AF" : "#4B5563"}
-                            />
+                            <FaEllipsisH className={dark ? "text-gray-400" : "text-gray-600"} />
                           </button>
 
                           {actionMenuId === service.id && (
                             <div
                               onMouseDown={(e) => e.stopPropagation()}
                               onClick={(e) => e.stopPropagation()}
-                              className={`absolute top-10 left-0 w-48 rounded-2xl shadow-2xl border py-2 z-50 flex flex-col overflow-hidden ${
-                                !dark
-                                  ? "bg-white border-gray-100"
-                                  : "bg-[#0d1629] border-gray-800"
+                              className={`absolute top-0 left-full w-40 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
+                                !dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-800"
                               }`}
                             >
                               <button
                                 type="button"
                                 onClick={() => openServiceDrawer(service)}
-                                className={`flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/10 transition-colors w-full text-right ${
-                                  !dark ? "text-gray-700" : "text-gray-300"
-                                }`}
+                                className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                               >
-                                <FaEye size={14} /> عرض التفاصيل
+                                عرض التفاصيل
                               </button>
-
                               <button
                                 type="button"
                                 onClick={() => openAddSubModal(service)}
-                                className="flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#137FEC] transition-colors w-full text-right"
+                                className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                               >
-                                <FaPlusCircle size={14} /> إضافة خدمة فرعية
+                                إضافة فرعية
                               </button>
-
                               <button
                                 type="button"
                                 onClick={() => openEditModal(service)}
-                                className="flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-[#137FEC] transition-colors w-full text-right"
+                                className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                               >
-                                <FaEdit size={14} /> تعديل
+                                تعديل
                               </button>
-
-                              <div
-                                className={`h-px mx-4 my-1 ${
-                                  !dark ? "bg-gray-100" : "bg-gray-800"
-                                }`}
-                              />
-
                               <button
                                 type="button"
                                 onClick={() => handleDeleteService(service.id)}
-                                className="flex items-center gap-3 px-4 py-3 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors w-full text-right"
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-right"
                               >
-                                <FaTrash size={14} /> حذف
+                                حذف
                               </button>
                             </div>
                           )}
@@ -826,15 +788,9 @@ const ServicesManagement: React.FC = () => {
             </div>
 
             {totalPages > 1 && (
-              <div
-                className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t ${
-                  !dark ? "border-gray-100" : "border-gray-800"
-                }`}
-              >
-                <span className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>
-                  عرض {(currentPage - 1) * itemsPerPage + 1} إلى{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredServices.length)} من{" "}
-                  {filteredServices.length}
+              <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+                <span className={`text-xs md:text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>
+                  عرض {(currentPage - 1) * itemsPerPage + 1} إلى {Math.min(currentPage * itemsPerPage, filteredServices.length)} من {filteredServices.length}
                 </span>
 
                 <div className="flex gap-2">
@@ -843,12 +799,12 @@ const ServicesManagement: React.FC = () => {
                       key={i}
                       type="button"
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`w-9 h-9 md:w-10 md:h-10 rounded-xl text-sm font-bold transition ${
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition ${
                         currentPage === i + 1
-                          ? "bg-[#137FEC] text-white shadow-lg shadow-blue-500/20"
+                          ? "bg-blue-600 text-white"
                           : !dark
-                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          : "bg-[#131c2f] text-gray-400 hover:bg-[#1a2332]"
+                          ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          : "bg-[#131c2f] text-gray-300 hover:bg-[#1a2332]"
                       }`}
                     >
                       {i + 1}
@@ -862,15 +818,11 @@ const ServicesManagement: React.FC = () => {
 
         {/* CARDS - Mobile */}
         {filteredServices.length > 0 && (
-          <div className="md:hidden space-y-4">
+          <div className="md:hidden space-y-3">
             {paginatedServices.map((service) => (
               <div
                 key={service.id}
-                className={`p-4 rounded-2xl ${
-                  !dark
-                    ? "bg-white shadow-md border border-gray-100"
-                    : "bg-[#0d1629] border border-gray-800"
-                }`}
+                className={`p-4 rounded-xl ${!dark ? "bg-white shadow-md border border-gray-200" : "bg-[#0d1629] border border-gray-800"}`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -901,66 +853,48 @@ const ServicesManagement: React.FC = () => {
                       onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActionMenuId(
-                          actionMenuId === service.id ? null : service.id
-                        );
+                        setActionMenuId(actionMenuId === service.id ? null : service.id);
                       }}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                      className="p-1"
                     >
-                      <FaEllipsisV
-                        size={18}
-                        color={dark ? "#9CA3AF" : "#4B5563"}
-                      />
+                      <FaEllipsisH className="text-gray-400" />
                     </button>
 
                     {actionMenuId === service.id && (
                       <div
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={(e) => e.stopPropagation()}
-                        className={`absolute top-8 left-0 w-48 rounded-2xl shadow-2xl border py-2 z-50 flex flex-col overflow-hidden ${
-                          !dark
-                            ? "bg-white border-gray-100"
-                            : "bg-[#0d1629] border-gray-800"
+                        className={`absolute top-0 left-full w-40 rounded-lg shadow-xl border z-50 overflow-hidden mt-1 ${
+                          !dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-800"
                         }`}
                       >
                         <button
                           type="button"
                           onClick={() => openServiceDrawer(service)}
-                          className={`flex items-center gap-3 px-4 py-3 text-sm font-bold w-full text-right hover:bg-gray-50 dark:hover:bg-white/10 ${
-                            !dark ? "text-gray-700" : "text-gray-300"
-                          }`}
+                          className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                         >
-                          <FaEye size={14} /> عرض التفاصيل
+                          عرض التفاصيل
                         </button>
-
                         <button
                           type="button"
                           onClick={() => openAddSubModal(service)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold w-full text-right text-[#137FEC] hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                         >
-                          <FaPlusCircle size={14} /> إضافة خدمة فرعية
+                          إضافة فرعية
                         </button>
-
                         <button
                           type="button"
                           onClick={() => openEditModal(service)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold w-full text-right text-[#137FEC] hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors w-full text-right hover:bg-blue-50 dark:hover:bg-blue-900/20 ${!dark ? "text-gray-700" : "text-gray-300"}`}
                         >
-                          <FaEdit size={14} /> تعديل
+                          تعديل
                         </button>
-
-                        <div
-                          className={`h-px mx-4 my-1 ${
-                            !dark ? "bg-gray-100" : "bg-gray-800"
-                          }`}
-                        />
-
                         <button
                           type="button"
                           onClick={() => handleDeleteService(service.id)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold w-full text-right text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-right"
                         >
-                          <FaTrash size={14} /> حذف
+                          حذف
                         </button>
                       </div>
                     )}
@@ -1007,147 +941,87 @@ const ServicesManagement: React.FC = () => {
 
           <div
             dir="rtl"
-            className={`fixed top-0 left-0 h-full w-full sm:w-[460px] z-50 shadow-2xl overflow-y-auto
-              transition-transform duration-500 ease-in-out
+            className={`fixed top-0 left-0 h-full w-full sm:w-[420px] z-50 shadow-2xl overflow-y-auto flex flex-col
+              transition-transform duration-300 ease-in-out
               ${isDrawerOpen ? "translate-x-0" : "-translate-x-full"}
-              ${!dark ? "bg-white" : "bg-[#0d1629]"}
+              ${!dark ? "bg-white border-r border-gray-200" : "bg-[#0d1629] border-r border-gray-800"}
             `}
           >
-            <div
-              className={`flex items-center justify-between p-6 border-b ${
-                !dark ? "border-gray-100" : "border-gray-800"
-              }`}
-            >
-              <h2 className="text-xl font-bold">تفاصيل الخدمة</h2>
-
+            <div className={`flex items-center justify-between px-5 py-4 border-b shrink-0 ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+              <h2 className="text-base font-semibold">تفاصيل الخدمة</h2>
               <button
                 type="button"
                 onClick={closeServiceDrawer}
-                className={`w-10 h-10 flex items-center justify-center rounded-full transition ${
-                  !dark
-                    ? "hover:bg-gray-100 text-gray-600"
-                    : "hover:bg-gray-800 text-gray-400"
-                }`}
-              >
-                <MdClose size={26} />
-              </button>
+                className={`w-8 h-8 flex items-center justify-center rounded-full border text-sm transition
+                  ${!dark ? "border-gray-200 text-gray-500 hover:bg-gray-100" : "border-gray-700 text-gray-400 hover:bg-gray-800"}`}
+              >✕</button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className="flex justify-center">{getStatusBadge()}</div>
+            <div className="flex flex-col gap-4 p-5 overflow-y-auto flex-1">
+              <div className="flex justify-between items-center">
+                {getStatusBadge()}
+              </div>
 
-              <div
-                className={`rounded-2xl p-6 space-y-4 ${
-                  !dark
-                    ? "bg-gray-50 border border-gray-200"
-                    : "bg-[#131c2f] border border-gray-800"
-                }`}
-              >
-                <h3
-                  className={`text-xs font-bold uppercase tracking-wider mb-2 ${
-                    !dark ? "text-gray-500" : "text-gray-400"
-                  }`}
-                >
-                  الخدمة الرئيسية
-                </h3>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-[#137FEC] flex items-center justify-center text-white font-black text-xl">
-                    {selectedService.name.charAt(0)}
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="font-bold text-xl truncate">
-                      {selectedService.name}
-                    </p>
-                    <p className={`text-sm ${!dark ? "text-gray-500" : "text-gray-400"}`}>
-                      خدمة رئيسية
-                    </p>
-                  </div>
+              <div className={`flex items-center gap-4 p-4 rounded-xl ${!dark ? "bg-gray-50" : "bg-[#131c2f]"}`}>
+                <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl font-semibold w-[52px] h-[52px] shrink-0">
+                  {selectedService.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold mb-0.5">{selectedService.name}</h3>
+                  <p className={`text-xs truncate ${dark ? "text-gray-400" : "text-gray-500"}`}>خدمة رئيسية</p>
                 </div>
               </div>
 
-              <div
-                className={`rounded-2xl p-6 space-y-3 ${
-                  !dark
-                    ? "bg-gray-50 border border-gray-200"
-                    : "bg-[#131c2f] border border-gray-800"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <h3
-                    className={`text-xs font-bold uppercase tracking-wider ${
-                      !dark ? "text-gray-500" : "text-gray-400"
-                    }`}
-                  >
+              <div className={`rounded-xl border overflow-hidden ${!dark ? "border-gray-200" : "border-gray-800"}`}>
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${!dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-800"}`}>
+                  <h3 className={`text-[11px] font-semibold uppercase tracking-wider ${!dark ? "text-gray-400" : "text-gray-500"}`}>
                     الخدمات الفرعية ({selectedService.count})
                   </h3>
-
                   <button
                     type="button"
                     onClick={() => openAddSubModal(selectedService)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#137FEC] text-white text-xs font-bold hover:bg-blue-600 transition"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 text-xs font-semibold transition"
                   >
-                    <FaPlus size={11} /> إضافة
+                    <FaPlus size={10} /> إضافة
                   </button>
                 </div>
 
                 {selectedService.subSpecializations.length > 0 ? (
-                  <div className="space-y-2">
-                    {selectedService.subSpecializations.map((sub) => (
+                  <div className="flex flex-col">
+                    {selectedService.subSpecializations.map((sub, i, arr) => (
                       <div
                         key={sub.id}
-                        className={`flex items-center justify-between gap-3 p-3 rounded-xl border ${
-                          !dark
-                            ? "bg-white border-gray-200"
-                            : "bg-[#0d1629] border-gray-800"
-                        }`}
+                        className={`flex items-center justify-between gap-3 px-4 py-3 text-sm ${i < arr.length - 1 ? `border-b ${!dark ? "border-gray-100" : "border-gray-800/60"}` : ""}`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-[#137FEC20] text-[#137FEC] flex items-center justify-center shrink-0">
-                            <FaWrench size={12} />
-                          </div>
-
-                          <span className="text-sm font-bold truncate">
-                            {sub.name}
-                          </span>
+                          <span className={dark ? "text-gray-300" : "text-gray-700"}>{sub.name}</span>
                         </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => openEditSubModal(sub)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-[#137FEC] hover:bg-[#137FEC] hover:text-white transition"
+                            className={`p-1.5 rounded-lg transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 ${!dark ? "text-gray-400" : "text-gray-500"}`}
                             title="تعديل"
                           >
-                            <FaEdit size={13} />
+                            <FaEdit size={14} />
                           </button>
-
                           <button
                             type="button"
                             onClick={() => handleDeleteSubService(sub.id)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition"
+                            className={`p-1.5 rounded-lg transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 ${!dark ? "text-gray-400" : "text-gray-500"}`}
                             title="حذف"
                           >
-                            <FaTrash size={13} />
+                            <FaTrash size={14} />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p
-                    className={`text-sm text-center py-6 ${
-                      !dark ? "text-gray-500" : "text-gray-400"
-                    }`}
-                  >
+                  <p className={`text-xs text-center py-4 ${!dark ? "text-gray-500" : "text-gray-400"}`}>
                     لا توجد خدمات فرعية لهذه الخدمة
                   </p>
                 )}
-
-                <div className="text-center text-xs text-gray-400 mt-2">
-                  ID: {selectedService.id}
-                </div>
               </div>
             </div>
           </div>
@@ -1162,7 +1036,7 @@ const ServicesManagement: React.FC = () => {
             onClick={() => setIsAddMainModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[24px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
             <button
               type="button"
               onClick={() => setIsAddMainModalOpen(false)}
@@ -1171,7 +1045,7 @@ const ServicesManagement: React.FC = () => {
               <MdClose size={30} />
             </button>
 
-            <div className="p-8 md:p-12">
+            <div className="p-6 md:p-10">
               <h2 className="text-2xl font-black text-gray-800 dark:text-white text-right mb-10">
                 إضافة خدمة رئيسية جديدة
               </h2>
@@ -1194,14 +1068,14 @@ const ServicesManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsAddMainModalOpen(false)}
-                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-4 rounded-2xl font-black text-lg border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
+                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-3 rounded-xl font-bold text-base border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
                   >
                     إلغاء
                   </button>
 
                   <button
                     type="submit"
-                    className="flex-1 bg-[#137FEC] text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
                   >
                     إضافة
                   </button>
@@ -1220,7 +1094,7 @@ const ServicesManagement: React.FC = () => {
             onClick={() => setIsAddSubModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[24px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
             <button
               type="button"
               onClick={() => setIsAddSubModalOpen(false)}
@@ -1229,7 +1103,7 @@ const ServicesManagement: React.FC = () => {
               <MdClose size={30} />
             </button>
 
-            <div className="p-8 md:p-12">
+            <div className="p-6 md:p-10">
               <h2 className="text-2xl font-black text-gray-800 dark:text-white text-right mb-10">
                 إضافة خدمة فرعية
               </h2>
@@ -1259,14 +1133,14 @@ const ServicesManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsAddSubModalOpen(false)}
-                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-4 rounded-2xl font-black text-lg border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
+                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-3 rounded-xl font-bold text-base border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
                   >
                     إلغاء
                   </button>
 
                   <button
                     type="submit"
-                    className="flex-1 bg-[#137FEC] text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
                   >
                     إضافة
                   </button>
@@ -1285,7 +1159,7 @@ const ServicesManagement: React.FC = () => {
             onClick={() => setIsEditModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[24px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
             <button
               type="button"
               onClick={() => setIsEditModalOpen(false)}
@@ -1294,7 +1168,7 @@ const ServicesManagement: React.FC = () => {
               <MdClose size={30} />
             </button>
 
-            <div className="p-8 md:p-12">
+            <div className="p-6 md:p-10">
               <h2 className="text-2xl font-black text-gray-800 dark:text-white text-right mb-10">
                 تعديل اسم الخدمة
               </h2>
@@ -1317,14 +1191,14 @@ const ServicesManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-4 rounded-2xl font-black text-lg border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
+                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-3 rounded-xl font-bold text-base border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
                   >
                     إلغاء
                   </button>
 
                   <button
                     type="submit"
-                    className="flex-1 bg-[#137FEC] text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
                   >
                     حفظ التعديلات
                   </button>
@@ -1343,7 +1217,7 @@ const ServicesManagement: React.FC = () => {
             onClick={closeEditSubModal}
           />
 
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[24px] shadow-2xl overflow-hidden border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300">
             <button
               type="button"
               onClick={closeEditSubModal}
@@ -1352,7 +1226,7 @@ const ServicesManagement: React.FC = () => {
               <MdClose size={30} />
             </button>
 
-            <div className="p-8 md:p-12">
+            <div className="p-6 md:p-10">
               <h2 className="text-2xl font-black text-gray-800 dark:text-white text-right mb-10">
                 تعديل الخدمة الفرعية
               </h2>
@@ -1377,14 +1251,14 @@ const ServicesManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={closeEditSubModal}
-                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-4 rounded-2xl font-black text-lg border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
+                    className="flex-1 bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white py-3 rounded-xl font-bold text-base border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all"
                   >
                     إلغاء
                   </button>
 
                   <button
                     type="submit"
-                    className="flex-1 bg-[#137FEC] text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-base shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
                   >
                     حفظ التعديلات
                   </button>

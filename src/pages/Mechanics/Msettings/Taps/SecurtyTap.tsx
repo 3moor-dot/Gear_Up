@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaSave, FaSpinner, FaLock } from "react-icons/fa";
-import { MdVisibility, MdVisibilityOff, MdCheckCircleOutline, MdErrorOutline } from "react-icons/md";
+import {
+  MdVisibility,
+  MdVisibilityOff,
+  MdCheckCircleOutline,
+  MdErrorOutline,
+} from "react-icons/md";
 
-// ✅ برا الـ component الرئيسية
 const PasswordField = ({
-  label, name, value, show, onToggle, onChange, dark,
+  label,
+  name,
+  value,
+  show,
+  onToggle,
+  onChange,
+  dark,
 }: {
   label: string;
   name: string;
@@ -15,17 +25,18 @@ const PasswordField = ({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   dark: boolean;
 }) => {
-  // التعديل هنا: أضفنا pl-12 (فراغ لليسار) وحذفنا pr-12
-  const inputClass = `w-full px-4 py-3 pl-12 rounded-lg border outline-none transition-all text-right ${!dark
-      ? "bg-gray-50 border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-      : "bg-[#131c2f] border-gray-700 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-    }`;
+  const inputClass = `w-full text-right font-semibold py-3 px-4 pl-12 rounded-2xl transition-all duration-200 border outline-none ${
+    !dark
+      ? "bg-white border-[#D7E7FF] focus:border-[#137FEC] focus:ring-2 focus:ring-[#137FEC]/15 text-gray-900 shadow-sm"
+      : "bg-[#131c2f] border-[#24324A] focus:border-[#137FEC] focus:ring-2 focus:ring-[#137FEC]/25 text-white"
+  }`;
 
   return (
     <div>
-      <label className={`block text-sm mb-2 ${!dark ? "text-gray-600" : "text-gray-400"}`}>
+      <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-2">
         {label}
       </label>
+
       <div className="relative">
         <input
           type={show ? "text" : "password"}
@@ -36,10 +47,11 @@ const PasswordField = ({
           required
           className={inputClass}
         />
-        {/* التعديل هنا: قمنا بتغيير right-3 إلى left-3 ليكون في الجهة المطلوبة */}
+
         <button
           type="button"
           onClick={onToggle}
+          aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
         >
           {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
@@ -63,24 +75,42 @@ const SecuritySettings = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({ type: null, message: "" });
+
+  const [status, setStatus] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({
+    type: null,
+    message: "",
+  });
 
   const token = sessionStorage.getItem("userToken");
   const BASE_URL = "https://gearupapp.runasp.net/api/auth/change-password";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
+    setPasswords({
+      ...passwords,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus({ type: null, message: "" });
+
+    setStatus({
+      type: null,
+      message: "",
+    });
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      return setStatus({ type: "error", message: "كلمة المرور الجديدة غير متطابقة" });
+      return setStatus({
+        type: "error",
+        message: "كلمة المرور الجديدة غير متطابقة",
+      });
     }
 
     setLoading(true);
+
     try {
       const response = await fetch(BASE_URL, {
         method: "POST",
@@ -95,15 +125,31 @@ const SecuritySettings = () => {
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        setStatus({ type: "success", message: data.message || "تم تغيير كلمة المرور بنجاح" });
-        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setStatus({
+          type: "success",
+          message: data.message || "تم تغيير كلمة المرور بنجاح",
+        });
+
+        setPasswords({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+
         setTimeout(() => window.location.reload(), 1000);
       } else {
-        setStatus({ type: "error", message: data.message || "فشل التغيير، تأكد من كلمة المرور الحالية" });
+        setStatus({
+          type: "error",
+          message: data.message || "فشل التغيير، تأكد من كلمة المرور الحالية",
+        });
       }
     } catch {
-      setStatus({ type: "error", message: "حدث خطأ في الاتصال بالسيرفر" });
+      setStatus({
+        type: "error",
+        message: "حدث خطأ في الاتصال بالسيرفر",
+      });
     } finally {
       setLoading(false);
     }
@@ -111,90 +157,114 @@ const SecuritySettings = () => {
 
   return (
     <div
-      className={`rounded-xl border overflow-hidden ${!dark ? "bg-white shadow-md border-gray-200" : "bg-[#0d1629] border-blue-900/30"}`}
       dir="rtl"
+      className="bg-white dark:bg-[#0d1629] rounded-3xl border border-[#D7E7FF] dark:border-[#24324A] shadow-sm p-5 md:p-6 space-y-6 md:space-y-8"
     >
       {/* Header */}
-      <div className={`p-6 border-b ${!dark ? "border-gray-200" : "border-gray-800"}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full border-4 border-blue-500 bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <FaLock className="text-blue-500 text-xl" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold mb-1">إعدادات الأمان</h3>
-              <p className={`text-sm ${!dark ? "text-gray-600" : "text-gray-400"}`}>
-                تغيير كلمة المرور
-              </p>
-            </div>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-[#D7E7FF] dark:border-[#24324A]">
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full border-4 border-[#BFD8FF] dark:border-[#1E3A5F] bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shadow-sm">
+            <FaLock className="text-[#137FEC] text-2xl sm:text-3xl" />
           </div>
 
-          <button
-            type="submit"
-            form="password-form"
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
-          >
-            {loading ? (
-              <><FaSpinner className="animate-spin" /><span>جاري الحفظ...</span></>
-            ) : (
-              <><FaSave /><span>حفظ التغييرات</span></>
-            )}
-          </button>
+          <div>
+            <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white">
+              إعدادات الأمان
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              تغيير كلمة المرور وتأمين حسابك
+            </p>
+          </div>
         </div>
+
+        <button
+          type="submit"
+          form="password-form"
+          disabled={loading}
+          className={`w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-blue-500/20 ${
+            loading
+              ? "bg-gray-400 cursor-wait text-white shadow-none"
+              : "bg-[#137FEC] hover:bg-blue-600 text-white"
+          }`}
+        >
+          {loading ? (
+            <>
+              <FaSpinner className="animate-spin" />
+              <span>جاري الحفظ...</span>
+            </>
+          ) : (
+            <>
+              <FaSave />
+              <span>حفظ التغييرات</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Fields */}
-      <div className="p-6">
-        <h4 className="text-lg font-bold mb-6">بيانات كلمة المرور</h4>
-
+      <div>
         {status.type && (
-          <div className={`mb-4 p-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 ${status.type === "success"
-              ? "bg-green-500/10 border border-green-500/30 text-green-500"
-              : "bg-red-500/10 border border-red-500/30 text-red-500"
-            }`}>
-            {status.type === "success" ? <MdCheckCircleOutline size={18} /> : <MdErrorOutline size={18} />}
+          <div
+            className={`mb-6 p-3 rounded-xl text-sm text-center flex items-center justify-center gap-2 font-medium border ${
+              status.type === "success"
+                ? "bg-green-500/10 border-green-500/25 text-green-600 dark:text-green-400"
+                : "bg-red-500/10 border-red-500/25 text-red-600 dark:text-red-400"
+            }`}
+          >
+            {status.type === "success" ? (
+              <MdCheckCircleOutline size={18} />
+            ) : (
+              <MdErrorOutline size={18} />
+            )}
             {status.message}
           </div>
         )}
 
         <form id="password-form" onSubmit={handleChangePassword}>
-  
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div className="md:col-span-2">
-    <PasswordField
-      label="كلمة المرور الحالية"
-      name="currentPassword"
-      value={passwords.currentPassword}
-      show={showCurrent}
-      onToggle={() => setShowCurrent(!showCurrent)}
-      onChange={handleInputChange}
-      dark={dark}
-    />
-  </div>
-  <PasswordField
-    label="كلمة المرور الجديدة"
-    name="newPassword"
-    value={passwords.newPassword}
-    show={showNew}
-    onToggle={() => setShowNew(!showNew)}
-    onChange={handleInputChange}
-    dark={dark}
-  />
-  <PasswordField
-    label="تأكيد كلمة المرور الجديدة"
-    name="confirmPassword"
-    value={passwords.confirmPassword}
-    show={showConfirm}
-    onToggle={() => setShowConfirm(!showConfirm)}
-    onChange={handleInputChange}
-    dark={dark}
-  />
-</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <PasswordField
+                label="كلمة المرور الحالية"
+                name="currentPassword"
+                value={passwords.currentPassword}
+                show={showCurrent}
+                onToggle={() => setShowCurrent(!showCurrent)}
+                onChange={handleInputChange}
+                dark={dark}
+              />
+            </div>
 
-          <div className={`mt-6 p-4 rounded-xl border ${!dark ? "bg-blue-50 border-blue-100 text-blue-600" : "bg-blue-900/20 border-blue-900/30 text-blue-400"}`}>
+            <PasswordField
+              label="كلمة المرور الجديدة"
+              name="newPassword"
+              value={passwords.newPassword}
+              show={showNew}
+              onToggle={() => setShowNew(!showNew)}
+              onChange={handleInputChange}
+              dark={dark}
+            />
+
+            <PasswordField
+              label="تأكيد كلمة المرور الجديدة"
+              name="confirmPassword"
+              value={passwords.confirmPassword}
+              show={showConfirm}
+              onToggle={() => setShowConfirm(!showConfirm)}
+              onChange={handleInputChange}
+              dark={dark}
+            />
+          </div>
+
+          <div
+            className={`mt-6 p-4 rounded-xl border ${
+              !dark
+                ? "bg-blue-50/70 border-[#CFE3FF] text-blue-600"
+                : "bg-blue-900/20 border-[#1E3A5F] text-blue-400"
+            }`}
+          >
             <p className="text-sm text-center font-medium">
-              ملاحظة: يفضل أن تحتوي كلمة المرور على 8 أحرف على الأقل، بما في ذلك أرقام ورموز خاصة.
+              ملاحظة: يفضل أن تحتوي كلمة المرور على 8 أحرف على الأقل، بما في
+              ذلك أرقام ورموز خاصة.
             </p>
           </div>
         </form>

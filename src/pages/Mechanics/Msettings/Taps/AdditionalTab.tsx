@@ -450,40 +450,42 @@ const AdditionalTab = () => {
 
   return (
     <div
-      className={`rounded-2xl border p-6 space-y-6 ${
-        !dark
-          ? "bg-white border-gray-200 shadow-md"
-          : "bg-[#0d1629] border-blue-900/30"
-      }`}
+      dir="rtl"
+      className="bg-white dark:bg-[#0d1629] rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-5 md:p-6 space-y-6 md:space-y-8"
     >
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold">البيانات الإضافية</h3>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-gray-200 dark:border-gray-800">
+        <div>
+          <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white">البيانات الإضافية</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">تعديل التخصصات، أوقات العمل ورخصة الورشة</p>
+        </div>
 
-        <div className="flex gap-2">
+        <div className="w-full md:w-auto">
           {isEditing ? (
-            <>
-              <button onClick={handleCancel} className={`px-4 py-2 rounded-xl text-sm font-medium ${!dark ? "bg-gray-200" : "bg-gray-700 text-white"}`}>إلغاء</button>
-              <button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-50">
-                {isSaving ? <FaSpinner className="animate-spin" /> : <FaSave />} حفظ
+            <div className="flex gap-2 w-full">
+              <button onClick={handleCancel} className="flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all bg-gray-100 dark:bg-[#131c2f] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 hover:bg-gray-200 dark:hover:bg-gray-800">إلغاء</button>
+              <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none disabled:bg-gray-400">
+                {isSaving ? <><FaSpinner className="animate-spin" /> جاري الحفظ...</> : <><FaSave /> حفظ التغييرات</>}
               </button>
-            </>
+            </div>
           ) : (
-            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium">
-              <FaEdit /> تعديل
+            <button onClick={() => setIsEditing(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#137FEC] hover:bg-blue-600 text-white text-sm font-bold transition-all active:scale-95 shadow-md shadow-blue-500/20">
+              <FaEdit /> تعديل البيانات
             </button>
           )}
         </div>
       </div>
 
       {/* messages */}
-      {success && <div className="p-3 bg-green-500/10 text-green-500 text-center text-sm font-medium">{success}</div>}
-      {error && <div className="p-3 bg-red-500/10 text-red-500 text-center text-sm font-medium">{error}</div>}
+      {success && <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-500 text-sm text-center font-medium">{success}</div>}
+      {error && <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm text-center font-medium">{error}</div>}
+
+      <div className="space-y-6">
 
       {/* ================= WORKSHOP LICENSE (New UI) ================= */}
-      <div className={`p-4 rounded-xl border ${!dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-700"}`}>
+      <div className={`p-4 sm:p-6 rounded-2xl border transition-all ${!dark ? "bg-white border-gray-100" : "bg-[#131c2f] border-gray-800"}`}>
         <div className="flex items-center justify-between mb-4">
-          <label className="text-sm font-bold flex items-center gap-2">
+          <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] flex items-center gap-2">
             رخصة الورشة <span className="text-red-500">*</span>
           </label>
           {/* Status Badge */}
@@ -568,108 +570,143 @@ const AdditionalTab = () => {
       {/* ================= LOCATION ================= */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <label className="text-sm font-bold">موقع الورشة <span className="text-red-500">*</span></label>
+          <label className="text-xs sm:text-sm font-extrabold text-[#137FEC]">موقع الورشة <span className="text-red-500">*</span></label>
           {isEditing && (
-            <button onClick={handleGetMyLocation} className="text-blue-500 flex gap-2 items-center text-sm hover:underline">
+            <button onClick={handleGetMyLocation} className="text-[#137FEC] flex gap-2 items-center text-sm font-bold hover:underline">
               <FaLocationArrow /> تحديد موقعي
             </button>
           )}
         </div>
 
-        <MapPicker
-          latitude={data.latitude}
-          longitude={data.longitude}
-          setLocation={(lat: number, lng: number) => setData((p) => ({ ...p, latitude: lat, longitude: lng }))}
-          isEditing={isEditing}
-          dark={dark}
-        />
+        <div className={`rounded-2xl overflow-hidden border ${!dark ? "border-gray-200 shadow-sm" : "border-gray-700"} p-1`}>
+          <MapPicker
+            latitude={data.latitude}
+            longitude={data.longitude}
+            setLocation={(lat: number, lng: number) => setData((p) => ({ ...p, latitude: lat, longitude: lng }))}
+            isEditing={isEditing}
+            dark={dark}
+          />
+        </div>
       </div>
 
       {/* ================= SPECIALIZATION ================= */}
-      <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4`}>
+      <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4 sm:gap-6`}>
         <div className="space-y-2">
-          <label className="text-sm font-bold">التخصص الرئيسي <span className="text-red-500">*</span></label>
-          <select
-            disabled={!isEditing}
-            value={selectedMain}
-            onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
-            className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
-          >
-            <option value="">اختر التخصص الرئيسي</option>
-            {specializations.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
-          </select>
+          {isEditing ? (
+            <>
+              <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block">التخصص الرئيسي <span className="text-red-500">*</span></label>
+              <select
+                value={selectedMain}
+                onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
+                className={`w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border outline-none ${
+                  !dark
+                    ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900 shadow-sm"
+                    : "bg-gray-800 border-blue-400 ring-2 ring-blue-900/40 text-white"
+                }`}
+              >
+                <option value="">اختر التخصص الرئيسي</option>
+                {specializations.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
+              </select>
+            </>
+          ) : (
+            <div className="rounded-2xl bg-gray-50 dark:bg-[#131c2f] border border-gray-200 dark:border-gray-800 px-4 py-3">
+              <p className="text-xs font-bold text-[#137FEC] mb-1">التخصص الرئيسي</p>
+              <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                {specializations.find((s) => s.id === selectedMain)?.name || "—"}
+              </p>
+            </div>
+          )}
         </div>
 
         {subList.length > 0 && (
           <div className="space-y-2">
-            <label className="text-sm font-bold">التخصص الفرعي</label>
-            <select
-              disabled={!isEditing}
-              value={selectedSub}
-              onChange={(e) => setSelectedSub(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
-            >
-              <option value="">اختر التخصص الفرعي</option>
-              {subList.map((sub: any) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))}
-            </select>
+            {isEditing ? (
+              <>
+                <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block">التخصص الفرعي</label>
+                <select
+                  value={selectedSub}
+                  onChange={(e) => setSelectedSub(e.target.value)}
+                  className={`w-full text-right font-semibold py-3 px-4 rounded-2xl transition-all duration-200 border outline-none ${
+                    !dark
+                      ? "bg-white border-blue-400 ring-2 ring-blue-100 text-gray-900 shadow-sm"
+                      : "bg-gray-800 border-blue-400 ring-2 ring-blue-900/40 text-white"
+                  }`}
+                >
+                  <option value="">اختر التخصص الفرعي</option>
+                  {subList.map((sub: any) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))}
+                </select>
+              </>
+            ) : (
+              <div className="rounded-2xl bg-gray-50 dark:bg-[#131c2f] border border-gray-200 dark:border-gray-800 px-4 py-3">
+                <p className="text-xs font-bold text-[#137FEC] mb-1">التخصص الفرعي</p>
+                <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                  {subList.find((s: any) => s.id === selectedSub)?.name || "—"}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* ================= FIELD VISIT & WORKING HOURS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         
         {/* FIELD VISIT */}
-        <div className={`flex items-center justify-between p-3 rounded-xl border ${
-          !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-700"
+        <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+          !dark ? "bg-white border-gray-100 shadow-sm" : "bg-[#131c2f] border-gray-800"
         }`}>
           <div>
-            <label className="text-sm font-bold">الزيارة الميدانية</label>
-            <p className={`text-xs mt-0.5 ${!dark ? "text-gray-500" : "text-gray-400"}`}>
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block">الزيارة الميدانية</label>
+            <p className={`text-xs mt-1 font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>
               تقديم الخدمة في الموقع
             </p>
           </div>
           
           <div
             onClick={() => { if (isEditing) setData((prev) => ({ ...prev, fieldVisit: !prev.fieldVisit })); }}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
-              data.fieldVisit ? "bg-blue-600" : (dark ? "bg-gray-600" : "bg-gray-300")
+            className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
+              data.fieldVisit ? "bg-[#137FEC]" : (dark ? "bg-gray-600" : "bg-gray-300")
             } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
           >
             <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
-              data.fieldVisit ? "translate-x-5" : "translate-x-0"
+              data.fieldVisit ? "translate-x-6" : "translate-x-0"
             }`} />
           </div>
         </div>
 
         {/* WORKING HOURS */}
-        <div className={`p-3 rounded-xl border ${
-          !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-700"
+        <div className={`p-4 rounded-2xl border transition-all ${
+          !isEditing ? "bg-gray-50 dark:bg-[#131c2f] border-gray-200 dark:border-gray-800" : !dark ? "bg-white border-gray-200 shadow-sm" : "bg-[#131c2f] border-gray-800"
         }`}>
-          <label className="text-sm font-bold">ساعات العمل</label>
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="time"
-              value={data.workingHoursFrom}
-              onChange={(e) => setData((prev) => ({ ...prev, workingHoursFrom: e.target.value }))}
-              disabled={!isEditing}
-              className={`w-full px-3 py-1.5 rounded-lg border outline-none text-sm ${
-                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-600 text-white [color-scheme:dark]"
-              } ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
-            />
-            <span className={`text-sm font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>إلى</span>
-            <input
-              type="time"
-              value={data.workingHoursTo}
-              onChange={(e) => setData((prev) => ({ ...prev, workingHoursTo: e.target.value }))}
-              disabled={!isEditing}
-              className={`w-full px-3 py-1.5 rounded-lg border outline-none text-sm ${
-                !dark ? "bg-white border-gray-300 text-gray-900" : "bg-[#0d1629] border-gray-600 text-white [color-scheme:dark]"
-              } ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
-            />
-          </div>
+          <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-1">ساعات العمل</label>
+          
+          {!isEditing ? (
+            <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mt-2">
+              من {data.workingHoursFrom} إلى {data.workingHoursTo}
+            </p>
+          ) : (
+            <div className="flex items-center gap-2 mt-3">
+              <input
+                type="time"
+                value={data.workingHoursFrom}
+                onChange={(e) => setData((prev) => ({ ...prev, workingHoursFrom: e.target.value }))}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
+                  !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
+                }`}
+              />
+              <span className={`text-sm font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>إلى</span>
+              <input
+                type="time"
+                value={data.workingHoursTo}
+                onChange={(e) => setData((prev) => ({ ...prev, workingHoursTo: e.target.value }))}
+                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
+                  !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
+                }`}
+              />
+            </div>
+          )}
         </div>
-
+      </div>
       </div>
     </div>
   );

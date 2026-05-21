@@ -313,6 +313,7 @@ const Reviews: React.FC = () => {
                     <th className="p-3 lg:p-4 font-semibold">الخدمة</th>
                     <th className="p-3 lg:p-4 font-semibold">التاريخ</th>
                     <th className="p-3 lg:p-4 font-semibold">التقييم</th>
+                    <th className="p-3 lg:p-4 font-semibold">التعليق</th>
                     <th className="p-3 lg:p-4 font-semibold">الإجراءات</th>
                   </tr>
                 </thead>
@@ -330,6 +331,12 @@ const Reviews: React.FC = () => {
                          <div className="flex gap-1 text-yellow-500">
                             {[...Array(review.stars)].map((_, i) => <FaStar key={i} size={12} />)}
                          </div>
+                      </td>
+                      <td 
+                        className={`p-3 lg:p-4 text-xs lg:text-sm cursor-pointer transition-colors ${!dark ? "text-black hover:text-blue-600" : "text-white hover:text-blue-400"}`}
+                        onClick={() => setSelectedReview(review)}
+                      >
+                        {review.comment ? (review.comment.length > 15 ? review.comment.substring(0, 15) + '...' : review.comment) : "____"}
                       </td>
                       <td className="p-3 lg:p-4">
                         <div className="relative inline-block text-left">

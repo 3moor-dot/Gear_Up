@@ -301,7 +301,7 @@ const AddBookingModal = ({
     try {
       setLoadingMechanics(true);
 
-      const response = await axios.get(`${API_BASE_URL}/mechanics`, {
+      const response = await axios.get(`${API_BASE_URL}/mechanics/verified`, {
         headers: { Accept: "*/*" },
       });
 
