@@ -2,13 +2,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { FaEdit, FaSave, FaSpinner, FaLocationArrow, FaCloudUploadAlt, FaCheckCircle } from "react-icons/fa";
+import { FaEdit, FaSave, FaSpinner, FaLocationArrow, FaCloudUploadAlt, FaCheckCircle } from "react-icons/fa"; 
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
 // --- Map ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.tst,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
 
   if (loadError)
@@ -73,6 +73,7 @@ interface AdditionalData {
   workingHoursTo: string;
   experience: string;
   workshopLicenseUrl?: string; 
+  isAvailable?: boolean; 
 }
 
 const getUserIdFromToken = () => {
@@ -122,6 +123,7 @@ const defaultData: AdditionalData = {
   workingHoursTo: "18:00",
   experience: "",
   workshopLicenseUrl: undefined,
+  isAvailable: false,
 };
 
 // ---------------- COMPONENT ----------------
@@ -235,6 +237,7 @@ const AdditionalTab = () => {
           workingHoursFrom: apiData.workStartTime || "08:00",
           workingHoursTo: apiData.workEndTime || "18:00",
           experience: "",
+          isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
         }));
   
       } catch (err) {
@@ -304,7 +307,6 @@ const AdditionalTab = () => {
     setError("");
     setSuccess("");
 
-    // ... (كود التحقق من المدخلات كما هو - بدون تغيير) ...
     if (!selectedMain) {
       setError("يرجى اختيار التخصص الرئيسي");
       setIsSaving(false);
@@ -326,51 +328,55 @@ const AdditionalTab = () => {
     try {
       const token = sessionStorage.getItem("userToken") || "";
 
-      // 1. تجهيز البيانات
+      // 1. Location
       const payloadLocation = {
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
         location: data.location || "تم التحديد عبر الخريطة",
       };
-
-      const payloadSpecialization = {
-        primarySpecializationId: selectedMain,
-        subSpecializationId: selectedSub || null,
-      };
-
-      const payloadFieldVisit = {
-        supportsFieldVisit: data.fieldVisit,
-      };
-
-      const payloadWorkingHours = {
-        workStartTime: data.workingHoursFrom,
-        workEndTime: data.workingHoursTo,
-      };
-
-      // 2. إرسال الطلبات بشكل متتابع (Sequential) بدلاً من Promise.all
-      // هذا يمنع الـ Deadlock لأننا لا نعدل نفس المستخدم في نفس الوقت
-      
-      // تحديث الموقع
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // تحديث التخصصات
+      // 2. Specialization
+      const payloadSpecialization = {
+        primarySpecializationId: selectedMain,
+        subSpecializationId: selectedSub || null,
+      };
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // تحديث الزيارات الميدانية
+      // 3. Field Visit
+      const payloadFieldVisit = {
+        supportsFieldVisit: data.fieldVisit,
+      };
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // تحديث ساعات العمل
+      // 4. Working Hours
+      const payloadWorkingHours = {
+        workStartTime: data.workingHoursFrom,
+        workEndTime: data.workingHoursTo,
+      };
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // رفع الملف (إن وجد)
+      // 5. Availability Status
+      await axios.put(
+        "https://gearupapp.runasp.net/api/mechanics/availability", 
+        data.isAvailable, 
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+
+      // 6. File Upload (License)
       if (licenseFile) {
         const formData = new FormData();
         formData.append("File", licenseFile);
@@ -401,7 +407,7 @@ const AdditionalTab = () => {
         }
       }
 
-      // 3. حفظ في الـ LocalStorage وعرض رسالة النجاح
+      // 7. Save to LocalStorage
       localStorage.setItem(
         getStorageKey(),
         JSON.stringify({
@@ -425,9 +431,16 @@ const AdditionalTab = () => {
 
     } catch (err: any) {
       console.error("Save Error:", err);
-      // ملاحظة: إذا حدث Deadlock مرة أخرى (نادر جداً بعد هذا التعديل)، السيرفر يجب أن يعيد المحاولة
-      const serverMessage = err?.response?.data?.message || err?.response?.data || "حصل خطأ أثناء الحفظ";
-      setError(typeof serverMessage === 'string' ? serverMessage : "حصل خطأ غير متوقع");
+      
+      const errorData = err?.response?.data;
+      const isErrorString = typeof errorData === 'string';
+      
+      if (err?.response?.status === 500 && isErrorString && errorData.includes("Unverified mechanic")) {
+        setError("عذراً، لا يمكن تفعيل حالة التوفر إلا بعد إرفاق صورة الرخصة والتحقق منها من قبل الإدارة.");
+      } else {
+        const serverMessage = errorData?.message || errorData || "حصل خطأ أثناء الحفظ";
+        setError(typeof serverMessage === 'string' ? serverMessage : "حصل خطأ غير متوقع");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -457,7 +470,6 @@ const AdditionalTab = () => {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-gray-200 dark:border-gray-800">
         <div>
           <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white">البيانات الإضافية</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">تعديل التخصصات، أوقات العمل ورخصة الورشة</p>
         </div>
 
         <div className="w-full md:w-auto">
@@ -482,13 +494,12 @@ const AdditionalTab = () => {
 
       <div className="space-y-6">
 
-      {/* ================= WORKSHOP LICENSE (New UI) ================= */}
+      {/* ================= WORKSHOP LICENSE ================= */}
       <div className={`p-4 sm:p-6 rounded-2xl border transition-all ${!dark ? "bg-white border-gray-100" : "bg-[#131c2f] border-gray-800"}`}>
         <div className="flex items-center justify-between mb-4">
           <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] flex items-center gap-2">
             رخصة الورشة <span className="text-red-500">*</span>
           </label>
-          {/* Status Badge */}
           {data.workshopLicenseUrl && !isEditing && (
             <span className="text-xs text-green-500 bg-green-500/10 px-2 py-1 rounded-full flex items-center gap-1">
               <FaCheckCircle /> مرفقة
@@ -496,7 +507,6 @@ const AdditionalTab = () => {
           )}
         </div>
 
-        {/* Modern Upload Area */}
         <div
           className={`relative w-full flex flex-col items-center justify-center min-h-[240px] rounded-xl transition-all duration-300 border-2 overflow-hidden group
             ${displayImage
@@ -506,17 +516,9 @@ const AdditionalTab = () => {
             ${!isEditing && !displayImage ? "opacity-60 cursor-not-allowed" : isEditing && !displayImage ? "cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "cursor-default"}
           `}
         >
-          {/* {displayImage ? ( */}
           {displayImage && displayImage.trim() !== "" ? (
-            // --- Image State ---
             <>
-<img
-  src={displayImage}
-  alt=""
-  className="max-h-[300px] w-full object-contain"
-/>
-              
-              {/* Overlay on Hover for Editing */}
+              <img src={displayImage} alt="" className="max-h-[300px] w-full object-contain" />
               {isEditing && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[2px]">
                   <label
@@ -529,7 +531,6 @@ const AdditionalTab = () => {
               )}
             </>
           ) : (
-            // --- Empty State ---
             isEditing ? (
               <label htmlFor="license-upload" className="cursor-pointer flex flex-col items-center gap-3 p-6">
                 <div className={`p-4 rounded-full transition-transform duration-300 group-hover:scale-110 ${dark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
@@ -537,7 +538,6 @@ const AdditionalTab = () => {
                 </div>
                 <div className="text-center">
                   <span className="text-sm font-bold block mb-1">اضغط لرفع صورة الرخصة</span>
-                  {/* <span className="text-xs text-gray-400">JPG, PNG (Max 5MB)</span> */}
                 </div>
               </label>
             ) : (
@@ -549,7 +549,6 @@ const AdditionalTab = () => {
           )}
         </div>
 
-        {/* Instruction Text (Below) */}
         {isEditing && (
           <div className="mt-3 text-center">
              <p className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
@@ -558,7 +557,6 @@ const AdditionalTab = () => {
           </div>
         )}
 
-        {/* Hidden Input */}
         <input
           type="file"
           id="license-upload"
@@ -649,7 +647,7 @@ const AdditionalTab = () => {
         )}
       </div>
 
-      {/* ================= FIELD VISIT & WORKING HOURS ================= */}
+      {/* ================= FIELD VISIT & AVAILABILITY (Row 1) ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         
         {/* FIELD VISIT */}
@@ -675,39 +673,64 @@ const AdditionalTab = () => {
           </div>
         </div>
 
-        {/* WORKING HOURS */}
-        <div className={`p-4 rounded-2xl border transition-all ${
-          !isEditing ? "bg-gray-50 dark:bg-[#131c2f] border-gray-200 dark:border-gray-800" : !dark ? "bg-white border-gray-200 shadow-sm" : "bg-[#131c2f] border-gray-800"
+        {/* AVAILABILITY STATUS */}
+        <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+          !dark ? "bg-white border-gray-100 shadow-sm" : "bg-[#131c2f] border-gray-800"
         }`}>
-          <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-1">ساعات العمل</label>
-          
-          {!isEditing ? (
-            <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mt-2">
-              من {data.workingHoursFrom} إلى {data.workingHoursTo}
+          <div>
+            <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block">حالة التوفر</label>
+            <p className={`text-xs mt-1 font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>
+              ظهورك للعملاء واستلام الطلبات
             </p>
-          ) : (
-            <div className="flex items-center gap-2 mt-3">
-              <input
-                type="time"
-                value={data.workingHoursFrom}
-                onChange={(e) => setData((prev) => ({ ...prev, workingHoursFrom: e.target.value }))}
-                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
-                  !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
-                }`}
-              />
-              <span className={`text-sm font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>إلى</span>
-              <input
-                type="time"
-                value={data.workingHoursTo}
-                onChange={(e) => setData((prev) => ({ ...prev, workingHoursTo: e.target.value }))}
-                className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
-                  !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
-                }`}
-              />
-            </div>
-          )}
+          </div>
+          
+          <div
+            onClick={() => { if (isEditing) setData((prev) => ({ ...prev, isAvailable: !prev.isAvailable })); }}
+            className={`relative w-12 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
+              // data.isAvailable ? "bg-green-500" : (dark ? "bg-gray-600" : "bg-gray-300")
+              data.isAvailable ? "bg-[#137FEC]" : (dark ? "bg-gray-600" : "bg-gray-300")
+            } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
+          >
+            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${
+              data.isAvailable ? "translate-x-6" : "translate-x-0"
+            }`} />
+          </div>
         </div>
       </div>
+
+      {/* ================= WORKING HOURS (Row 2) ================= */}
+      <div className={`p-4 rounded-2xl border transition-all ${
+        !isEditing ? "bg-gray-50 dark:bg-[#131c2f] border-gray-200 dark:border-gray-800" : !dark ? "bg-white border-gray-200 shadow-sm" : "bg-[#131c2f] border-gray-800"
+      }`}>
+        <label className="text-xs sm:text-sm font-extrabold text-[#137FEC] block mb-1">ساعات العمل</label>
+        
+        {!isEditing ? (
+          <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mt-2">
+            من {data.workingHoursFrom} إلى {data.workingHoursTo}
+          </p>
+        ) : (
+          <div className="flex items-center gap-2 mt-3">
+            <input
+              type="time"
+              value={data.workingHoursFrom}
+              onChange={(e) => setData((prev) => ({ ...prev, workingHoursFrom: e.target.value }))}
+              className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
+                !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
+              }`}
+            />
+            <span className={`text-sm font-bold ${!dark ? "text-gray-500" : "text-gray-400"}`}>إلى</span>
+            <input
+              type="time"
+              value={data.workingHoursTo}
+              onChange={(e) => setData((prev) => ({ ...prev, workingHoursTo: e.target.value }))}
+              className={`flex-1 px-3 py-2 rounded-xl border outline-none text-sm font-bold text-center transition-all ${
+                !dark ? "bg-white border-blue-400 text-gray-900 ring-2 ring-blue-100" : "bg-gray-800 border-blue-400 text-white ring-2 ring-blue-900/40 [color-scheme:dark]"
+              }`}
+            />
+          </div>
+        )}
+      </div>
+
       </div>
     </div>
   );

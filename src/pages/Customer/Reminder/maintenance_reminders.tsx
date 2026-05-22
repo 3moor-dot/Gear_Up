@@ -369,27 +369,7 @@ const MaintenanceReminders = () => {
 
       {/* --- القائمة الجانبية (Drawer) --- */}
       <div
-        // className={`
-        //   fixed left-0
-        //   top-[260px] 
-        //   sm:top-[200px] 
-        //   md:top-[210px] 
-        //   bottom-4
-          
-        //   bg-white dark:bg-[#0f172acc] 
-        //   backdrop-blur-md 
-        //   shadow-2xl 
-        //   z-[60] 
-        //   transition-all duration-300 ease-in-out 
-        //   border-r border-slate-200 dark:border-slate-700 
-        //   flex flex-col 
-        //   rounded-r-2xl 
-        //   overflow-hidden
-          
-        //   ${isCompletedDrawerOpen 
-        //     ? 'w-[85vw] max-w-[300px] sm:max-w-[320px] sm:w-[320px]' 
-        //     : 'w-[42px] sm:w-[56px]'}
-        // `}
+    
         className={`
           fixed left-0 top-[260px] sm:top-[200px] md:top-[210px]
           bottom-4 z-[60]
