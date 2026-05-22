@@ -89,27 +89,30 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Fetch monthly registrations
-        const registrationsResponse = await fetch(
-          "https://gearupapp.runasp.net/api/admin/dashboard/monthly-registrations",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+ // Fetch monthly registrations
+const registrationsResponse = await fetch(
+  "https://gearupapp.runasp.net/api/admin/dashboard/monthly-registrations",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
 
-        if (registrationsResponse.ok) {
-          const data = await registrationsResponse.json();
-          // Transform data to match chart format
-          const transformedData = data.monthlyRegistrations.map((item: any) => ({
-            name: item.month,
-            مستخدمون: item.users,
-            ميكانيكيون: item.mechanics,
-          }));
-          setMonthlyRegistrations(transformedData);
-        }
+if (registrationsResponse.ok) {
+  const data = await registrationsResponse.json();
+  // Transform data and filter out empty months
+  const transformedData = data.monthlyRegistrations
+    .filter((item: any) => item.users > 0 || item.mechanics > 0)
+    .map((item: any) => ({
+      name: item.month,
+      مستخدمون: item.users,
+      ميكانيكيون: item.mechanics,
+    }));
+  setMonthlyRegistrations(transformedData);
+}
 
         // Fetch monthly bookings
         const bookingsResponse = await fetch(
@@ -296,40 +299,40 @@ const AdminDashboard: React.FC = () => {
               مقارنة بين المستخدمين والميكانيكيين
             </p>
             {monthlyRegistrations.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={monthlyRegistrations} barGap={4}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={gridColor}
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: axisColor, fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: axisColor, fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: dark ? "#1f2d4520" : "#f0f4ff" }} />
-                  <Legend
-                    wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-                  />
-                  <Bar
-                    dataKey="مستخدمون"
-                    fill="#3B82F6"
-                    radius={[6, 6, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="ميكانيكيون"
-                    fill="#10B981"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+<ResponsiveContainer width="100%" height={240}>
+  <BarChart data={monthlyRegistrations} barGap={2} barSize={30}>
+    <CartesianGrid
+      strokeDasharray="3 3"
+      stroke={gridColor}
+      vertical={false}
+    />
+    <XAxis
+      dataKey="name"
+      tick={{ fill: axisColor, fontSize: 12 }}
+      axisLine={false}
+      tickLine={false}
+    />
+    <YAxis
+      tick={{ fill: axisColor, fontSize: 12 }}
+      axisLine={false}
+      tickLine={false}
+    />
+    <Tooltip contentStyle={tooltipStyle} cursor={{ fill: dark ? "#1f2d4520" : "#f0f4ff" }} />
+    <Legend
+      wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
+    />
+    <Bar
+      dataKey="مستخدمون"
+      fill="#3B82F6"
+      radius={[6, 6, 0, 0]}
+    />
+    <Bar
+      dataKey="ميكانيكيون"
+      fill="#10B981"
+      radius={[6, 6, 0, 0]}
+    />
+  </BarChart>
+</ResponsiveContainer>
             ) : (
               <div className="h-60 flex items-center justify-center text-gray-400 text-sm">
                 لا توجد بيانات متاحة

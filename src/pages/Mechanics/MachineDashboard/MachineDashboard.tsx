@@ -102,10 +102,11 @@ const MachineDashboard = () => {
       let ratingValue = "0";
 
       if (typeof data === 'number') {
-        ratingValue = String(data);
+        ratingValue = Number(data).toFixed(2);
       } else if (typeof data === 'object' && data !== null) {
         // تم وضع avgRating في البداية لأن هذا هو ما يظهر في الصورة
-        ratingValue = data.avgRating ?? data.averageRating ?? data.rating ?? "0";
+        const val = data.avgRating ?? data.averageRating ?? data.rating ?? 0;
+        ratingValue = Number(val).toFixed(2);
       }
       
       setAverageRating(ratingValue);
@@ -136,7 +137,7 @@ const fetchLatestReviews = async () => {
   try {
     setLoadingReviews(true);
     const res = await fetch(
-      `https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/latest?count=5`,
+      `https://gearupapp.runasp.net/api/mechanics/mechanic/${mechanicId}/latest?count=4`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -364,7 +365,7 @@ const fetchLatestReviews = async () => {
             <div className={`p-4 sm:p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
               <h2 className="text-lg sm:text-xl font-bold">مواعيد اليوم</h2>
             </div>
-            <div className="p-3 sm:p-6 space-y-3">
+            <div className="p-3 sm:p-6 space-y-3 max-h-[380px] overflow-y-auto">
               {loadingToday ? (
                  <div className="text-center py-6 text-gray-400">جاري التحميل...</div>
               ) : todayAppointments.length === 0 ? (
@@ -403,7 +404,7 @@ const fetchLatestReviews = async () => {
               ) : reviews.length === 0 ? (
                 <div className="text-center py-6 text-gray-400">لا توجد مراجعات حتى الآن</div>
               ) : (
-                reviews.map((review) => (
+                reviews.slice(0, 4).map((review) => (
                   <div key={review.id} className={`p-3 sm:p-4 rounded-xl border ${
                     !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
                   }`}>
