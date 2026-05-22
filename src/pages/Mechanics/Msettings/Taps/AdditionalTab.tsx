@@ -8,7 +8,8 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    // googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.tst,
   });
 
   if (loadError)
