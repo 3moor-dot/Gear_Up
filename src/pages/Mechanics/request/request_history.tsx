@@ -355,12 +355,12 @@ const Mrequest_history = () => {
                       </div>
 
                       {/* Car */}
-                      <div>
+                      {/* <div>
                         <p className="text-[10px] text-gray-400">السيارة</p>
                         <p className="font-medium text-gray-800 dark:text-gray-200">
                           {req.car.brand} {req.car.model}
                         </p>
-                      </div>
+                      </div> */}
 
                       {/* Service */}
                       <div>

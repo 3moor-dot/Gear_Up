@@ -244,7 +244,7 @@ const ServiceHistory = () => {
                       <thead>
                         <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
                           <th className="p-2.5 whitespace-nowrap font-semibold"> المشكلة </th>
-                          <th className="p-2.5 whitespace-nowrap font-semibold">السيارة</th>
+                          {/* <th className="p-2.5 whitespace-nowrap font-semibold">السيارة</th> */}
                           <th className="p-2.5 whitespace-nowrap font-semibold">الخدمة</th>
                           <th className="p-2.5 whitespace-nowrap font-semibold">الحالة</th>
                           <th className="p-2.5 whitespace-nowrap font-semibold">الميكانيكي</th>
@@ -290,9 +290,9 @@ const ServiceHistory = () => {
                               </div>
                             </td>
 
-                            <td className="p-2.5">
+                            {/* <td className="p-2.5">
                               {row.car?.brand} {row.car?.model}
-                            </td>
+                            </td> */}
 
                             <td className="p-2.5">
                               <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-medium">
