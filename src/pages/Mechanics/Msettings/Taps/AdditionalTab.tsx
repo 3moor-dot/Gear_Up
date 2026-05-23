@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -8,7 +9,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map Component ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.tst,
+    googleMapsApiKey: import.meta.env.tst, // تأكد أن هذا المفتاح صحيح في ملف الـ .env
   });
 
   if (loadError)
@@ -69,7 +70,7 @@ interface AdditionalData {
   mainSpecialty: string[];
   subSpecialty: string;
   fieldVisit: boolean;
-  isAvailable: boolean; // New: Added Availability state
+  isAvailable: boolean; 
   workingHoursFrom: string;
   workingHoursTo: string;
   experience: string;
@@ -77,9 +78,15 @@ interface AdditionalData {
   status?: number;
 }
 
-// ---------------- HELPERS ----------------
+// ---------------- HELPERS (UPDATED) ----------------
+
+// دالة موحدة لجلب التوكن من sessionStorage أو localStorage
+const getToken = () => {
+  return sessionStorage.getItem("userToken") || localStorage.getItem("userToken") || "";
+};
+
 const getUserIdFromToken = () => {
-  const token = sessionStorage.getItem("userToken");
+  const token = getToken(); // استخدام الدالة الجديدة
   if (!token) return "";
   try {
     const base64Url = token.split('.')[1];
@@ -95,7 +102,7 @@ const getUserIdFromToken = () => {
 };
 
 const getStorageKey = () => {
-  const token = sessionStorage.getItem("userToken");
+  const token = getToken(); // استخدام الدالة الجديدة
   if (!token) return "mechanic_data_guest";
 
   try {
@@ -132,7 +139,9 @@ const defaultData: AdditionalData = {
 // ---------------- COMPONENT ----------------
 const AdditionalTab = () => {
   const { dark } = useTheme();
-  const token = sessionStorage.getItem("userToken") || "";
+  
+  // استخدام الدالة المحدثة لجلب التوكن
+  const token = getToken();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -148,6 +157,7 @@ const AdditionalTab = () => {
 
   const [data, setData] = useState<AdditionalData>(() => {
     try {
+      // الآن getStorageKey ستعمل بشكل صحيح حتى في التاب الجديد
       const saved = localStorage.getItem(getStorageKey());
       return saved ? JSON.parse(saved) : defaultData;
     } catch {
@@ -219,11 +229,12 @@ const AdditionalTab = () => {
     };
 
     fetchSpecializations();
-  }, []);
+  }, [token]); // Added token dependency for safety
 
   // Fetch Profile Data
   useEffect(() => {
     const fetchMyData = async () => {
+      if (!token) return; // Don't fetch if no token
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/mechanics/my/profile",
@@ -240,7 +251,6 @@ const AdditionalTab = () => {
           mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
           subSpecialty: apiData.subSpecializationId || "",
           fieldVisit: apiData.supportsFieldVisit || false,
-          // Keep existing isAvailable if API doesn't return it, or update if it does
           isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
           workingHoursFrom: apiData.workStartTime || "08:00",
           workingHoursTo: apiData.workEndTime || "18:00",
@@ -253,11 +263,12 @@ const AdditionalTab = () => {
     };
   
     fetchMyData();
-  }, []);
+  }, [token]);
 
   // Fetch Summary (License)
   useEffect(() => {
     const fetchSummary = async () => {
+      if (!token) return;
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
@@ -278,7 +289,7 @@ const AdditionalTab = () => {
     };
   
     fetchSummary();
-  }, []);
+  }, [token]);
 
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
@@ -335,15 +346,15 @@ const AdditionalTab = () => {
     }
 
     // Validate Working Hours
-if (data.workingHoursTo <= data.workingHoursFrom) {
-  setError("وقت نهاية العمل يجب أن يكون بعد وقت بداية العمل");
-  setIsSaving(false);
-  return;
-}
-
+    if (data.workingHoursTo <= data.workingHoursFrom) {
+      setError("وقت نهاية العمل يجب أن يكون بعد وقت بداية العمل");
+      setIsSaving(false);
+      return;
+    }
 
     try {
-      const token = sessionStorage.getItem("userToken") || "";
+      // استخدام الدالة المحدثة هنا أيضاً
+      const currentToken = getToken();
 
       // 2. Prepare Payloads
       const payloadLocation = {
@@ -370,45 +381,45 @@ if (data.workingHoursTo <= data.workingHoursFrom) {
 
       // Update Location
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
       });
 
       // Update Specialization
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
       });
 
       // Update Field Visit
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
       });
 
       // Update Working Hours
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${currentToken}` },
       });
 
 
-if (!data.isAvailable || canEnableAvailability()) {
-  try {
-    await axios.put(
-      "https://gearupapp.runasp.net/api/mechanics/availability",
-      data.isAvailable,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      if (!data.isAvailable || canEnableAvailability()) {
+        try {
+          await axios.put(
+            "https://gearupapp.runasp.net/api/mechanics/availability",
+            data.isAvailable,
+            {
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } catch (availErr: any) {
+          console.error("Availability Error:", availErr);
+        }
+      } else {
+        setError(
+          "تم حفظ باقي البيانات، لكن لا يمكن تفعيل حالة التوفر إلا بعد مراجعة الرخصة من الإدارة"
+        );
       }
-    );
-  } catch (availErr: any) {
-    console.error("Availability Error:", availErr);
-  }
-} else {
-  setError(
-    "تم حفظ باقي البيانات، لكن لا يمكن تفعيل حالة التوفر إلا بعد مراجعة الرخصة من الإدارة"
-  );
-}
 
       // Upload License File (if exists)
       if (licenseFile) {
@@ -421,7 +432,7 @@ if (!data.isAvailable || canEnableAvailability()) {
         if (isUpdate) {
           await axios.put("https://gearupapp.runasp.net/api/mechanics/documents/workshop-license", formData, {
             headers: { 
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${currentToken}`,
               'Content-Type': 'multipart/form-data'
             },
           });
@@ -434,7 +445,7 @@ if (!data.isAvailable || canEnableAvailability()) {
 
           await axios.post("https://gearupapp.runasp.net/api/mechanics/documents", formData, {
             headers: { 
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${currentToken}`,
               'Content-Type': 'multipart/form-data'
             },
           });
@@ -702,7 +713,6 @@ if (!data.isAvailable || canEnableAvailability()) {
           </div>
           
           <div
-
             onClick={() => {
               if (!isEditing) return;
             
@@ -725,7 +735,6 @@ if (!data.isAvailable || canEnableAvailability()) {
               }));
             }}
             className={`relative w-11 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
-
               data.isAvailable ? "bg-blue-600" : (dark ? "bg-gray-600" : "bg-gray-300")
             } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
           >
