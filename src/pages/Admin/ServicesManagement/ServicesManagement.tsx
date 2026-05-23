@@ -208,7 +208,7 @@ const ServicesManagement: React.FC = () => {
         Swal.fire({
           icon: "error",
           title: "فشل الإضافة",
-          text: "حدث خطأ أثناء إضافة الخدمة",
+          text: "هذه الخدمة الرئيسية موجودة بالفعل ",
           confirmButtonColor: "#d33",
         });
       }

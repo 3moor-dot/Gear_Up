@@ -1,18 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { MdClose } from "react-icons/md";
+import { MdClose, MdDirectionsCar, MdCalendarMonth, MdAccessTime, MdTitle, MdDescription, MdRefresh } from "react-icons/md";
 import axios from "axios";
 import toast from "react-hot-toast";
-
-
-const scrollbarHideStyle = `
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-`;
 
 interface ReminderPrefillData {
   title?: string;
@@ -233,195 +222,170 @@ const CreateReminderModal = ({
     }
   };
   
-  // تقليل البادينج للحقل الواحد للحد الأقصى
-  const inputStyle =
-    "w-full dark:bg-[#1A233A] bg-white dark:text-white border border-gray-300 dark:border-gray-700 rounded-xl py-2 px-2.5 text-sm text-right outline-none focus:border-[#137FEC] focus:ring-1 focus:ring-[#137FEC] transition-all";
+  const labelStyle = "text-right font-bold text-gray-700 dark:text-white mb-2 block text-sm pr-1";
+  const inputStyle = "w-full bg-gray-100 dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 text-gray-800 dark:text-blue-400 font-bold outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-[#0F172A] transition-all focus:border-blue-500/50";
 
   if (!isOpen) return null;
 
   return (
-    <>
-      <style>{scrollbarHideStyle}</style>
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm"
-        dir="rtl"
-        onClick={onClose}
-      >
-        <div
-          className="bg-[#F8FAFC] dark:bg-primary_BGD w-full max-w-2xl rounded-[16px] sm:rounded-[30px] shadow-2xl transition-all duration-300 flex flex-col max-h-[92vh] sm:max-h-[90vh]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* تصغير الهيدر جداً إلى py-2 */}
-          <div className="px-3 py-2 sm:px-6 sm:py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-[#137FEC0D] flex-shrink-0">
-            <h2 className="text-base sm:text-xl font-bold dark:text-white">إنشاء تذكير جديد</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-red-500"
-              type="button"
-            >
-              <MdClose size={22} />
-            </button>
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#0F172A] rounded-[40px] shadow-2xl border border-gray-200 dark:border-blue-500/20 animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <button type="button" onClick={onClose} className="absolute top-6 left-6 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors z-10">
+          <MdClose size={30} />
+        </button>
+
+        <div className="p-8 md:p-12">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-800 dark:text-white">إنشاء تذكير جديد</h2>
+            <p className="mt-2 text-sm md:text-base text-gray-500 dark:text-gray-300">قم بإضافة تذكير للصيانة أو تجديد الرخصة أو غيرها من الخدمات</p>
           </div>
 
-          {/* 
-             إضافة no-scrollbar
-             تقليل المسافات space-y-2
-          */}
-          <form ref={formRef} onSubmit={handleSubmit} className="px-3 py-2 sm:px-6 sm:py-5 space-y-2 flex-1 overflow-y-auto no-scrollbar">
-            <div className="space-y-0.5">
-              <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                المركبة المستهدفة *
-              </label>
-              <select
-                className={inputStyle}
-                value={selectedCar}
-                onChange={(e) => setSelectedCar(e.target.value)}
-              >
-                <option value="" disabled>
-                  اختر المركبة
-                </option>
-                {cars.map((car, i) => (
-                  <option key={i} value={`${car.year} ${car.brand} ${car.model}`}>
-                    {`${car.year} ${car.brand} ${car.model}`}
-                  </option>
-                ))}
-              </select>
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* المركبة */}
+              <div className="text-right">
+                <label className={labelStyle}>المركبة المستهدفة *</label>
+                <div className="relative">
+                  <select
+                    className={`${inputStyle} pl-12 appearance-none`}
+                    value={selectedCar}
+                    onChange={(e) => setSelectedCar(e.target.value)}
+                    dir="rtl"
+                  >
+                    <option value="" disabled>اختر المركبة...</option>
+                    {cars.map((car, i) => (
+                      <option key={i} value={`${car.year} ${car.brand} ${car.model}`}>
+                        {`${car.year} ${car.brand} ${car.model}`}
+                      </option>
+                    ))}
+                  </select>
+                  <MdDirectionsCar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
+              </div>
+
+              {/* عنوان التذكير */}
+              <div className="text-right">
+                <label className={labelStyle}>عنوان التذكير *</label>
+                <div className="relative">
+                  <input
+                    required
+                    type="text"
+                    placeholder="مثال: تغيير الزيت"
+                    className={`${inputStyle} pl-12`}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    dir="rtl"
+                  />
+                  <MdTitle className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-0.5">
-              <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                عنوان التذكير *
-              </label>
-              <input
-                required
-                type="text"
-                placeholder="مثال: تغيير الزيت"
-                className={inputStyle}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-
-            <div className="space-y-0.5">
-  <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-    وصف التذكير
-  </label>
-
-  {/* <textarea
-    className={inputStyle}
-    rows={2}
-    placeholder="اكتب وصف التذكير..."
-    value={formData.description}
-    onChange={(e) =>
-      setFormData({ ...formData, description: e.target.value })
-    }
-  /> */}
-<textarea
-  className={inputStyle + " min-h-[70px] resize-none"}
-  placeholder="اكتب وصف التذكير..."
-  value={formData.description}
-  onChange={(e) =>
-    setFormData({ ...formData, description: e.target.value })
-  }
-/>
-
-</div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="space-y-0.5">
-                <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                  تاريخ البدء *
-                </label>
+            {/* وصف التذكير */}
+            <div className="text-right">
+              <label className={labelStyle}>وصف التذكير</label>
+              <div className="relative">
                 <input
-                  required
-                  type="date"
-                  className={inputStyle}
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  type="text"
+                  className={`${inputStyle} pl-12`}
+                  placeholder="اكتب وصف التذكير..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  dir="rtl"
                 />
-              </div>
-
-              <div className="space-y-0.5">
-                <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                  تاريخ الانتهاء
-                </label>
-                <input
-                  type="date"
-                  className={inputStyle}
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                />
+                <MdDescription className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div className="space-y-0.5">
-                <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                  وقت الإشعار
-                </label>
-                <input
-                  type="time"
-                  className={inputStyle}
-                  value={formData.preferredNotificationTime}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      preferredNotificationTime: e.target.value,
-                    })
-                  }
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="text-right">
+                <label className={labelStyle}>تاريخ البدء *</label>
+                <div className="relative">
+                  <input
+                    required
+                    type="date"
+                    className={`${inputStyle} custom-date-input pl-12 text-center md:text-right`}
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    dir="rtl"
+                  />
+                  <MdCalendarMonth className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
               </div>
 
-              <div className="space-y-0.5">
-                <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                  نظام التكرار
-                </label>
-                <select
-                  className={inputStyle}
-                  value={frequencyType}
-                  onChange={(e) => setFrequencyType(e.target.value)}
-                >
-                  <option value="0">مرة واحدة فقط</option>
-                  <option value="1">كل يوم</option>
-                  <option value="2">كل أسبوع</option>
-                  <option value="3">كل شهر</option>
-                  <option value="4">تكرار مخصص</option>
-                </select>
+              <div className="text-right">
+                <label className={labelStyle}>تاريخ الانتهاء</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    className={`${inputStyle} custom-date-input pl-12 text-center md:text-right`}
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    dir="rtl"
+                  />
+                  <MdCalendarMonth className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
               </div>
             </div>
 
-          
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="text-right">
+                <label className={labelStyle}>وقت الإشعار</label>
+                <div className="relative">
+                  <input
+                    type="time"
+                    className={`${inputStyle} custom-time-input pl-12 text-center md:text-right`}
+                    value={formData.preferredNotificationTime}
+                    onChange={(e) => setFormData({ ...formData, preferredNotificationTime: e.target.value })}
+                    dir="rtl"
+                  />
+                  <MdAccessTime className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="text-right">
+                <label className={labelStyle}>نظام التكرار</label>
+                <div className="relative">
+                  <select
+                    className={`${inputStyle} pl-12 appearance-none`}
+                    value={frequencyType}
+                    onChange={(e) => setFrequencyType(e.target.value)}
+                    dir="rtl"
+                  >
+                    <option value="0">مرة واحدة فقط</option>
+                    <option value="1">كل يوم</option>
+                    <option value="2">كل أسبوع</option>
+                    <option value="3">كل شهر</option>
+                    <option value="4">تكرار مخصص</option>
+                  </select>
+                  <MdRefresh className="absolute left-4 top-1/2 -translate-y-1/2 text-[#137FEC] text-xl pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
             {frequencyType === "4" && (
-              <div className="grid grid-cols-2 gap-2 items-end">
-                <div className="space-y-0.5">
-                  <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                    القيمة
-                  </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                <div className="text-right">
+                  <label className={labelStyle}>القيمة</label>
                   <input
                     type="number"
                     min="1"
-                    className={inputStyle}
+                    className={`${inputStyle} text-center md:text-right`}
                     value={formData.intervalValue}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        intervalValue: Number(e.target.value),
-                      })
-                    }
+                    onChange={(e) => setFormData({ ...formData, intervalValue: Number(e.target.value) })}
+                    dir="rtl"
                   />
                 </div>
 
-                <div className="space-y-0.5">
-                  <label className="text-[11px] sm:text-sm font-bold text-gray-700 dark:text-gray-300">
-                    الوحدة
-                  </label>
+                <div className="text-right">
+                  <label className={labelStyle}>الوحدة</label>
                   <select
-                    className={inputStyle}
+                    className={`${inputStyle} appearance-none`}
                     value={formData.intervalUnit}
-                    onChange={(e) =>
-                      setFormData({ ...formData, intervalUnit: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, intervalUnit: e.target.value })}
+                    dir="rtl"
                   >
                     <option value="0">أيام</option>
                     <option value="1">أسابيع</option>
@@ -431,29 +395,35 @@ const CreateReminderModal = ({
                 </div>
               </div>
             )}
-          </form>
 
-   
-          <div className="px-3 py-2 sm:px-6 sm:py-4 border-t border-gray-200 dark:border-gray-800 flex justify-center gap-2 sm:gap-3 flex-shrink-0">
-            <button
-              onClick={onClose}
-              className="px-5 py-2 rounded-xl font-bold text-gray-500 text-sm sm:text-base"
-              type="button"
-            >
-              إلغاء
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => formRef.current?.requestSubmit()}
-              className="bg-[#137FEC] text-white px-7 py-2 rounded-xl font-bold disabled:opacity-60 text-sm sm:text-base"
-            >
-              {loading ? "جاري الحفظ..." : "إضافة التذكير"}
-            </button>
-          </div>
+            {/* الأزرار */}
+            <div className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4 sm:justify-center" dir="rtl">
+                <button type="button" onClick={onClose} disabled={loading}
+                  className="sm:min-w-[160px] bg-gray-100 text-gray-700 dark:bg-[#0F1323] dark:text-white px-8 py-4 rounded-2xl font-black text-lg border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-[#1e293b] transition-all disabled:opacity-60">
+                  إلغاء
+                </button>
+                <button type="button" disabled={loading} onClick={() => formRef.current?.requestSubmit()}
+                  className="sm:min-w-[220px] bg-[#137FEC] text-white px-8 py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all disabled:opacity-60 disabled:hover:scale-100">
+                  {loading ? "جاري الحفظ..." : "إضافة التذكير"}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
-    </>
+
+      <style>{`
+        .custom-date-input::-webkit-calendar-picker-indicator,
+        .custom-time-input::-webkit-calendar-picker-indicator {
+          position: absolute; top: 0; left: 0;
+          width: 100%; height: 100%;
+          background: transparent; cursor: pointer; opacity: 0;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </div>
   );
 };
 

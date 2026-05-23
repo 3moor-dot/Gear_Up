@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaChevronDown } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 // --- 1. تعريف الواجهات (Interfaces) في البداية ---
 
@@ -87,7 +88,7 @@ const CustomServiceSelect = ({
                 : "bg-[#1a253a] border-gray-700 shadow-black/50"
             }`}
         >
-          <ul className="max-h-[340px] overflow-y-auto custom-scrollbar">
+          <ul className="max-h-[220px] overflow-y-auto custom-scrollbar">
             {options && options.length > 0 ? (
               options.map((item) => (
                 <li
@@ -467,7 +468,7 @@ const ServicesTab = () => {
         </div>
       )}
 
-     <div className="max-h-[420px] overflow-y-auto pr-2 space-y-3">
+     <div className="min-h-[400px] max-h-[420px] overflow-y-auto pr-2 pb-4 space-y-3">
   {services.length === 0 ? (
     <div className="text-center py-12 text-gray-400">
       <p>لا توجد خدمات مضافة بعد</p>
@@ -481,11 +482,12 @@ const ServicesTab = () => {
     services.map((service, index) => (
       <div
         key={service.id || `${service.subSpecializationId}-${index}`}
-        className={`p-4 sm:p-6 rounded-2xl border transition-all ${
+        className={`relative p-4 sm:p-6 rounded-2xl border transition-all ${
           !dark
             ? "bg-white border-gray-100 shadow-sm"
             : "bg-[#131c2f] border-gray-800"
         }`}
+        style={{ zIndex: 100 - index }}
       >
         <div className="flex flex-col sm:flex-row items-end gap-4">
           <div className="w-full flex-1">
@@ -501,6 +503,19 @@ const ServicesTab = () => {
                 options={subSpecializations}
                 value={service.subSpecializationId}
                 onChange={(id, name) => {
+                  const isDuplicate = services.some(
+                    (s, i) => i !== index && s.subSpecializationId === id
+                  );
+                  if (isDuplicate) {
+                    Swal.fire({
+                      title: "عفواً!",
+                      text: "هذه الخدمة مضافة بالفعل في القائمة.",
+                      icon: "warning",
+                      confirmButtonText: "حسناً",
+                      confirmButtonColor: "#137FEC",
+                    });
+                    return;
+                  }
                   updateService(index, "subSpecializationId", id);
                   updateService(index, "subSpecializationName", name);
                 }}
