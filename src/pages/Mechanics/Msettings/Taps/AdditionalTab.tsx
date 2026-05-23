@@ -1,5 +1,4 @@
 
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -9,7 +8,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map Component ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.tst, // تأكد أن هذا المفتاح صحيح في ملف الـ .env
+    googleMapsApiKey: import.meta.env.tst,
   });
 
   if (loadError)
@@ -22,7 +21,7 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
       </div>
     );
 
-  const defaultCenter = { lat: 26.8206, lng: 30.8025 }; // مصر
+  const defaultCenter = { lat: 26.8206, lng: 30.8025 };
 
   const center =
     latitude && longitude
@@ -70,23 +69,21 @@ interface AdditionalData {
   mainSpecialty: string[];
   subSpecialty: string;
   fieldVisit: boolean;
-  isAvailable: boolean; 
+  isAvailable: boolean;
   workingHoursFrom: string;
   workingHoursTo: string;
   experience: string;
-  workshopLicenseUrl?: string; 
+  workshopLicenseUrl?: string;
   status?: number;
 }
 
-// ---------------- HELPERS (UPDATED) ----------------
-
-// دالة موحدة لجلب التوكن من sessionStorage أو localStorage
+// ---------------- HELPERS ----------------
 const getToken = () => {
   return sessionStorage.getItem("userToken") || localStorage.getItem("userToken") || "";
 };
 
 const getUserIdFromToken = () => {
-  const token = getToken(); // استخدام الدالة الجديدة
+  const token = getToken();
   if (!token) return "";
   try {
     const base64Url = token.split('.')[1];
@@ -102,7 +99,7 @@ const getUserIdFromToken = () => {
 };
 
 const getStorageKey = () => {
-  const token = getToken(); // استخدام الدالة الجديدة
+  const token = getToken();
   if (!token) return "mechanic_data_guest";
 
   try {
@@ -139,28 +136,30 @@ const defaultData: AdditionalData = {
 // ---------------- COMPONENT ----------------
 const AdditionalTab = () => {
   const { dark } = useTheme();
-  
-  // استخدام الدالة المحدثة لجلب التوكن
   const token = getToken();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const [specializations, setSpecializations] = useState<any[]>([]);
   const [selectedMain, setSelectedMain] = useState("");
   const [selectedSub, setSelectedSub] = useState("");
-
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
 
   const [data, setData] = useState<AdditionalData>(() => {
     try {
-      // الآن getStorageKey ستعمل بشكل صحيح حتى في التاب الجديد
       const saved = localStorage.getItem(getStorageKey());
-      return saved ? JSON.parse(saved) : defaultData;
-    } catch {
+      if (saved) {
+        console.log("Loaded data from LocalStorage:", saved);
+        return JSON.parse(saved);
+      } else {
+        console.log("No LocalStorage data found, using default.");
+        return defaultData;
+      }
+    } catch (e) {
+      console.error("Error parsing LocalStorage", e);
       return defaultData;
     }
   });
@@ -183,6 +182,7 @@ const AdditionalTab = () => {
   // Fetch Specializations
   useEffect(() => {
     const fetchSpecializations = async () => {
+      if (!token) return;
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/specializations",
@@ -224,17 +224,17 @@ const AdditionalTab = () => {
         setSpecializations(cleanedData);
 
       } catch (err) {
-        console.log(err);
+        console.log("Error fetching specializations:", err);
       }
     };
 
     fetchSpecializations();
-  }, [token]); // Added token dependency for safety
+  }, [token]);
 
   // Fetch Profile Data
   useEffect(() => {
     const fetchMyData = async () => {
-      if (!token) return; // Don't fetch if no token
+      if (!token) return;
       try {
         const res = await axios.get(
           "https://gearupapp.runasp.net/api/mechanics/my/profile",
@@ -242,23 +242,27 @@ const AdditionalTab = () => {
         );
   
         const apiData = res.data;
-  
+        console.log("API Profile Data:", apiData);
+
+        // المنطق الجديد: نحدث الداتا بس لو السيرفر رجع قيم، لو رجع فاضي نحتفظ بالقديم
         setData((prev) => ({
           ...prev,
-          location: apiData.location || "",
-          latitude: apiData.latitude,
-          longitude: apiData.longitude,
-          mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
-          subSpecialty: apiData.subSpecializationId || "",
-          fieldVisit: apiData.supportsFieldVisit || false,
+          location: apiData.location || prev.location,
+          latitude: apiData.latitude || prev.latitude,
+          longitude: apiData.longitude || prev.longitude,
+          // التأكد هنا إننا مانمسحش القيم لو السيرفر رجع null
+          mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : prev.mainSpecialty,
+          subSpecialty: apiData.subSpecializationId || prev.subSpecialty,
+          fieldVisit: apiData.supportsFieldVisit !== undefined ? apiData.supportsFieldVisit : prev.fieldVisit,
           isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
-          workingHoursFrom: apiData.workStartTime || "08:00",
-          workingHoursTo: apiData.workEndTime || "18:00",
-          experience: "",
+          workingHoursFrom: apiData.workStartTime || prev.workingHoursFrom,
+          workingHoursTo: apiData.workEndTime || prev.workingHoursTo,
+          experience: apiData.experience || prev.experience,
         }));
   
       } catch (err) {
-        console.log(err);
+        console.log("Error fetching profile (keeping local data):", err);
+        // هنا بنبقي صامتين عشان ما نغيرش الـ State لو السيرفر فشل
       }
     };
   
@@ -276,15 +280,17 @@ const AdditionalTab = () => {
         );
   
         const apiData = res.data;
+        console.log("API Summary Data:", apiData);
   
         setData((prev) => ({
           ...prev,
-          workshopLicenseUrl: apiData.workshopLicenseUrl,
-          status: apiData.status,
+          // بنحدث الرخصة لو السيرفر رجع برابط
+          workshopLicenseUrl: apiData.workshopLicenseUrl || prev.workshopLicenseUrl,
+          status: apiData.status || prev.status,
         }));
   
       } catch (err) {
-        console.log("Error fetching summary:", err);
+        console.log("Error fetching summary (keeping local data):", err);
       }
     };
   
@@ -294,7 +300,6 @@ const AdditionalTab = () => {
   const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const subList = selectedMainObj?.subSpecializations || [];
 
- 
   const canEnableAvailability = () => {
     return !!data.workshopLicenseUrl && data.status === 1;
   };
@@ -332,7 +337,6 @@ const AdditionalTab = () => {
     setError("");
     setSuccess("");
 
-    // 1. Validation
     if (!selectedMain) {
       setError("يرجى اختيار التخصص الرئيسي");
       setIsSaving(false);
@@ -345,7 +349,6 @@ const AdditionalTab = () => {
       return;
     }
 
-    // Validate Working Hours
     if (data.workingHoursTo <= data.workingHoursFrom) {
       setError("وقت نهاية العمل يجب أن يكون بعد وقت بداية العمل");
       setIsSaving(false);
@@ -353,10 +356,8 @@ const AdditionalTab = () => {
     }
 
     try {
-      // استخدام الدالة المحدثة هنا أيضاً
       const currentToken = getToken();
 
-      // 2. Prepare Payloads
       const payloadLocation = {
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
@@ -377,24 +378,19 @@ const AdditionalTab = () => {
         workEndTime: data.workingHoursTo,
       };
 
-      // --- 3. API CALLS ---
-
-      // Update Location
+      // API Calls
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
 
-      // Update Specialization
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
 
-      // Update Field Visit
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
 
-      // Update Working Hours
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
         headers: { Authorization: `Bearer ${currentToken}` },
       });
@@ -421,7 +417,6 @@ const AdditionalTab = () => {
         );
       }
 
-      // Upload License File (if exists)
       if (licenseFile) {
         const formData = new FormData();
         formData.append("File", licenseFile);
@@ -452,7 +447,7 @@ const AdditionalTab = () => {
         }
       }
 
-      // 4. Save to LocalStorage and Update UI
+      // Save to LocalStorage
       localStorage.setItem(
         getStorageKey(),
         JSON.stringify({
@@ -477,24 +472,16 @@ const AdditionalTab = () => {
     } catch (err: any) {
       console.error("Save Error:", err);
       
-      // --- Enhanced Error Handling ---
       let errorMessage = "حصل خطأ غير متوقع";
-      
       if (err?.response?.data) {
         const errorData = err.response.data;
-        if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.title) {
-          errorMessage = errorData.title;
-        } else {
-          errorMessage = JSON.stringify(errorData);
-        }
+        if (typeof errorData === 'string') errorMessage = errorData;
+        else if (errorData.message) errorMessage = errorData.message;
+        else if (errorData.title) errorMessage = errorData.title;
+        else errorMessage = JSON.stringify(errorData);
       } else if (err?.message) {
         errorMessage = err.message;
       }
-
       setError(errorMessage);
     } finally {
       setIsSaving(false);
@@ -716,9 +703,7 @@ const AdditionalTab = () => {
             onClick={() => {
               if (!isEditing) return;
             
-              // لو بيحاول يشغل التوفر
               if (!data.isAvailable) {
-            
                 if (!canEnableAvailability()) {
                   setError(
                     "لا يمكن تعيين التوفر إلا بعد إرفاق صورة رخصة الورشة وتأكيدها من الإدارة"
