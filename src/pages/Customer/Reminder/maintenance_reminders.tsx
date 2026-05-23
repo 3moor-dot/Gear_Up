@@ -42,16 +42,16 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   );
 };
 
-// تحديث الـ Interface ليشمل الحقول القادمة من API المكتملة
+
 interface Reminder {
   carId: string | number;
-  id?: string | number; // للقائمة النشطة
-  reminderId?: string; // للقائمة المكتملة
-  name?: string; // للقائمة النشطة
-  title?: string; // للقائمة المكتملة
+  id?: string | number; 
+  reminderId?: string; 
+  name?: string; 
+  title?: string; 
   description?: string;
   startDate?: string;
-  completedDate?: string; // للقائمة المكتملة
+  completedDate?: string; 
   endDate?: string;
   preferredNotificationTime?: string;
   frequencyType: string | number;
@@ -73,13 +73,9 @@ const translateReminderDescription = (text: string) => {
   if (!text) return "";
 
   return text
-    // حذف اسم العربية فقط من أول السطر
     .replace(/-.*?\n/, "\n")
 
-    // حذف سطر الموديل
     .replace(/Model:\s*\d+\s*\n?/gi, "")
-
-    // تحويل باقي النص
   
     .replace(/Every/gi, "كل")
     .replace(/months/gi, "شهور")

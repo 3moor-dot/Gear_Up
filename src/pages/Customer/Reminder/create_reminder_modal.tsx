@@ -3,7 +3,7 @@ import { MdClose } from "react-icons/md";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-// كلاس مخصص لإخفاء شريط السكرول
+
 const scrollbarHideStyle = `
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -391,11 +391,7 @@ const CreateReminderModal = ({
               </div>
             </div>
 
-            {/* 
-               التعديل الأهم هنا:
-               إزالة p-3 تماماً وتغيير الـ grid إلى grid-cols-2 دائماً
-               هذا سيجعل الحقول جنب بعض في الموبايل ويوفر ارتفاع
-            */}
+          
             {frequencyType === "4" && (
               <div className="grid grid-cols-2 gap-2 items-end">
                 <div className="space-y-0.5">
@@ -437,7 +433,7 @@ const CreateReminderModal = ({
             )}
           </form>
 
-          {/* تثبيت الفوتر في الأسفل مع تقليل الارتفاع py-2 */}
+   
           <div className="px-3 py-2 sm:px-6 sm:py-4 border-t border-gray-200 dark:border-gray-800 flex justify-center gap-2 sm:gap-3 flex-shrink-0">
             <button
               onClick={onClose}

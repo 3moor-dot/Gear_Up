@@ -244,7 +244,6 @@ const ServiceHistory = () => {
                       <thead>
                         <tr className="bg-[#137FEC1A] dark:bg-gray-800 text-gray-700 dark:text-gray-200">
                           <th className="p-2.5 whitespace-nowrap font-semibold"> المشكلة </th>
-                          {/* <th className="p-2.5 whitespace-nowrap font-semibold">السيارة</th> */}
                           <th className="p-2.5 whitespace-nowrap font-semibold">الخدمة</th>
                           <th className="p-2.5 whitespace-nowrap font-semibold">الحالة</th>
                           <th className="p-2.5 whitespace-nowrap font-semibold">الميكانيكي</th>
@@ -290,9 +289,6 @@ const ServiceHistory = () => {
                               </div>
                             </td>
 
-                            {/* <td className="p-2.5">
-                              {row.car?.brand} {row.car?.model}
-                            </td> */}
 
                             <td className="p-2.5">
                               <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-medium">
@@ -382,7 +378,7 @@ const ServiceHistory = () => {
                     >
                       {/* Top Row: Title + Status */}
                       <div className="flex justify-between items-start mb-3 gap-2">
-                        {/* --- تم التعديل هنا: إزالة line-clamp-2 للسماح للنص بالظهور كاملاً --- */}
+
                         <h3 className="text-sm font-bold text-gray-900 dark:text-white break-words whitespace-normal leading-relaxed">
                           {row.issueDescription}
                         </h3>

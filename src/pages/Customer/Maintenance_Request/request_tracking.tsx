@@ -30,8 +30,7 @@ const statusOrder = [
   "OnTheWay",
   "Arrived",
   "InProgress",
-  "Completed",
-  // "Cancelled",
+  "Completed"
 ];
 
 const serviceTypeMap: any = {
@@ -118,7 +117,6 @@ const RequestTracking = () => {
 
 
 {/* 🚗 CAR CARD */}
-{/* <div className="flex gap-3 items-center"> */}
 <div className="flex gap-4 items-center border-b pb-4">
 
   {request?.car?.carPhotoUrl && (
@@ -131,7 +129,6 @@ const RequestTracking = () => {
 
   <div className="flex-1">
     <p className="font-bold">
-      {/* <Car className="w-4 h-4 inline-block mr-1 text-blue-500" /> */}
 
 {request?.car?.brand} {request?.car?.model}
 
@@ -155,7 +152,6 @@ const RequestTracking = () => {
 {/* 📌 نوع الطلب */}
 
 <p className="flex items-center gap-2">
-  {/* <AlertTriangle className="w-4 h-4 text-red-500" /> */}
   <AlertTriangle className="w-4 h-4 text-sky-500" />
   <strong>نوع الطلب:</strong>{" "}
   {request?.requestType === "Emergency" ? "طارئ" : "مجدول"}

@@ -162,9 +162,9 @@ const MaintenanceRequest = () => {
 
   const [gettingLocation, setGettingLocation] = useState(false);
 
-  // const inputStyle = "w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border-2 border-blue-500/20 rounded-2xl p-4 text-right outline-none dark:text-white focus:border-blue-500 transition-all";
+
   const inputStyle ="w-full bg-[#137FEC1A] dark:bg-[#137FEC33] border border-blue-500/20 rounded-xl p-2.5 text-sm text-right outline-none dark:text-white focus:border-blue-500 transition-all";
-  // const sectionTitleStyle = "text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
+
   const sectionTitleStyle ="text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
   const { isLoaded } = useLoadScript({
     // googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
@@ -390,16 +390,13 @@ const MaintenanceRequest = () => {
   };
 
   return (
-    // <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
+ 
     <div className="flex h-screen overflow-hidden dark:bg-primary_BGD" dir="rtl">
       <Sidebar />
-      {/* <div className="flex-1 flex flex-col min-w-0 overflow-hidden"> */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header />
-        {/* <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6"> */}
         <main className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
           {currentStep === 1 ? (
-            // <div className="space-y-10 animate-in fade-in duration-500">
             <div className="space-y-5 animate-in fade-in duration-500">
               {/* 1. اختيار السيارة */}
              
@@ -582,7 +579,6 @@ const MaintenanceRequest = () => {
               {/* تصنيف العطل - Updated Section with Dark Hover */}
               <section>
                 <h3 className={sectionTitleStyle}>تصنيف العطل</h3>
-                {/* <div className="grid grid-cols-4 gap-3"> */}
                 <div className="grid grid-cols-4 gap-2">
                   {[
                     { t: "تشخيص", icon: <FaWrench size={24} />, v: 1 },
@@ -667,15 +663,12 @@ const MaintenanceRequest = () => {
 {/* Specializations - Updated Logic */}
 <div className="flex flex-wrap gap-1 mt-3">
   {(() => {
-    // 1. محاولة استخراج البيانات من مصفوفة specializations
     let specs = Array.isArray(m.specializations) ? m.specializations : [];
 
-    // 2. إذا كانت فارغة، نحاول استخراجها إذا كانت نص String
     if (specs.length === 0 && m.specializations && typeof m.specializations === 'string') {
       specs = [m.specializations];
     }
 
-    // 3. إذا كانت فارغة، نحاول البحث في حقل specialization (بالمفرد) وهو شائع في الـ APIs
     if (specs.length === 0 && m.specialization) {
       specs = [m.specialization];
     }
@@ -722,11 +715,6 @@ const MaintenanceRequest = () => {
                                 <span className="text-[10px] text-gray-400">({m.totalRatings || 0})</span>
                             </div>
                         </div>
-
-                        {/* <p className="text-green-500 text-xs mt-3 font-bold text-right flex items-center gap-1">
-                           <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                           تم قبول الطلب
-                        </p> */}
                         
                         <button
                           onClick={() => handleSelectMechanic(m.mechanicUserId)}
