@@ -121,7 +121,7 @@ const defaultData: AdditionalData = {
   mainSpecialty: [],
   subSpecialty: "",
   fieldVisit: false,
-  isAvailable: true, // Default to true
+  isAvailable: false, 
   workingHoursFrom: "08:00",
   workingHoursTo: "18:00",
   experience: "",
@@ -333,6 +333,13 @@ const AdditionalTab = () => {
       setIsSaving(false);
       return;
     }
+
+    // Validate Working Hours
+if (data.workingHoursTo <= data.workingHoursFrom) {
+  setError("وقت نهاية العمل يجب أن يكون بعد وقت بداية العمل");
+  setIsSaving(false);
+  return;
+}
 
 
     try {
