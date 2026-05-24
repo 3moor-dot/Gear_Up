@@ -640,7 +640,19 @@ if (!data.isAvailable || canEnableAvailability()) {
           <select
             disabled={!isEditing}
             value={selectedMain}
-            onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
+            // onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
+            onChange={(e) => {
+              const value = e.target.value;
+            
+              setSelectedMain(value);
+              setSelectedSub("");
+            
+              setData((prev) => ({
+                ...prev,
+                mainSpecialty: value ? [value] : [],
+                subSpecialty: "",
+              }));
+            }}
             className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
           >
             <option value="">اختر التخصص الرئيسي</option>
@@ -654,7 +666,17 @@ if (!data.isAvailable || canEnableAvailability()) {
             <select
               disabled={!isEditing}
               value={selectedSub}
-              onChange={(e) => setSelectedSub(e.target.value)}
+              // onChange={(e) => setSelectedSub(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+              
+                setSelectedSub(value);
+              
+                setData((prev) => ({
+                  ...prev,
+                  subSpecialty: value,
+                }));
+              }}
               className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
             >
               <option value="">اختر التخصص الفرعي</option>
