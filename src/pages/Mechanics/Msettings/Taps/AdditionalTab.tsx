@@ -222,37 +222,103 @@ const AdditionalTab = () => {
   }, []);
 
   // Fetch Profile Data
+  // useEffect(() => {
+  //   const fetchMyData = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         "https://gearupapp.runasp.net/api/mechanics/my/profile",
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+  
+  //       const apiData = res.data;
+  
+  //       setData((prev) => ({
+  //         ...prev,
+  //         location: apiData.location || "",
+  //         latitude: apiData.latitude,
+  //         longitude: apiData.longitude,
+  //         mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
+  //         subSpecialty: apiData.subSpecializationId || "",
+  //         fieldVisit: apiData.supportsFieldVisit || false,
+  //         // Keep existing isAvailable if API doesn't return it, or update if it does
+  //         isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
+  //         workingHoursFrom: apiData.workStartTime || "08:00",
+  //         workingHoursTo: apiData.workEndTime || "18:00",
+  //         experience: "",
+  //       }));
+  
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
+  
+  //   fetchMyData();
+  // }, []);
   useEffect(() => {
-    const fetchMyData = async () => {
+    const fetchSummary = async () => {
       try {
         const res = await axios.get(
-          "https://gearupapp.runasp.net/api/mechanics/my/profile",
-          { headers: { Authorization: `Bearer ${token}` } }
+          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
   
         const apiData = res.data;
   
         setData((prev) => ({
           ...prev,
-          location: apiData.location || "",
-          latitude: apiData.latitude,
-          longitude: apiData.longitude,
-          mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
-          subSpecialty: apiData.subSpecializationId || "",
-          fieldVisit: apiData.supportsFieldVisit || false,
-          // Keep existing isAvailable if API doesn't return it, or update if it does
-          isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
-          workingHoursFrom: apiData.workStartTime || "08:00",
-          workingHoursTo: apiData.workEndTime || "18:00",
-          experience: "",
+  
+          status: apiData.status,
+  
+          workshopLicenseUrl:
+            apiData.workshopLicenseUrl ??
+            prev.workshopLicenseUrl,
+  
+          latitude:
+            apiData.latitude ??
+            prev.latitude,
+  
+          longitude:
+            apiData.longitude ??
+            prev.longitude,
+  
+          fieldVisit:
+            apiData.supportsFieldVisit ??
+            prev.fieldVisit,
+  
+          isAvailable:
+            apiData.isAvailable ??
+            prev.isAvailable,
+  
+          workingHoursFrom:
+            apiData.workStartTime
+              ?.slice(0, 5) ??
+            prev.workingHoursFrom,
+  
+          workingHoursTo:
+            apiData.workEndTime
+              ?.slice(0, 5) ??
+            prev.workingHoursTo,
+  
+          mainSpecialty:
+            apiData.primarySpecialization?.id
+              ? [apiData.primarySpecialization.id]
+              : prev.mainSpecialty,
+  
+          subSpecialty:
+            apiData.subSpecializations?.[0]?.id ??
+            prev.subSpecialty,
         }));
   
       } catch (err) {
-        console.log(err);
+        console.log("Error fetching summary:", err);
       }
     };
   
-    fetchMyData();
+    fetchSummary();
   }, []);
 
   // Fetch Summary (License)
