@@ -156,19 +156,35 @@ const AdditionalTab = () => {
   });
 
   // Sync Selects with Data
-  useEffect(() => {
-    if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
-      setSelectedMain(String(data.mainSpecialty[0]));
-    } else {
-      setSelectedMain("");
-    }
+  // useEffect(() => {
+  //   if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
+  //     setSelectedMain(String(data.mainSpecialty[0]));
+  //   } else {
+  //     setSelectedMain("");
+  //   }
     
+  //   if (data?.subSpecialty) {
+  //     setSelectedSub(String(data.subSpecialty));
+  //   } else {
+  //     setSelectedSub("");
+  //   }
+  // }, [data]);
+  // Sync Selects with Data + Ensure subList is ready
+useEffect(() => {
+  if (data?.mainSpecialty?.length) {
+    const mainId = String(data.mainSpecialty[0]);
+    setSelectedMain(mainId);
+  }
+
+  // تأخير بسيط عشان specializations تكون محملة
+  const timer = setTimeout(() => {
     if (data?.subSpecialty) {
       setSelectedSub(String(data.subSpecialty));
-    } else {
-      setSelectedSub("");
     }
-  }, [data]);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [data, specializations]);   // ← added specializations as dependency
 
   // Fetch Specializations
   useEffect(() => {
@@ -221,138 +237,127 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, []);
 
-  // Fetch Profile Data
+  
   // useEffect(() => {
-  //   const fetchMyData = async () => {
+  //   const fetchSummary = async () => {
   //     try {
   //       const res = await axios.get(
-  //         "https://gearupapp.runasp.net/api/mechanics/my/profile",
-  //         { headers: { Authorization: `Bearer ${token}` } }
+  //         "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
   //       );
   
   //       const apiData = res.data;
   
   //       setData((prev) => ({
   //         ...prev,
-  //         location: apiData.location || "",
-  //         latitude: apiData.latitude,
-  //         longitude: apiData.longitude,
-  //         mainSpecialty: apiData.primarySpecializationId ? [apiData.primarySpecializationId] : [],
-  //         subSpecialty: apiData.subSpecializationId || "",
-  //         fieldVisit: apiData.supportsFieldVisit || false,
-  //         // Keep existing isAvailable if API doesn't return it, or update if it does
-  //         isAvailable: apiData.isAvailable !== undefined ? apiData.isAvailable : prev.isAvailable,
-  //         workingHoursFrom: apiData.workStartTime || "08:00",
-  //         workingHoursTo: apiData.workEndTime || "18:00",
-  //         experience: "",
+  
+  //         status: apiData.status,
+  
+  //         workshopLicenseUrl:
+  //           apiData.workshopLicenseUrl ??
+  //           prev.workshopLicenseUrl,
+  
+  //         latitude:
+  //           apiData.latitude ??
+  //           prev.latitude,
+  
+  //         longitude:
+  //           apiData.longitude ??
+  //           prev.longitude,
+  
+  //         fieldVisit:
+  //           apiData.supportsFieldVisit ??
+  //           prev.fieldVisit,
+  
+  //         isAvailable:
+  //           apiData.isAvailable ??
+  //           prev.isAvailable,
+  
+  //         workingHoursFrom:
+  //           apiData.workStartTime
+  //             ?.slice(0, 5) ??
+  //           prev.workingHoursFrom,
+  
+  //         workingHoursTo:
+  //           apiData.workEndTime
+  //             ?.slice(0, 5) ??
+  //           prev.workingHoursTo,
+  
+  //         mainSpecialty:
+  //           apiData.primarySpecialization?.id
+  //             ? [apiData.primarySpecialization.id]
+  //             : prev.mainSpecialty,
+  
+  //         subSpecialty:
+  //           apiData.subSpecializations?.[0]?.id ??
+  //           prev.subSpecialty,
   //       }));
   
   //     } catch (err) {
-  //       console.log(err);
+  //       console.log("Error fetching summary:", err);
   //     }
   //   };
   
-  //   fetchMyData();
+  //   fetchSummary();
   // }, []);
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await axios.get(
-          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-  
-        const apiData = res.data;
-  
-        setData((prev) => ({
-          ...prev,
-  
-          status: apiData.status,
-  
-          workshopLicenseUrl:
-            apiData.workshopLicenseUrl ??
-            prev.workshopLicenseUrl,
-  
-          latitude:
-            apiData.latitude ??
-            prev.latitude,
-  
-          longitude:
-            apiData.longitude ??
-            prev.longitude,
-  
-          fieldVisit:
-            apiData.supportsFieldVisit ??
-            prev.fieldVisit,
-  
-          isAvailable:
-            apiData.isAvailable ??
-            prev.isAvailable,
-  
-          workingHoursFrom:
-            apiData.workStartTime
-              ?.slice(0, 5) ??
-            prev.workingHoursFrom,
-  
-          workingHoursTo:
-            apiData.workEndTime
-              ?.slice(0, 5) ??
-            prev.workingHoursTo,
-  
-          mainSpecialty:
-            apiData.primarySpecialization?.id
-              ? [apiData.primarySpecialization.id]
-              : prev.mainSpecialty,
-  
-          subSpecialty:
-            apiData.subSpecializations?.[0]?.id ??
-            prev.subSpecialty,
-        }));
-  
-      } catch (err) {
-        console.log("Error fetching summary:", err);
-      }
-    };
-  
-    fetchSummary();
-  }, []);
+  // Fetch Profile Summary
+useEffect(() => {
+  const fetchSummary = async () => {
+    try {
+      const res = await axios.get(
+        "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  // Fetch Summary (License)
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await axios.get(
-          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-  
-        const apiData = res.data;
-  
-        setData((prev) => ({
-          ...prev,
-          workshopLicenseUrl: apiData.workshopLicenseUrl,
-          status: apiData.status,
-        }));
-  
-      } catch (err) {
-        console.log("Error fetching summary:", err);
-      }
-    };
-  
-    fetchSummary();
-  }, []);
+      const apiData = res.data;
+
+      setData((prev) => ({
+        ...prev,
+        status: apiData.status,
+        workshopLicenseUrl: apiData.workshopLicenseUrl ?? prev.workshopLicenseUrl,
+        latitude: apiData.latitude ?? prev.latitude,
+        longitude: apiData.longitude ?? prev.longitude,
+        fieldVisit: apiData.supportsFieldVisit ?? prev.fieldVisit,
+        isAvailable: apiData.isAvailable ?? prev.isAvailable,
+        workingHoursFrom: apiData.workStartTime?.slice(0, 5) ?? prev.workingHoursFrom,
+        workingHoursTo: apiData.workEndTime?.slice(0, 5) ?? prev.workingHoursTo,
+
+        mainSpecialty: apiData.primarySpecialization?.id 
+          ? [apiData.primarySpecialization.id] 
+          : prev.mainSpecialty,
+
+        subSpecialty: apiData.subSpecializations?.[0]?.id ?? prev.subSpecialty,
+      }));
+
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+    }
+  };
+
+  if (token) fetchSummary();
+}, [token]);
+
 
   // const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const selectedMainObj = specializations.find(
     (s) => String(s.id) === String(selectedMain)
   );
+
+  
   const subList = selectedMainObj?.subSpecializations || [];
 
- 
+  console.log({
+    selectedMain,
+    selectedSub,
+    mainFound: !!selectedMainObj,
+    subListLength: subList.length,
+    subFromApi: data.subSpecialty
+  });
+
   const canEnableAvailability = () => {
     return !!data.workshopLicenseUrl && data.status === 1;
   };
