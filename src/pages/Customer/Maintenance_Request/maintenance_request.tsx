@@ -168,7 +168,7 @@ const MaintenanceRequest = () => {
   const sectionTitleStyle ="text-lg font-bold mb-4 dark:text-white text-gray-800 text-right";
   const { isLoaded } = useLoadScript({
     // googleMapsApiKey: "AIzaSyBX8_y6ZtDBv722QljpxUubkpQQQG4sTQ0",
-    googleMapsApiKey: import.meta.env.tst,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
 
 

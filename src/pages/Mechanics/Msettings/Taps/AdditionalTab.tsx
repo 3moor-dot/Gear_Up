@@ -8,7 +8,7 @@ import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 // --- Map Component ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.tst,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
   if (loadError) return <div className="text-red-500 text-sm">خطأ في تحميل الخريطة</div>;
   if (!isLoaded) return (
