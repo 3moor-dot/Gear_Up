@@ -7,52 +7,58 @@ import MachineSidebar from "../../../components/Machine/MachineSidebar";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
-// تم إضافة Wrench للاستخدام كبديل للإيموجي
 import { Car, ClipboardCheck, ClipboardList, AlertTriangle, Settings, Wrench } from "lucide-react";
 
-     const statusOptions = [
-         { value: "Accepted", label: "تم القبول" },
-         { value: "OnTheWay", label: "في الطريق" },
-         { value: "Arrived", label: "وصل" },
-         { value: "InProgress", label: "قيد الإصلاح" },
-         { value: "Completed", label: "تم الانتهاء" },
-         { value: "Cancelled", label: "تم الإلغاء" }
-       ];
+const statusOptions = [
+  { value: "Accepted", label: "تم القبول" },
+  { value: "OnTheWay", label: "في الطريق" },
+  { value: "Arrived", label: "وصل" },
+  { value: "InProgress", label: "قيد الإصلاح" },
+  { value: "Completed", label: "تم الانتهاء" },
+  { value: "Cancelled", label: "تم الإلغاء" }
+];
 
-       const statusMap: any = {
-        Accepted: 3,
-        OnTheWay: 4,
-        Arrived: 5,
-        InProgress: 6,
-        Completed: 7,
-        Cancelled: 8
-      };
+const statusMap: any = {
+  Accepted: 3,
+  OnTheWay: 4,
+  Arrived: 5,
+  InProgress: 6,
+  Completed: 7,
+  Cancelled: 8
+};
 
-      const statusOrder = [
-        "Accepted",
-        "OnTheWay",
-        "Arrived",
-        "InProgress",
-        "Completed",
-        // "Cancelled",
-      ];
-     
-      const serviceTypeMap: any = {
-        Diagnosis: "تشخيص",
-        Tires: "إطارات",
-        BodyRepair: "إصلاح هيكل",
-        OilChange: "تغيير زيت",
-      };
+// قائمة الحالات الكاملة (لما الميكانيكي يروح للعميل)
+const statusOrderFull = [
+  "Accepted",
+  "OnTheWay",
+  "Arrived",
+  "InProgress",
+  "Completed",
+];
 
-      const requestTypeMap: any = {
-        Emergency: "طارئ",
-        Scheduled: "مجدول",
-      };
+// قائمة الحالات المختصرة (لما العميل ييجي للميكانيكي)
+const statusOrderShort = [
+  "Accepted",
+  "InProgress",
+  "Completed",
+];
 
-      const serviceModeMap: any = {
-        MechanicComesToCustomer: "الميكانيكي يذهب للعميل",
-        CustomerGoesToMechanic: "العميل يأتي للميكانيكي",
-      };
+const serviceTypeMap: any = {
+  Diagnosis: "تشخيص",
+  Tires: "إطارات",
+  BodyRepair: "إصلاح هيكل",
+  OilChange: "تغيير زيت",
+};
+
+const requestTypeMap: any = {
+  Emergency: "طارئ",
+  Scheduled: "مجدول",
+};
+
+const serviceModeMap: any = {
+  MechanicComesToCustomer: "الميكانيكي يذهب للعميل",
+  CustomerGoesToMechanic: "العميل يأتي للميكانيكي",
+};
 
 
 const MRequestTracking = () => {
@@ -62,14 +68,14 @@ const MRequestTracking = () => {
   const { dark } = useTheme();
 
   const [request, setRequest] = useState<any>(null);
-const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const token = sessionStorage.getItem("userToken");
   const [openImg, setOpenImg] = useState(false);
-const [selectedImg, setSelectedImg] = useState<string | null>(null);
+  const [selectedImg, setSelectedImg] = useState<string | null>(null);
 
-const fetchRequest = async () => {
+  const fetchRequest = async () => {
     try {
       const resStatus = await axios.get(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/status`,
@@ -77,13 +83,12 @@ const fetchRequest = async () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-  
+
       console.log("DATA:", resStatus.data);
-  
-      setRequest(resStatus.data);   
-      setRequest(resStatus.data);   
+
+      setRequest(resStatus.data);
       setStatus(resStatus.data.status);
-  
+
     } catch (err: any) {
       console.error("ERROR:", err.response?.data);
       toast.error("فشل تحميل بيانات الطلب");
@@ -98,7 +103,7 @@ const fetchRequest = async () => {
   }, [requestId]);
 
 
-const updateStatus = async (newStatus: string) => {
+  const updateStatus = async (newStatus: string) => {
     try {
       await axios.put(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/status`,
@@ -107,13 +112,11 @@ const updateStatus = async (newStatus: string) => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-  
+
       toast.success("تم تحديث الحالة");
-  
       setStatus(newStatus);
-  
       fetchRequest();
-  
+
     } catch (err: any) {
       console.error("UPDATE ERROR:", err.response?.data);
       toast.error("فشل تحديث الحالة");
@@ -121,12 +124,17 @@ const updateStatus = async (newStatus: string) => {
   };
 
 
-    const getStatusLabel = (value: string | null) => {
+  const getStatusLabel = (value: string | null) => {
     const found = statusOptions.find(s => s.value === value);
     return found ? found.label : "غير معروف";
   };
 
   if (loading) return <p className="p-10 text-center">جاري التحميل...</p>;
+
+  // تحديد القائمة المستخدمة بناءً على طريقة الخدمة
+  // لو العميل رايح للميكانيكي -> نستخدم القائمة المختصرة
+  // غير كده -> نستخدم القائمة الكاملة
+  const activeStatusOrder = request?.serviceMode === "CustomerGoesToMechanic" ? statusOrderShort : statusOrderFull;
 
   return (
     <div
@@ -153,186 +161,183 @@ const updateStatus = async (newStatus: string) => {
           </div>
         </div>
 
-       
+
         <div
-  className={`w-full max-w-4xl mx-auto p-4 rounded-xl shadow ${
-    !dark ? "bg-white" : "bg-[#0d1629]"
-  }`}
->
+          className={`w-full max-w-4xl mx-auto p-4 rounded-xl shadow ${
+            !dark ? "bg-white" : "bg-[#0d1629]"
+          }`}
+        >
 
-              {request && (
-  <>
+          {request && (
+            <>
 
-    <div className="flex items-center gap-3">
-  {request.car?.carPhotoUrl && (
-    <img
-      src={request.car.carPhotoUrl}
-      className="w-20 h-20 rounded-lg object-cover"
-      alt="car"
-    />
-  )}
+              <div className="flex items-center gap-3">
+                {request.car?.carPhotoUrl && (
+                  <img
+                    src={request.car.carPhotoUrl}
+                    className="w-20 h-20 rounded-lg object-cover"
+                    alt="car"
+                  />
+                )}
 
-  <div>
-    <p className="flex flex-wrap items-center gap-2">
-      <strong>السيارة:</strong>
-      <span>
-        {request.car?.brand} {request.car?.model} - {request.car?.year} - {request.car?.plateNumber}
-      </span>
-    </p>
-  </div>
-</div>
+                <div>
+                  <p className="flex flex-wrap items-center gap-2">
+                    <strong>السيارة:</strong>
+                    <span>
+                      {request.car?.brand} {request.car?.model} - {request.car?.year} - {request.car?.plateNumber}
+                    </span>
+                  </p>
+                </div>
+              </div>
 
-    <hr className="my-3" />
+              <hr className="my-3" />
 
-    {/* 🧑 customer */}
+              {/* 🧑 customer */}
+              <div className="flex items-center gap-3">
+                {request.customer?.profilePhotoUrl ? (
+                  <img
+                    src={request.customer.profilePhotoUrl}
+                    className="w-12 h-12 rounded-full object-cover border border-gray-300 dark:border-gray-600"
+                    alt="customer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
 
-{/* 🧑 customer - تم التعديل هنا */}
-<div className="flex items-center gap-3">
-  {request.customer?.profilePhotoUrl ? (
-    <img
-      src={request.customer.profilePhotoUrl}
-      className="w-12 h-12 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-      alt="customer"
-      onError={(e) => {
-        // لو الرابط موجود بس الصورة تالفة، نخفيها
-        (e.target as HTMLImageElement).style.display = 'none';
-      }}
-    />
-  ) : (
-    // الأيقونة اللي بتظهر لو مفيش صورة
-    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
-      <svg
-        className="w-6 h-6"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-          clipRule="evenodd"
-        />
-      </svg>
-    </div>
-  )}
+                <div>
+                  <p><strong>👤 العميل:</strong> {request.customer?.firstName} {request.customer?.lastName}</p>
+                  <p>📞 {request.customer?.phoneNumber}</p>
+                </div>
+              </div>
 
-  <div>
-    <p><strong>👤 العميل:</strong> {request.customer?.firstName} {request.customer?.lastName}</p>
-    <p>📞 {request.customer?.phoneNumber}</p>
-  </div>
-</div>
+              <hr className="my-3" />
 
-    <hr className="my-3" />
 
-   
-    <p>
-  <ClipboardList className="w-4 h-4 text-sky-500 inline-block ml-1" />
-  <strong>المشكلة:</strong> {request.issueDescription}
-</p>
+              <p>
+                <ClipboardList className="w-4 h-4 text-sky-500 inline-block ml-1" />
+                <strong>المشكلة:</strong> {request.issueDescription}
+              </p>
 
-    {request.problemPhotoUrl && (
-  <img
-    src={request.problemPhotoUrl}
-    onClick={() => {
-      setSelectedImg(request.problemPhotoUrl);
-      setOpenImg(true);
-    }}
-    className="w-full h-64 object-cover rounded-lg mt-2 cursor-pointer hover:opacity-90 transition"
-  />
-)}
-{openImg && selectedImg && (
-  <div
-    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
-    onClick={() => setOpenImg(false)}
-  >
-    <img
-      src={selectedImg}
-      className="max-w-[95%] max-h-[95%] object-contain rounded-lg"
-    />
-  </div>
-)}
+              {request.problemPhotoUrl && (
+                <img
+                  src={request.problemPhotoUrl}
+                  onClick={() => {
+                    setSelectedImg(request.problemPhotoUrl);
+                    setOpenImg(true);
+                  }}
+                  className="w-full h-64 object-cover rounded-lg mt-2 cursor-pointer hover:opacity-90 transition"
+                />
+              )}
+              {openImg && selectedImg && (
+                <div
+                  className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+                  onClick={() => setOpenImg(false)}
+                >
+                  <img
+                    src={selectedImg}
+                    className="max-w-[95%] max-h-[95%] object-contain rounded-lg"
+                  />
+                </div>
+              )}
 
-    <hr className="my-3" />
+              <hr className="my-3" />
 
-    {/* 📌 request info */}
-<p>
-  <AlertTriangle className="w-4 h-4 text-sky-500 inline-block ml-1" />
-  <strong> نوع الطلب:</strong>{" "}
-  {requestTypeMap[request.requestType] || request.requestType}
-</p>
+              {/* 📌 request info */}
+              <p>
+                <AlertTriangle className="w-4 h-4 text-sky-500 inline-block ml-1" />
+                <strong> نوع الطلب:</strong>{" "}
+                {requestTypeMap[request.requestType] || request.requestType}
+              </p>
 
-<p>
-  <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
-  <strong> طريقة تلقي الخدمة:</strong>{" "}
-  {serviceModeMap[request?.serviceMode] || request?.serviceMode}
-</p>
- 
-{request?.serviceType && (
-  <p>
-    <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
-    <strong>الخدمة:</strong>{" "} 
-    {serviceTypeMap[request.serviceType] || request.serviceType}
-  </p>
-)}
+              <p>
+                <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
+                <strong> طريقة تلقي الخدمة:</strong>{" "}
+                {serviceModeMap[request?.serviceMode] || request?.serviceMode}
+              </p>
+
+              {request?.serviceType && (
+                <p>
+                  <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
+                  <strong>الخدمة:</strong>{" "}
+                  {serviceTypeMap[request.serviceType] || request.serviceType}
+                </p>
+              )}
             </>
           )}
 
-      
+
           <p>
-          <ClipboardCheck className="w-4 h-4 text-sky-500 inline-block ml-1" />
-  <strong> حالة الطلب:</strong>{" "}
-{getStatusLabel(status)}
-</p>
+            <ClipboardCheck className="w-4 h-4 text-sky-500 inline-block ml-1" />
+            <strong> حالة الطلب:</strong>{" "}
+            {getStatusLabel(status)}
+          </p>
 
         </div>
 
-<h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
-<Car className="w-5 h-5 drive-animation" />
-  تحديث حالة الطلب
-</h2>
+        <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Car className="w-5 h-5 drive-animation" />
+          تحديث حالة الطلب
+        </h2>
 
 
-<div className="flex items-center justify-between mt-6">
-  {statusOrder.map((step, index) => {
-    const currentIndex = statusOrder.indexOf(status || "");
-    const isCompleted = index < currentIndex;
-    const isActive = index === currentIndex;
+        <div className="flex items-center justify-between mt-6">
+          {/* استخدام activeStatusOrder بدلاً من statusOrder الثابتة */}
+          {activeStatusOrder.map((step, index) => {
+            const currentIndex = activeStatusOrder.indexOf(status || "");
+            const isCompleted = index < currentIndex;
+            const isActive = index === currentIndex;
 
-    return (
-      <div key={step} className="flex-1 flex flex-col items-center relative">
+            return (
+              <div key={step} className="flex-1 flex flex-col items-center relative">
 
-        {/* الخط */}
-        {index !== statusOrder.length - 1 && (
-          <div
-            className={`absolute top-4 right-1/2 w-full h-1 z-0 ${
-              index < currentIndex ? "bg-green-500" : "bg-gray-300"
-            }`}
-          />
-        )}
+                {/* الخط */}
+                {index !== activeStatusOrder.length - 1 && (
+                  <div
+                    className={`absolute top-4 right-1/2 w-full h-1 z-0 ${
+                      index < currentIndex ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  />
+                )}
 
-        {/* الدائرة */}
-        <button
-          onClick={() => updateStatus(step)}
-          className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-            ${
-              isCompleted
-                ? "bg-green-500 text-white"
-                : isActive
-                ? "bg-blue-500 text-white"
-                : "bg-gray-300 text-black"
-            }`}
-        >
-          {index + 1}
-        </button>
+                {/* الدائرة */}
+                <button
+                  onClick={() => updateStatus(step)}
+                  className={`z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                    ${
+                      isCompleted
+                        ? "bg-green-500 text-white"
+                        : isActive
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-300 text-black"
+                    }`}
+                >
+                  {index + 1}
+                </button>
 
-        {/* اللابل */}
-        <span className="text-xs mt-2 text-center">
-          {statusOptions.find(s => s.value === step)?.label}
-        </span>
-      </div>
-    );
-  })}
-</div>
+                {/* اللابل */}
+                <span className="text-xs mt-2 text-center">
+                  {statusOptions.find(s => s.value === step)?.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
 
       </main>

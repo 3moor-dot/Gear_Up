@@ -7,6 +7,8 @@ import Sidebar from "../../../components/Customer/customer_sidebar";
 import Header from "../../../components/Customer/customer_header";
 import { useTheme } from "../../../contexts/ThemeContext";
 import {  Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle ,User  } from "lucide-react";
+import { Settings } from "lucide-react";
+
 
  const statusMap: any = {
    Accepted: "تم القبول",
@@ -25,10 +27,18 @@ const statusOptions = [
   { value: "Cancelled", label: "تم الإلغاء" }
 ];
 
-const statusOrder = [
+// القائمة الكاملة (ميكانيكي ييجي للعميل)
+const statusOrderFull = [
   "Accepted",
   "OnTheWay",
   "Arrived",
+  "InProgress",
+  "Completed"
+];
+
+// القائمة المختصرة (العميل يروح للميكانيكي)
+const statusOrderShort = [
+  "Accepted",
   "InProgress",
   "Completed"
 ];
@@ -49,7 +59,6 @@ const RequestTracking = () => {
   const [loading, setLoading] = useState(true);
 
   const token = sessionStorage.getItem("userToken");
-  const currentIndex = statusOrder.indexOf(request?.status);
   const [openImg, setOpenImg] = useState(false);
 
   useEffect(() => {
@@ -80,7 +89,7 @@ const RequestTracking = () => {
       }
     };
   
-    load(); // أول مرة بس
+    load(); 
   
     const interval = setInterval(load, 5000);
   
@@ -91,6 +100,12 @@ const RequestTracking = () => {
   if (loading && !request) {
     return <p className="p-10 text-center">جاري التحميل...</p>;
   }
+
+  // تحديد القائمة المناسبة بناءً على طريقة الخدمة
+  const activeStatusOrder = request?.serviceMode === "CustomerGoesToMechanic" ? statusOrderShort : statusOrderFull;
+  
+  // حساب المؤشر الحالي بناءً على القائمة النشطة
+  const currentIndex = activeStatusOrder.indexOf(request?.status || "");
 
   return (
   
@@ -140,14 +155,20 @@ const RequestTracking = () => {
 
 </div>
 
+<p className="flex items-start gap-2">
+  <ClipboardList className="w-4 h-4 text-sky-500 mt-1" />
+  <strong>المشكلة:</strong> {request?.issueDescription}
+</p>
 
+{/* 🔧 تعديل قسم الخدمة ليطابق صفحة الميكانيكي */}
 {request?.serviceType && (
   <p>
-    
-    <Wrench className="w-4 h-4 inline-block mr-1" />
+    <Wrench className="w-4 h-4 text-sky-500 inline-block ml-1" />
+    <strong>الخدمة:</strong>{" "}
     {serviceTypeMap[request.serviceType] || request.serviceType}
   </p>
 )}
+
 
 {/* 📌 نوع الطلب */}
 
@@ -157,21 +178,14 @@ const RequestTracking = () => {
   {request?.requestType === "Emergency" ? "طارئ" : "مجدول"}
 </p>
 
-
-
 <p className="flex items-center gap-2">
-  <Wrench className="w-4 h-4 text-sky-500" />
-  <strong>نوع الخدمة:</strong>{" "}
+  <Settings className="w-4 h-4 text-sky-500" />
+  <strong>طريقة تلقي الخدمة:</strong>{" "}
   {request?.serviceMode === "MechanicComesToCustomer"
     ? "ميكانيكي متنقل"
     : request?.serviceMode === "CustomerGoesToMechanic"
     ? "الذهاب إلى الورشة"
     : "غير محدد"}
-</p>
-
-<p className="flex items-start gap-2">
-  <ClipboardList className="w-4 h-4 text-sky-500 mt-1" />
-  <strong>المشكلة:</strong> {request?.issueDescription}
 </p>
 
 
@@ -211,7 +225,8 @@ const RequestTracking = () => {
 </p>
 
 <div className="flex items-center justify-between mt-6">
-  {statusOrder.map((step, index) => {
+  {/* استخدام activeStatusOrder هنا */}
+  {activeStatusOrder.map((step, index) => {
     const isCompleted = index < currentIndex;
     const isActive = index === currentIndex;
 
@@ -219,7 +234,7 @@ const RequestTracking = () => {
       <div key={step} className="flex-1 flex flex-col items-center relative">
 
         {/* line */}
-        {index !== statusOrder.length - 1 && (
+        {index !== activeStatusOrder.length - 1 && (
           <div
             className={`absolute top-4 right-1/2 w-full h-1 z-0 ${
               index < currentIndex ? "bg-green-500" : "bg-gray-300"
