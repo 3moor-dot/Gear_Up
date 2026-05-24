@@ -346,7 +346,10 @@ const AdditionalTab = () => {
     fetchSummary();
   }, []);
 
-  const selectedMainObj = specializations.find((s) => s.id === selectedMain);
+  // const selectedMainObj = specializations.find((s) => s.id === selectedMain);
+  const selectedMainObj = specializations.find(
+    (s) => String(s.id) === String(selectedMain)
+  );
   const subList = selectedMainObj?.subSpecializations || [];
 
  
@@ -722,7 +725,12 @@ if (!data.isAvailable || canEnableAvailability()) {
             className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
           >
             <option value="">اختر التخصص الرئيسي</option>
-            {specializations.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
+            {/* {specializations.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))} */}
+            {specializations.map((s) => (
+  <option key={s.id} value={String(s.id)}>
+    {s.name}
+  </option>
+))}
           </select>
         </div>
 
@@ -746,7 +754,12 @@ if (!data.isAvailable || canEnableAvailability()) {
               className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
             >
               <option value="">اختر التخصص الفرعي</option>
-              {subList.map((sub: any) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))}
+              {/* {subList.map((sub: any) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))} */}
+              {subList.map((sub: any) => (
+  <option key={sub.id} value={String(sub.id)}>
+    {sub.name}
+  </option>
+))}
             </select>
           </div>
         )}
