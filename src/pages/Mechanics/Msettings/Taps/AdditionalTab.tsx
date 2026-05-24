@@ -17,6 +17,7 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
         جاري تحميل الخريطة...
       </div>
     );
+
   const defaultCenter = { lat: 26.8206, lng: 30.8025 }; // مصر
   const center =
     latitude && longitude
@@ -139,56 +140,102 @@ const AdditionalTab = () => {
   });
   
 
-   useEffect(() => {
-    // 1. Set Main Specialty
-    if (data?.mainSpecialty?.length && specializations.length > 0) {
-      const mainId = String(data.mainSpecialty[0]);
-      const mainExists = specializations.some((s) => String(s.id) === mainId);
+  //  useEffect(() => {
+  //   // 1. Set Main Specialty
+  //   if (data?.mainSpecialty?.length && specializations.length > 0) {
+  //     const mainId = String(data.mainSpecialty[0]);
+  //     const mainExists = specializations.some((s) => String(s.id) === mainId);
       
-      if (mainExists) {
-        setSelectedMain(mainId);
-      }
-    }
+  //     if (mainExists) {
+  //       setSelectedMain(mainId);
+  //     }
+  //   }
 
-    // 2. Set Sub Specialty (Auto-Correction Logic)
-    if (selectedMain && specializations.length > 0) {
-      const mainObj = specializations.find(
-        (s) => String(s.id) === String(selectedMain)
-      );
+  //   // 2. Set Sub Specialty (Auto-Correction Logic)
+  //   if (selectedMain && specializations.length > 0) {
+  //     const mainObj = specializations.find(
+  //       (s) => String(s.id) === String(selectedMain)
+  //     );
       
-      const currentSubList = mainObj?.subSpecializations || [];
+  //     const currentSubList = mainObj?.subSpecializations || [];
 
-      if (data?.subSpecialty) {
-        const apiSubId = String(data.subSpecialty);
-        const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
+  //     if (data?.subSpecialty) {
+  //       const apiSubId = String(data.subSpecialty);
+  //       const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
 
-        if (subExists) {
-          // الـ ID صحيح وموجود -> نختاره
-          setSelectedSub(apiSubId);
-        } else {
-          // ⚠️ مشكلة: الـ ID في البروفايل مش موجود في القائمة (Ghost ID)
-          // الحل: نمسح القيمة الغلط من data ونحط القيمة الصح
+  //       if (subExists) {
+  //         // الـ ID صحيح وموجود -> نختاره
+  //         setSelectedSub(apiSubId);
+  //       } else {
+  //         // ⚠️ مشكلة: الـ ID في البروفايل مش موجود في القائمة (Ghost ID)
+  //         // الحل: نمسح القيمة الغلط من data ونحط القيمة الصح
           
-          if (currentSubList.length === 1) {
-            // لو فيه خيار واحد بس، ناخده ونحدّث الـ data
-            const newId = String(currentSubList[0].id);
-            setSelectedSub(newId);
-            setData((prev) => ({ ...prev, subSpecialty: newId }));
-          } else {
-            // لو فيه أكتر من خيار، نمسح الاختيار القديم ونخلي المستخدم يختار
-            setSelectedSub("");
-            setData((prev) => ({ ...prev, subSpecialty: "" }));
-          }
+  //         if (currentSubList.length === 1) {
+  //           // لو فيه خيار واحد بس، ناخده ونحدّث الـ data
+  //           const newId = String(currentSubList[0].id);
+  //           setSelectedSub(newId);
+  //           setData((prev) => ({ ...prev, subSpecialty: newId }));
+  //         } else {
+  //           // لو فيه أكتر من خيار، نمسح الاختيار القديم ونخلي المستخدم يختار
+  //           setSelectedSub("");
+  //           setData((prev) => ({ ...prev, subSpecialty: "" }));
+  //         }
+  //       }
+  //     } else if (currentSubList.length === 1) {
+  //        // لو مفيش قيمة في data أصلاً، وفي عنصر واحد، نختاره (اختيار ذكي)
+  //        const newId = String(currentSubList[0].id);
+  //        setSelectedSub(newId);
+  //     } else {
+  //       setSelectedSub("");
+  //     }
+  //   }
+  // }, [data, specializations, selectedMain]);
+    // Sync Selects with Data + Aggressive Auto-Fix
+    useEffect(() => {
+      // 1. Set Main Specialty
+      if (data?.mainSpecialty?.length && specializations.length > 0) {
+        const mainId = String(data.mainSpecialty[0]);
+        const mainExists = specializations.some((s) => String(s.id) === mainId);
+        
+        if (mainExists) {
+          setSelectedMain(mainId);
         }
-      } else if (currentSubList.length === 1) {
-         // لو مفيش قيمة في data أصلاً، وفي عنصر واحد، نختاره (اختيار ذكي)
-         const newId = String(currentSubList[0].id);
-         setSelectedSub(newId);
-      } else {
-        setSelectedSub("");
       }
-    }
-  }, [data, specializations, selectedMain]);
+  
+      // 2. Set Sub Specialty (Aggressive Fix)
+      if (selectedMain && specializations.length > 0) {
+        const mainObj = specializations.find(
+          (s) => String(s.id) === String(selectedMain)
+        );
+        
+        const currentSubList = mainObj?.subSpecializations || [];
+  
+        // ⚡ الحل الجذري: لو فيه عنصر واحد، اختياره فوراً بغض النظر عن الـ ID القديم
+        if (currentSubList.length === 1) {
+          const onlyId = String(currentSubList[0].id);
+          
+          // بنحدث الـ State و الـ Data عشان يتفقوا
+          if (selectedSub !== onlyId) {
+            setSelectedSub(onlyId);
+            setData((prev) => ({ ...prev, subSpecialty: onlyId }));
+          }
+        } 
+        // لو فيه أكتر من خيار، بنحاول نطابق الـ ID
+        else if (currentSubList.length > 0 && data?.subSpecialty) {
+          const apiSubId = String(data.subSpecialty);
+          const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
+  
+          if (subExists && selectedSub !== apiSubId) {
+            setSelectedSub(apiSubId);
+          } else if (!subExists && selectedSub !== "") {
+            // لو الـ ID مش موجود، بنفضي الاختيار عشان المستخدم يختار الصح
+            setSelectedSub("");
+          }
+        } else if (selectedSub !== "") {
+          setSelectedSub("");
+        }
+      }
+    }, [data, specializations, selectedMain]);
 
 
     useEffect(() => {
@@ -698,7 +745,7 @@ if (!data.isAvailable || canEnableAvailability()) {
           </select>
         </div>
 
-        {subList.length > 0 && (
+        {/* {subList.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-bold">التخصص الفرعي</label>
             <select
@@ -724,7 +771,35 @@ if (!data.isAvailable || canEnableAvailability()) {
                 </option>
               ))}
             </select>
+          </div> */}
+                  {subList.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-sm font-bold">التخصص الفرعي</label>
+            <select
+              // تم حذف key={selectedMain} عشان الفلاش
+              disabled={!isEditing}
+              value={selectedSub}
+              onChange={(e) => {
+                const value = e.target.value;
+             
+                setSelectedSub(value);
+             
+                setData((prev) => ({
+                  ...prev,
+                  subSpecialty: value,
+                }));
+              }}
+              className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
+            >
+              <option value="">اختر التخصص الفرعي</option>
+              {subList.map((sub: any) => (
+                <option key={sub.id} value={String(sub.id)}>
+                  {sub.name}
+                </option>
+              ))}
+            </select>
           </div>
+        
         )}
       </div>
 
