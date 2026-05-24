@@ -4,30 +4,24 @@ import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { FaEdit, FaSave, FaSpinner, FaLocationArrow, FaCloudUploadAlt, FaCheckCircle } from "react-icons/fa";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
-
 // --- Map Component ---
 function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.tst,
   });
-
   if (loadError)
     return <div className="text-red-500 text-sm">خطأ في تحميل الخريطة</div>;
-
   if (!isLoaded)
     return (
       <div className="h-[250px] flex items-center justify-center animate-pulse bg-gray-200 rounded-xl">
         جاري تحميل الخريطة...
       </div>
     );
-
   const defaultCenter = { lat: 26.8206, lng: 30.8025 }; // مصر
-
   const center =
     latitude && longitude
       ? { lat: Number(latitude), lng: Number(longitude) }
       : defaultCenter;
-
   return (
     <div
       className={`rounded-xl overflow-hidden border ${
@@ -60,7 +54,6 @@ function MapPicker({ latitude, longitude, setLocation, isEditing, dark }: any) {
     </div>
   );
 }
-
 // ---------------- TYPE ----------------
 interface AdditionalData {
   location: string;
@@ -73,10 +66,9 @@ interface AdditionalData {
   workingHoursFrom: string;
   workingHoursTo: string;
   experience: string;
-  workshopLicenseUrl?: string; 
+  workshopLicenseUrl?: string;
   status?: number;
 }
-
 // ---------------- HELPERS ----------------
 const getUserIdFromToken = () => {
   const token = sessionStorage.getItem("userToken");
@@ -93,27 +85,24 @@ const getUserIdFromToken = () => {
     return "";
   }
 };
-
 const getStorageKey = () => {
   const token = sessionStorage.getItem("userToken");
   if (!token) return "mechanic_data_guest";
-
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
-    
+   
     const payload = JSON.parse(jsonPayload);
     const userId = payload.nameid || payload.sub || payload.id || payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-    
+   
     return `mechanic_data_${userId}`;
   } catch {
     return `mechanic_data_${token}`;
   }
 };
-
 const defaultData: AdditionalData = {
   location: "",
   latitude: undefined,
@@ -121,31 +110,25 @@ const defaultData: AdditionalData = {
   mainSpecialty: [],
   subSpecialty: "",
   fieldVisit: false,
-  isAvailable: false, 
+  isAvailable: false,
   workingHoursFrom: "08:00",
   workingHoursTo: "18:00",
   experience: "",
   workshopLicenseUrl: undefined,
   status: 0,
 };
-
 // ---------------- COMPONENT ----------------
 const AdditionalTab = () => {
   const { dark } = useTheme();
   const token = sessionStorage.getItem("userToken") || "";
-
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   const [specializations, setSpecializations] = useState<any[]>([]);
   const [selectedMain, setSelectedMain] = useState("");
   const [selectedSub, setSelectedSub] = useState("");
-
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
-
   const [data, setData] = useState<AdditionalData>(() => {
     try {
       const saved = localStorage.getItem(getStorageKey());
@@ -154,7 +137,6 @@ const AdditionalTab = () => {
       return defaultData;
     }
   });
-
   // Sync Selects with Data
   // useEffect(() => {
   //   if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
@@ -162,30 +144,59 @@ const AdditionalTab = () => {
   //   } else {
   //     setSelectedMain("");
   //   }
-    
+   
   //   if (data?.subSpecialty) {
   //     setSelectedSub(String(data.subSpecialty));
   //   } else {
   //     setSelectedSub("");
   //   }
   // }, [data]);
-  // Sync Selects with Data + Ensure subList is ready
-useEffect(() => {
-  if (data?.mainSpecialty?.length) {
-    const mainId = String(data.mainSpecialty[0]);
-    setSelectedMain(mainId);
-  }
-
-  // تأخير بسيط عشان specializations تكون محملة
-  const timer = setTimeout(() => {
-    if (data?.subSpecialty) {
-      setSelectedSub(String(data.subSpecialty));
-    }
-  }, 300);
-
-  return () => clearTimeout(timer);
-}, [data, specializations]);   // ← added specializations as dependency
-
+    // Sync Selects with Data + Smart Fallback
+    useEffect(() => {
+      // 1. Set Main Specialty
+      // بنشوف هل الـ ID اللي جاي من الـ data موجود فـ الـ list اللي جبناها من API التخصصات
+      if (data?.mainSpecialty?.length && specializations.length > 0) {
+        const mainId = String(data.mainSpecialty[0]);
+        const mainExists = specializations.some((s) => String(s.id) === mainId);
+        
+        if (mainExists) {
+          setSelectedMain(mainId);
+        }
+      }
+  
+      // 2. Set Sub Specialty (Smart Logic)
+      // بنشوف هل التخصص الفرعي اللي جاي موجود جوه التخصص الرئيسي المختار
+      if (selectedMain && specializations.length > 0) {
+        const mainObj = specializations.find(
+          (s) => String(s.id) === String(selectedMain)
+        );
+        
+        const currentSubList = mainObj?.subSpecializations || [];
+  
+        if (data?.subSpecialty) {
+          const apiSubId = String(data.subSpecialty);
+          
+          // هل الـ ID موجود بالفعل؟
+          const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
+  
+          if (subExists) {
+            // موجود تمام، نختاره
+            setSelectedSub(apiSubId);
+          } else {
+            // مش موجود (تغير الـ ID من الباك اند)
+            // لو فيه خيار واحد بس، ناخده عشان يظهر في الدروب داون
+            if (currentSubList.length === 1) {
+              setSelectedSub(String(currentSubList[0].id));
+            } else {
+              // لو فيه أكتر من خيار، نفضي الاختيار عشان المستخدم يختار الصح
+              setSelectedSub("");
+            }
+          }
+        } else {
+          setSelectedSub("");
+        }
+      }
+    }, [data, specializations, selectedMain]); // أضفنا specializations و selectedMain هنا عشان يعمل تحديث صحيح
   // Fetch Specializations
   useEffect(() => {
     const fetchSpecializations = async () => {
@@ -194,19 +205,18 @@ useEffect(() => {
           "https://gearupapp.runasp.net/api/specializations",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
+       
         const rawData: any[] = res.data;
         const namesWithSubs = new Set(
           rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
         );
-        
+       
         const filteredRaw = rawData.filter((item: any) => {
           if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
             return false;
           }
-          return true; 
+          return true;
         });
-
         const mergedMap = new Map<string, any>();
         filteredRaw.forEach((item: any) => {
           if (mergedMap.has(item.name)) {
@@ -219,155 +229,124 @@ useEffect(() => {
             });
           }
         });
-
         const cleanedData = Array.from(mergedMap.values()).map((main: any) => ({
           ...main,
           subSpecializations: Array.from(
             new Map(main.subSpecializations.map((sub: any) => [sub.name, sub])).values()
           )
         }));
-
         setSpecializations(cleanedData);
-
       } catch (err) {
         console.log(err);
       }
     };
-
     fetchSpecializations();
   }, []);
 
-  
-  // useEffect(() => {
-  //   const fetchSummary = async () => {
-  //     try {
-  //       const res = await axios.get(
-  //         "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         }
-  //       );
-  
-  //       const apiData = res.data;
-  
-  //       setData((prev) => ({
-  //         ...prev,
-  
-  //         status: apiData.status,
-  
-  //         workshopLicenseUrl:
-  //           apiData.workshopLicenseUrl ??
-  //           prev.workshopLicenseUrl,
-  
-  //         latitude:
-  //           apiData.latitude ??
-  //           prev.latitude,
-  
-  //         longitude:
-  //           apiData.longitude ??
-  //           prev.longitude,
-  
-  //         fieldVisit:
-  //           apiData.supportsFieldVisit ??
-  //           prev.fieldVisit,
-  
-  //         isAvailable:
-  //           apiData.isAvailable ??
-  //           prev.isAvailable,
-  
-  //         workingHoursFrom:
-  //           apiData.workStartTime
-  //             ?.slice(0, 5) ??
-  //           prev.workingHoursFrom,
-  
-  //         workingHoursTo:
-  //           apiData.workEndTime
-  //             ?.slice(0, 5) ??
-  //           prev.workingHoursTo,
-  
-  //         mainSpecialty:
-  //           apiData.primarySpecialization?.id
-  //             ? [apiData.primarySpecialization.id]
-  //             : prev.mainSpecialty,
-  
-  //         subSpecialty:
-  //           apiData.subSpecializations?.[0]?.id ??
-  //           prev.subSpecialty,
-  //       }));
-  
-  //     } catch (err) {
-  //       console.log("Error fetching summary:", err);
-  //     }
-  //   };
-  
-  //   fetchSummary();
-  // }, []);
-  // Fetch Profile Summary
-useEffect(() => {
-  const fetchSummary = async () => {
-    try {
-      const res = await axios.get(
-        "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const apiData = res.data;
-
-      setData((prev) => ({
-        ...prev,
-        status: apiData.status,
-        workshopLicenseUrl: apiData.workshopLicenseUrl ?? prev.workshopLicenseUrl,
-        latitude: apiData.latitude ?? prev.latitude,
-        longitude: apiData.longitude ?? prev.longitude,
-        fieldVisit: apiData.supportsFieldVisit ?? prev.fieldVisit,
-        isAvailable: apiData.isAvailable ?? prev.isAvailable,
-        workingHoursFrom: apiData.workStartTime?.slice(0, 5) ?? prev.workingHoursFrom,
-        workingHoursTo: apiData.workEndTime?.slice(0, 5) ?? prev.workingHoursTo,
-
-        mainSpecialty: apiData.primarySpecialization?.id 
-          ? [apiData.primarySpecialization.id] 
-          : prev.mainSpecialty,
-
-        subSpecialty: apiData.subSpecializations?.[0]?.id ?? prev.subSpecialty,
-      }));
-
-    } catch (err) {
-      console.error("Error fetching summary:", err);
-    }
-  };
-
-  if (token) fetchSummary();
-}, [token]);
-
-
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+ 
+        const apiData = res.data;
+ 
+        setData((prev) => ({
+          ...prev,
+ 
+          status: apiData.status,
+ 
+          workshopLicenseUrl:
+            apiData.workshopLicenseUrl ??
+            prev.workshopLicenseUrl,
+ 
+          latitude:
+            apiData.latitude ??
+            prev.latitude,
+ 
+          longitude:
+            apiData.longitude ??
+            prev.longitude,
+ 
+          fieldVisit:
+            apiData.supportsFieldVisit ??
+            prev.fieldVisit,
+ 
+          isAvailable:
+            apiData.isAvailable ??
+            prev.isAvailable,
+ 
+          workingHoursFrom:
+            apiData.workStartTime
+              ?.slice(0, 5) ??
+            prev.workingHoursFrom,
+ 
+          workingHoursTo:
+            apiData.workEndTime
+              ?.slice(0, 5) ??
+            prev.workingHoursTo,
+ 
+          mainSpecialty:
+            apiData.primarySpecialization?.id
+              ? [apiData.primarySpecialization.id]
+              : prev.mainSpecialty,
+ 
+          subSpecialty:
+            apiData.subSpecializations?.[0]?.id ??
+            prev.subSpecialty,
+        }));
+ 
+      } catch (err) {
+        console.log("Error fetching summary:", err);
+      }
+    };
+ 
+    fetchSummary();
+  }, []);
+  // Fetch Summary (License)
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(
+          "https://gearupapp.runasp.net/api/mechanics/my/profile/summary",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+ 
+        const apiData = res.data;
+ 
+        setData((prev) => ({
+          ...prev,
+          workshopLicenseUrl: apiData.workshopLicenseUrl,
+          status: apiData.status,
+        }));
+ 
+      } catch (err) {
+        console.log("Error fetching summary:", err);
+      }
+    };
+ 
+    fetchSummary();
+  }, []);
   // const selectedMainObj = specializations.find((s) => s.id === selectedMain);
   const selectedMainObj = specializations.find(
     (s) => String(s.id) === String(selectedMain)
   );
-
-  
   const subList = selectedMainObj?.subSpecializations || [];
-
-  console.log({
-    selectedMain,
-    selectedSub,
-    mainFound: !!selectedMainObj,
-    subListLength: subList.length,
-    subFromApi: data.subSpecialty
-  });
-
   const canEnableAvailability = () => {
     return !!data.workshopLicenseUrl && data.status === 1;
   };
-
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
       setError("المتصفح لا يدعم تحديد الموقع");
       return;
     }
-  
+ 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setError("");
@@ -383,86 +362,68 @@ useEffect(() => {
       }
     );
   };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setLicenseFile(e.target.files[0]);
     }
   };
-
   const handleSave = async () => {
     setIsSaving(true);
     setError("");
     setSuccess("");
-
     // 1. Validation
     if (!selectedMain) {
       setError("يرجى اختيار التخصص الرئيسي");
       setIsSaving(false);
       return;
     }
-
     if (!data.latitude || !data.longitude) {
       setError("يرجى تحديد الموقع بدقة على الخريطة (انقر على تحديد موقعي)");
       setIsSaving(false);
       return;
     }
-
     // Validate Working Hours
 if (data.workingHoursTo <= data.workingHoursFrom) {
   setError("وقت نهاية العمل يجب أن يكون بعد وقت بداية العمل");
   setIsSaving(false);
   return;
 }
-
-
     try {
       const token = sessionStorage.getItem("userToken") || "";
-
       // 2. Prepare Payloads
       const payloadLocation = {
         latitude: Number(data.latitude),
         longitude: Number(data.longitude),
         location: data.location || "تم التحديد عبر الخريطة",
       };
-
       const payloadSpecialization = {
         primarySpecializationId: selectedMain,
         subSpecializationId: selectedSub || null,
       };
-
       const payloadFieldVisit = {
         supportsFieldVisit: data.fieldVisit,
       };
-
       const payloadWorkingHours = {
         workStartTime: data.workingHoursFrom,
         workEndTime: data.workingHoursTo,
       };
-
       // --- 3. API CALLS ---
-
       // Update Location
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/location", payloadLocation, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       // Update Specialization
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/profile/complete", payloadSpecialization, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       // Update Field Visit
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/field-visit", payloadFieldVisit, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       // Update Working Hours
       await axios.put("https://gearupapp.runasp.net/api/mechanics/my/working-hours", payloadWorkingHours, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-
 if (!data.isAvailable || canEnableAvailability()) {
   try {
     await axios.put(
@@ -483,18 +444,15 @@ if (!data.isAvailable || canEnableAvailability()) {
     "تم حفظ باقي البيانات، لكن لا يمكن تفعيل حالة التوفر إلا بعد مراجعة الرخصة من الإدارة"
   );
 }
-
       // Upload License File (if exists)
       if (licenseFile) {
         const formData = new FormData();
         formData.append("File", licenseFile);
         formData.append("IsWorkshopLicense", "true");
-
         const isUpdate = !!data.workshopLicenseUrl;
-
         if (isUpdate) {
           await axios.put("https://gearupapp.runasp.net/api/mechanics/documents/workshop-license", formData, {
-            headers: { 
+            headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data'
             },
@@ -505,16 +463,14 @@ if (!data.isAvailable || canEnableAvailability()) {
             throw new Error("لا يمكن تحديد معرف المستخدم");
           }
           formData.append("UserId", userId);
-
           await axios.post("https://gearupapp.runasp.net/api/mechanics/documents", formData, {
-            headers: { 
+            headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data'
             },
           });
         }
       }
-
       // 4. Save to LocalStorage and Update UI
       localStorage.setItem(
         getStorageKey(),
@@ -524,25 +480,22 @@ if (!data.isAvailable || canEnableAvailability()) {
           subSpecialty: selectedSub,
         })
       );
-
       if (licenseFile) {
          setData(prev => ({
            ...prev,
            workshopLicenseUrl: URL.createObjectURL(licenseFile)
          }));
       }
-
       setSuccess("تم الحفظ بنجاح");
       setIsEditing(false);
       setLicenseFile(null);
       setTimeout(() => setSuccess(""), 2500);
-
     } catch (err: any) {
       console.error("Save Error:", err);
-      
+     
       // --- Enhanced Error Handling ---
       let errorMessage = "حصل خطأ غير متوقع";
-      
+     
       if (err?.response?.data) {
         const errorData = err.response.data;
         if (typeof errorData === 'string') {
@@ -557,13 +510,11 @@ if (!data.isAvailable || canEnableAvailability()) {
       } else if (err?.message) {
         errorMessage = err.message;
       }
-
       setError(errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
-
   const handleCancel = () => {
     setIsEditing(false);
     setLicenseFile(null);
@@ -576,9 +527,7 @@ if (!data.isAvailable || canEnableAvailability()) {
         // ignore error
     }
   };
-
   const displayImage = licenseFile ? URL.createObjectURL(licenseFile) : data.workshopLicenseUrl;
-
   return (
     <div
       className={`rounded-2xl border p-6 space-y-6 ${
@@ -590,7 +539,6 @@ if (!data.isAvailable || canEnableAvailability()) {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold">البيانات الإضافية</h3>
-
         <div className="flex gap-2">
           {isEditing ? (
             <>
@@ -606,11 +554,9 @@ if (!data.isAvailable || canEnableAvailability()) {
           )}
         </div>
       </div>
-
       {/* messages */}
       {success && <div className="p-3 bg-green-500/10 text-green-500 text-center text-sm font-medium">{success}</div>}
       {error && <div className="p-3 bg-red-500/10 text-red-500 text-center text-sm font-medium">{error}</div>}
-
       {/* ================= WORKSHOP LICENSE ================= */}
       <div className={`p-4 rounded-xl border ${!dark ? "bg-white border-gray-200" : "bg-[#131c2f] border-gray-700"}`}>
         <div className="flex items-center justify-between mb-4">
@@ -623,7 +569,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             </span>
           )}
         </div>
-
         <div
           className={`relative w-full flex flex-col items-center justify-center min-h-[240px] rounded-xl transition-all duration-300 border-2 overflow-hidden group
             ${displayImage
@@ -669,7 +614,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             )
           )}
         </div>
-
         {isEditing && (
           <div className="mt-3 text-center">
              <p className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>
@@ -677,7 +621,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             </p>
           </div>
         )}
-
         <input
           type="file"
           id="license-upload"
@@ -686,7 +629,6 @@ if (!data.isAvailable || canEnableAvailability()) {
           className="hidden"
         />
       </div>
-
       {/* ================= LOCATION ================= */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -697,7 +639,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             </button>
           )}
         </div>
-
         <MapPicker
           latitude={data.latitude}
           longitude={data.longitude}
@@ -706,7 +647,6 @@ if (!data.isAvailable || canEnableAvailability()) {
           dark={dark}
         />
       </div>
-
       {/* ================= SPECIALIZATION ================= */}
       <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4`}>
         <div className="space-y-2">
@@ -717,10 +657,10 @@ if (!data.isAvailable || canEnableAvailability()) {
             // onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
             onChange={(e) => {
               const value = e.target.value;
-            
+           
               setSelectedMain(value);
               setSelectedSub("");
-            
+           
               setData((prev) => ({
                 ...prev,
                 mainSpecialty: value ? [value] : [],
@@ -738,7 +678,6 @@ if (!data.isAvailable || canEnableAvailability()) {
 ))}
           </select>
         </div>
-
         {subList.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-bold">التخصص الفرعي</label>
@@ -748,9 +687,9 @@ if (!data.isAvailable || canEnableAvailability()) {
               // onChange={(e) => setSelectedSub(e.target.value)}
               onChange={(e) => {
                 const value = e.target.value;
-              
+             
                 setSelectedSub(value);
-              
+             
                 setData((prev) => ({
                   ...prev,
                   subSpecialty: value,
@@ -769,10 +708,9 @@ if (!data.isAvailable || canEnableAvailability()) {
           </div>
         )}
       </div>
-
       {/* ================= SETTINGS GRID ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
+       
         {/* FIELD VISIT */}
         <div className={`flex items-center justify-between p-3 rounded-xl border ${
           !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-700"
@@ -783,7 +721,7 @@ if (!data.isAvailable || canEnableAvailability()) {
               تقديم الخدمة في الموقع
             </p>
           </div>
-          
+         
           <div
             onClick={() => { if (isEditing) setData((prev) => ({ ...prev, fieldVisit: !prev.fieldVisit })); }}
             className={`relative w-11 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
@@ -795,7 +733,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             }`} />
           </div>
         </div>
-
         {/* AVAILABILITY (NEW) */}
         <div className={`flex items-center justify-between p-3 rounded-xl border ${
           !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-700"
@@ -806,15 +743,14 @@ if (!data.isAvailable || canEnableAvailability()) {
               قبول الطلبات الجديدة
             </p>
           </div>
-          
+         
           <div
-
             onClick={() => {
               if (!isEditing) return;
-            
+           
               // لو بيحاول يشغل التوفر
               if (!data.isAvailable) {
-            
+           
                 if (!canEnableAvailability()) {
                   setError(
                     "لا يمكن تعيين التوفر إلا بعد إرفاق صورة رخصة الورشة وتأكيدها من الإدارة"
@@ -822,16 +758,15 @@ if (!data.isAvailable || canEnableAvailability()) {
                   return;
                 }
               }
-            
+           
               setError("");
-            
+           
               setData((prev) => ({
                 ...prev,
                 isAvailable: !prev.isAvailable,
               }));
             }}
             className={`relative w-11 h-6 rounded-full transition-colors duration-300 cursor-pointer shrink-0 ${
-
               data.isAvailable ? "bg-blue-600" : (dark ? "bg-gray-600" : "bg-gray-300")
             } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
           >
@@ -840,7 +775,6 @@ if (!data.isAvailable || canEnableAvailability()) {
             }`} />
           </div>
         </div>
-
         {/* WORKING HOURS */}
         <div className={`p-3 rounded-xl border md:col-span-2 ${
           !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-700"
@@ -868,10 +802,8 @@ if (!data.isAvailable || canEnableAvailability()) {
             />
           </div>
         </div>
-
       </div>
     </div>
   );
 };
-
 export default AdditionalTab;
