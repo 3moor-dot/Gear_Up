@@ -137,112 +137,60 @@ const AdditionalTab = () => {
       return defaultData;
     }
   });
-  // Sync Selects with Data
-  // useEffect(() => {
-  //   if (data?.mainSpecialty?.length && data.mainSpecialty[0]) {
-  //     setSelectedMain(String(data.mainSpecialty[0]));
-  //   } else {
-  //     setSelectedMain("");
-  //   }
-   
-  //   if (data?.subSpecialty) {
-  //     setSelectedSub(String(data.subSpecialty));
-  //   } else {
-  //     setSelectedSub("");
-  //   }
-  // }, [data]);
-    // Sync Selects with Data + Smart Fallback
-    useEffect(() => {
-      // 1. Set Main Specialty
-      // بنشوف هل الـ ID اللي جاي من الـ data موجود فـ الـ list اللي جبناها من API التخصصات
-      if (data?.mainSpecialty?.length && specializations.length > 0) {
-        const mainId = String(data.mainSpecialty[0]);
-        const mainExists = specializations.some((s) => String(s.id) === mainId);
-        
-        if (mainExists) {
-          setSelectedMain(mainId);
-        }
+  
+
+   useEffect(() => {
+    // 1. Set Main Specialty
+    if (data?.mainSpecialty?.length && specializations.length > 0) {
+      const mainId = String(data.mainSpecialty[0]);
+      const mainExists = specializations.some((s) => String(s.id) === mainId);
+      
+      if (mainExists) {
+        setSelectedMain(mainId);
       }
-  
-      // 2. Set Sub Specialty (Smart Logic)
-      // بنشوف هل التخصص الفرعي اللي جاي موجود جوه التخصص الرئيسي المختار
-      if (selectedMain && specializations.length > 0) {
-        const mainObj = specializations.find(
-          (s) => String(s.id) === String(selectedMain)
-        );
-        
-        const currentSubList = mainObj?.subSpecializations || [];
-  
-        if (data?.subSpecialty) {
-          const apiSubId = String(data.subSpecialty);
-          
-          // هل الـ ID موجود بالفعل؟
-          const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
-  
-          if (subExists) {
-            // موجود تمام، نختاره
-            setSelectedSub(apiSubId);
-          } else {
-            // مش موجود (تغير الـ ID من الباك اند)
-            // لو فيه خيار واحد بس، ناخده عشان يظهر في الدروب داون
-            if (currentSubList.length === 1) {
-              setSelectedSub(String(currentSubList[0].id));
-            } else {
-              // لو فيه أكتر من خيار، نفضي الاختيار عشان المستخدم يختار الصح
-              setSelectedSub("");
-            }
-          }
+    }
+
+    // 2. Set Sub Specialty (Auto-Correction Logic)
+    if (selectedMain && specializations.length > 0) {
+      const mainObj = specializations.find(
+        (s) => String(s.id) === String(selectedMain)
+      );
+      
+      const currentSubList = mainObj?.subSpecializations || [];
+
+      if (data?.subSpecialty) {
+        const apiSubId = String(data.subSpecialty);
+        const subExists = currentSubList.some((sub) => String(sub.id) === apiSubId);
+
+        if (subExists) {
+          // الـ ID صحيح وموجود -> نختاره
+          setSelectedSub(apiSubId);
         } else {
-          setSelectedSub("");
+          // ⚠️ مشكلة: الـ ID في البروفايل مش موجود في القائمة (Ghost ID)
+          // الحل: نمسح القيمة الغلط من data ونحط القيمة الصح
+          
+          if (currentSubList.length === 1) {
+            // لو فيه خيار واحد بس، ناخده ونحدّث الـ data
+            const newId = String(currentSubList[0].id);
+            setSelectedSub(newId);
+            setData((prev) => ({ ...prev, subSpecialty: newId }));
+          } else {
+            // لو فيه أكتر من خيار، نمسح الاختيار القديم ونخلي المستخدم يختار
+            setSelectedSub("");
+            setData((prev) => ({ ...prev, subSpecialty: "" }));
+          }
         }
+      } else if (currentSubList.length === 1) {
+         // لو مفيش قيمة في data أصلاً، وفي عنصر واحد، نختاره (اختيار ذكي)
+         const newId = String(currentSubList[0].id);
+         setSelectedSub(newId);
+      } else {
+        setSelectedSub("");
       }
-    }, [data, specializations, selectedMain]); // أضفنا specializations و selectedMain هنا عشان يعمل تحديث صحيح
-  // Fetch Specializations
-  // useEffect(() => {
-  //   const fetchSpecializations = async () => {
-  //     try {
-  //       const res = await axios.get(
-  //         "https://gearupapp.runasp.net/api/specializations",
-  //         { headers: { Authorization: `Bearer ${token}` } }
-  //       );
-       
-  //       const rawData: any[] = res.data;
-  //       const namesWithSubs = new Set(
-  //         rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
-  //       );
-       
-  //       const filteredRaw = rawData.filter((item: any) => {
-  //         if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
-  //           return false;
-  //         }
-  //         return true;
-  //       });
-  //       const mergedMap = new Map<string, any>();
-  //       filteredRaw.forEach((item: any) => {
-  //         if (mergedMap.has(item.name)) {
-  //           const existing = mergedMap.get(item.name);
-  //           existing.subSpecializations.push(...item.subSpecializations);
-  //         } else {
-  //           mergedMap.set(item.name, {
-  //             ...item,
-  //             subSpecializations: [...item.subSpecializations]
-  //           });
-  //         }
-  //       });
-  //       const cleanedData = Array.from(mergedMap.values()).map((main: any) => ({
-  //         ...main,
-  //         subSpecializations: Array.from(
-  //           new Map(main.subSpecializations.map((sub: any) => [sub.name, sub])).values()
-  //         )
-  //       }));
-  //       setSpecializations(cleanedData);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   };
-  //   fetchSpecializations();
-  // }, []);
-    // Fetch Specializations
+    }
+  }, [data, specializations, selectedMain]);
+
+
     useEffect(() => {
       const fetchSpecializations = async () => {
         try {
@@ -719,6 +667,7 @@ if (!data.isAvailable || canEnableAvailability()) {
           dark={dark}
         />
       </div>
+    
       {/* ================= SPECIALIZATION ================= */}
       <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4`}>
         <div className="space-y-2">
@@ -726,7 +675,6 @@ if (!data.isAvailable || canEnableAvailability()) {
           <select
             disabled={!isEditing}
             value={selectedMain}
-            // onChange={(e) => { setSelectedMain(e.target.value); setSelectedSub(""); }}
             onChange={(e) => {
               const value = e.target.value;
            
@@ -742,21 +690,21 @@ if (!data.isAvailable || canEnableAvailability()) {
             className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
           >
             <option value="">اختر التخصص الرئيسي</option>
-            {/* {specializations.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))} */}
             {specializations.map((s) => (
-  <option key={s.id} value={String(s.id)}>
-    {s.name}
-  </option>
-))}
+              <option key={s.id} value={String(s.id)}>
+                {s.name}
+              </option>
+            ))}
           </select>
         </div>
+
         {subList.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-bold">التخصص الفرعي</label>
             <select
+              key={selectedMain} 
               disabled={!isEditing}
               value={selectedSub}
-              // onChange={(e) => setSelectedSub(e.target.value)}
               onChange={(e) => {
                 const value = e.target.value;
              
@@ -770,16 +718,18 @@ if (!data.isAvailable || canEnableAvailability()) {
               className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
             >
               <option value="">اختر التخصص الفرعي</option>
-              {/* {subList.map((sub: any) => (<option key={sub.id} value={sub.id}>{sub.name}</option>))} */}
               {subList.map((sub: any) => (
-  <option key={sub.id} value={String(sub.id)}>
-    {sub.name}
-  </option>
-))}
+                <option key={sub.id} value={String(sub.id)}>
+                  {sub.name}
+                </option>
+              ))}
             </select>
           </div>
         )}
       </div>
+
+
+
       {/* ================= SETTINGS GRID ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
        
