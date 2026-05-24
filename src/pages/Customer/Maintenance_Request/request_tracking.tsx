@@ -9,7 +9,6 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import {  Wrench,ClipboardCheck, Phone, ClipboardList,  AlertTriangle ,User  } from "lucide-react";
 import { Settings } from "lucide-react";
 
-
  const statusMap: any = {
    Accepted: "تم القبول",
    OnTheWay: "في الطريق",
@@ -178,7 +177,7 @@ const RequestTracking = () => {
   {request?.requestType === "Emergency" ? "طارئ" : "مجدول"}
 </p>
 
-<p className="flex items-center gap-2">
+{/* <p className="flex items-center gap-2">
   <Settings className="w-4 h-4 text-sky-500" />
   <strong>طريقة تلقي الخدمة:</strong>{" "}
   {request?.serviceMode === "MechanicComesToCustomer"
@@ -186,7 +185,33 @@ const RequestTracking = () => {
     : request?.serviceMode === "CustomerGoesToMechanic"
     ? "الذهاب إلى الورشة"
     : "غير محدد"}
-</p>
+</p> */}
+{/* طريقة تلقي الخدمة تظهر فقط لو الطلب مش مجدول */}
+{request?.requestType !== "Scheduled" && (
+  <p className="flex items-center gap-2">
+    <Settings className="w-4 h-4 text-sky-500" />
+    <strong>طريقة تلقي الخدمة:</strong>{" "}
+    {request?.serviceMode === "MechanicComesToCustomer"
+      ? "ميكانيكي متنقل"
+      : request?.serviceMode === "CustomerGoesToMechanic"
+      ? "الذهاب إلى الورشة"
+      : "غير محدد"}
+  </p>
+)}
+
+{/* ميعاد الخدمة يظهر فقط لو الطلب مجدول */}
+{request?.requestType === "Scheduled" && request?.scheduledDateTime && (
+  <p className="flex items-center gap-2">
+    <Settings className="w-4 h-4 text-sky-500" />
+    <strong>ميعاد الخدمة:</strong>{" "}
+    {new Date(request.scheduledDateTime).toLocaleDateString("ar-EG")}
+    {" - "}
+    {new Date(request.scheduledDateTime).toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </p>
+)}
 
 
 {/* 🖼️ صورة المشكلة */}

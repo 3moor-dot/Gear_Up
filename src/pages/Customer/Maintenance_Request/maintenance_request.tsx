@@ -268,6 +268,39 @@ const MaintenanceRequest = () => {
     console.log("LOCATION BEFORE SEND:", location);
     if (!validateStepOne()) return;
 
+
+
+// if (requestType === 2) {
+//   const selected = new Date(`${scheduledDate}T${scheduledTime}`);
+//   const now = new Date();
+
+//   if (selected <= now) {
+//     Swal.fire({
+//       icon: "error",
+//       title: "موعد غير صالح",
+//       text: "يجب أن يكون الوقت في المستقبل",
+//     });
+//     return;
+//   }
+// }
+if (requestType === 2) {
+  const selectedDate = new Date(scheduledDate);
+  const today = new Date();
+
+  // نخليهم "تاريخ فقط" بدون وقت
+  selectedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  if (selectedDate <= today) {
+    Swal.fire({
+      icon: "error",
+      title: "موعد غير صالح",
+      text: "يجب أن يكون تاريخ الطلب بعد تاريخ اليوم",
+    });
+    return;
+  }
+}
+
     setLoading(true);
     try {
       const token = sessionStorage.getItem('userToken');

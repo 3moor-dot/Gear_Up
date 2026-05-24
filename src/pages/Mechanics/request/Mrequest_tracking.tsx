@@ -103,7 +103,47 @@ const MRequestTracking = () => {
   }, [requestId]);
 
 
+
   const updateStatus = async (newStatus: string) => {
+    // الحالات اللي عايزين نمنع تعديلها قبل نص ساعة
+    const restrictedStatuses = [
+      "OnTheWay",
+      "Arrived",
+      "InProgress",
+      "Completed",
+    ];
+  
+    // لو الطلب مجدول
+    if (
+      request?.requestType === "Scheduled" &&
+      request?.scheduledDateTime &&
+      restrictedStatuses.includes(newStatus)
+    ) {
+      const scheduledTime = new Date(request.scheduledDateTime).getTime();
+      const now = new Date().getTime();
+  
+      // الفرق بالدقائق
+      const diffInMinutes = (scheduledTime - now) / (1000 * 60);
+  
+      // لو أكتر من 30 دقيقة
+      if (diffInMinutes > 30) {
+        const formattedDate =
+          new Date(request.scheduledDateTime).toLocaleDateString("ar-EG");
+  
+        const formattedTime =
+          new Date(request.scheduledDateTime).toLocaleTimeString("ar-EG", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+  
+        toast.error(
+          `لا يمكنك تحديث حالة الطلب إلا قبل ميعاد الخدمة بـ 30 دقيقة.\nميعاد الخدمة: ${formattedDate} - ${formattedTime}`
+        );
+  
+        return;
+      }
+    }
+  
     try {
       await axios.put(
         `https://gearupapp.runasp.net/api/mechanic/requests/${requestId}/status`,
@@ -112,11 +152,11 @@ const MRequestTracking = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
+  
       toast.success("تم تحديث الحالة");
       setStatus(newStatus);
       fetchRequest();
-
+  
     } catch (err: any) {
       console.error("UPDATE ERROR:", err.response?.data);
       toast.error("فشل تحديث الحالة");
@@ -265,11 +305,28 @@ const MRequestTracking = () => {
                 {requestTypeMap[request.requestType] || request.requestType}
               </p>
 
-              <p>
-                <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
-                <strong> طريقة تلقي الخدمة:</strong>{" "}
-                {serviceModeMap[request?.serviceMode] || request?.serviceMode}
-              </p>
+              {/* طريقة تلقي الخدمة تظهر فقط لو الطلب مش مجدول */}
+{request?.requestType !== "Scheduled" && (
+  <p>
+    <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
+    <strong> طريقة تلقي الخدمة:</strong>{" "}
+    {serviceModeMap[request?.serviceMode] || request?.serviceMode}
+  </p>
+)}
+
+{/* ميعاد الخدمة يظهر فقط لو الطلب مجدول */}
+{request?.requestType === "Scheduled" && request?.scheduledDateTime && (
+  <p>
+    <Settings className="w-4 h-4 text-sky-500 inline-block ml-1" />
+    <strong> ميعاد الخدمة:</strong>{" "}
+    {new Date(request.scheduledDateTime).toLocaleDateString("ar-EG")}
+    {" - "}
+    {new Date(request.scheduledDateTime).toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </p>
+)}
 
               {request?.serviceType && (
                 <p>

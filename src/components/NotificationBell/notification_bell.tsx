@@ -621,6 +621,19 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                       {isRequest && (
                         <div className="space-y-2 mb-2">
                           {n.requestDetail && <span className="text-[10px] font-bold text-blue-500/80 block">{n.requestDetail}</span>}
+
+                          {n.scheduledDateTime && (
+  <p className="text-[11px] text-gray-500 dark:text-gray-300 leading-5">
+    
+    {new Date(n.scheduledDateTime).toLocaleDateString("ar-EG")}
+    {" - "}
+    {new Date(n.scheduledDateTime).toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </p>
+)}
+                          
                           {n.description && (
                             <div className={`text-[11px] leading-5 whitespace-pre-line bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 ${n.title?.includes("تم تحديث") ? 'line-clamp-none' : 'line-clamp-2'}`}>
                               {n.description}
@@ -638,7 +651,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                           {n.requestId && n.title?.includes("تم اختيارك") && <div className="text-[11px] bg-green-500/10 border-r-2 border-green-500 p-2 rounded-lg text-green-500 font-bold">{n.message}</div>}
                           {n.hasTracking && role?.toLowerCase() === "mechanic" && <button onClick={() => navigate(`/mechanics/request/mrequest_tracking/${n.requestId}`)} className="mt-2 w-full bg-blue-500 text-white py-1 rounded text-xs">تتبع الطلب</button>}
                           {n.location && !n.hasTracking && <a href={`https://www.google.com/maps?q=${n.location.lat},${n.location.lng}`} target="_blank" rel="noopener noreferrer" className="text-[11px] opacity-80 text-blue-500 underline hover:text-blue-700 block mb-2">📍 عرض الموقع</a>}
-                          {n.scheduledDateTime && <div className="text-[11px] opacity-80 mt-1">{new Date(n.scheduledDateTime).toLocaleString("ar-EG")}</div>}
+                          {/* {n.scheduledDateTime && <div className="text-[11px] opacity-80 mt-1">{new Date(n.scheduledDateTime).toLocaleString("ar-EG")}</div>} */}
                         </div>
                       )}
 
@@ -646,7 +659,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                         <div className="space-y-1 mb-2">
                           {n.customerName && <div className="text-[11px] font-bold dark:text-slate-200">👤 {n.customerName}</div>}
                           {n.mechanicName && <div className="text-[11px] dark:text-slate-300">🔧 {n.mechanicName}</div>}
-                          {n.date && <div className="text-[11px] opacity-80">📅 {n.date} {n.slotStart && `${n.slotStart.slice(0, 5)} - ${n.slotEnd?.slice(0, 5)}`}</div>}
+                          {n.date && <div className="text-[11px] opacity-80"> {n.date} {n.slotStart && `${n.slotStart.slice(0, 5)} - ${n.slotEnd?.slice(0, 5)}`}</div>}
                           {n.message && <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5">{n.message}</div>}
                         </div>
                       )}
