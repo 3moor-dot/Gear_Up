@@ -171,9 +171,7 @@ const MRequestTracking = () => {
 
   if (loading) return <p className="p-10 text-center">جاري التحميل...</p>;
 
-  // تحديد القائمة المستخدمة بناءً على طريقة الخدمة
-  // لو العميل رايح للميكانيكي -> نستخدم القائمة المختصرة
-  // غير كده -> نستخدم القائمة الكاملة
+
   const activeStatusOrder = request?.serviceMode === "CustomerGoesToMechanic" ? statusOrderShort : statusOrderFull;
 
   return (

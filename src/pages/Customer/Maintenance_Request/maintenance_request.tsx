@@ -269,20 +269,6 @@ const MaintenanceRequest = () => {
     if (!validateStepOne()) return;
 
 
-
-// if (requestType === 2) {
-//   const selected = new Date(`${scheduledDate}T${scheduledTime}`);
-//   const now = new Date();
-
-//   if (selected <= now) {
-//     Swal.fire({
-//       icon: "error",
-//       title: "موعد غير صالح",
-//       text: "يجب أن يكون الوقت في المستقبل",
-//     });
-//     return;
-//   }
-// }
 if (requestType === 2) {
   const selectedDate = new Date(scheduledDate);
   const today = new Date();

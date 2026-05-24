@@ -46,7 +46,6 @@ interface AdditionalData {
   workingHoursTo: string;
   workshopLicenseUrl?: string;
   status?: number;
-  // نخزن الكائنات الكاملة من Summary لضمان ظهور الأسماء حتى لو كانت خاطئة هيكلياً
   savedPrimarySpec?: { id: string; name: string };
   savedSubSpec?: { id: string; name: string };
 }
@@ -58,7 +57,7 @@ const getUserIdFromToken = () => {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(baseUrl).split('').map(function(c) {
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     const payload = JSON.parse(jsonPayload);
@@ -72,7 +71,7 @@ const getStorageKey = () => {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64Url).split('').map(function(c) {
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     const payload = JSON.parse(jsonPayload);
@@ -118,15 +117,11 @@ const AdditionalTab = () => {
         const sub = apiData.subSpecializations?.[0];
 
         setData((prev) => {
-          // --- Fix Start ---
-          // نأخذ الـ ID من الـ API إذا وجد، وإلا نأخذ القيمة المحفوظة سابقاً (في localStorage أو state)
           const finalPrimaryId = primary?.id || prev.mainSpecialty?.[0] || "";
           const finalSubId = sub?.id || prev.subSpecialty || "";
 
-          // نقوم بتحديث الـ State الخاص بالـ Select فوراً
           if (finalPrimaryId) setSelectedMain(finalPrimaryId);
           if (finalSubId) setSelectedSub(finalSubId);
-          // --- Fix End ---
 
           return {
             ...prev,
@@ -137,10 +132,9 @@ const AdditionalTab = () => {
             fieldVisit: apiData.supportsFieldVisit ?? prev.fieldVisit,
             isAvailable: apiData.isAvailable ?? prev.isAvailable,
             workingHoursFrom: apiData.workStartTime?.slice(0, 5) ?? prev.workingHoursFrom,
-            workingHoursTo: apiData.workEndTime?.slice(0, 5) ?? prev.workingEndTime,
+            workingHoursTo: apiData.workEndTime?.slice(0, 5) ?? prev.workingHoursTo, 
             mainSpecialty: finalPrimaryId ? [finalPrimaryId] : [],
             subSpecialty: finalSubId,
-            // حفظ الكائنات كما هي لعرضها إذا لم توجد في القائمة العامة
             savedPrimarySpec: primary || prev.savedPrimarySpec,
             savedSubSpec: sub || prev.savedSubSpec,
           };
@@ -156,33 +150,34 @@ const AdditionalTab = () => {
     const fetchSpecializations = async () => {
       try {
         const res = await axios.get("https://gearupapp.runasp.net/api/specializations", { headers: { Authorization: `Bearer ${token}` } });
-        // نستخدم البيانات كما هي بدون تعقيد، أو نقوم بتنظيف بسيط إذا لزم الأمر
         setSpecializationsList(res.data || []);
       } catch (err) { console.log("Error fetching specializations:", err); }
     };
     fetchSpecializations();
   }, [token]);
 
-  // تحديث الـ Sub Selection بناءً على الـ Main المختار
-  // هذا التأثير يضمن أنه إذا غير المستخدم الـ Main، نتحقق هل الـ Sub الحالي ما زال صالحاً
+  // --- Fixed: Added 'selectedSub' to deps and logic to prevent infinite loop ---
   useEffect(() => {
     if (selectedMain && specializationsList.length > 0) {
       const mainObj = specializationsList.find((s) => s.id === selectedMain);
       const subs = mainObj?.subSpecializations || [];
       
-      // هل الـ Sub الحالي موجود في القائمة الجديدة؟
       const exists = subs.some((s: any) => s.id === selectedSub);
       
+      // إذا تغير التخصص الرئيسي والتخصص الفرعي الحالي غير موجود ضمن القوائم الفرعية الجديدة، نقوم بتفريغه
+      // تمت إضافة شرط && selectedSub !== "" لمنع الحلقة اللانهائية عند التفريغ
+      if (!exists && selectedSub !== "") {
+        setSelectedSub("");
+      }
     }
-  }, [selectedMain, specializationsList]); 
+  }, [selectedMain, specializationsList, selectedSub]); 
 
-  // حساب القائمة الفرعية التي ستظهر في الـ UI
+  // --- Fixed: Use 'const' instead ---
   const getDisplaySubList = () => {
     if (!selectedMain) return [];
     
     const mainObj = specializationsList.find((s) => s.id === selectedMain);
-    let subs = mainObj ? [...mainObj.subSpecializations] : [];
-
+    const subs = mainObj ? [...mainObj.subSpecializations] : [];
 
     if (data.savedSubSpec && selectedSub) {
       const isMissing = !subs.some((s: any) => s.id === selectedSub);
@@ -190,8 +185,6 @@ const AdditionalTab = () => {
         subs.push(data.savedSubSpec);
       }
     }
-    // --------------------------------------------------
-
     return subs;
   };
 
@@ -260,7 +253,13 @@ const AdditionalTab = () => {
 
   const handleCancel = () => {
     setIsEditing(false); setLicenseFile(null);
-    try { const saved = localStorage.getItem(getStorageKey()); if (saved) setData(JSON.parse(saved)); } catch {}
+    // --- Fixed: Added error handling to catch block ---
+    try { 
+      const saved = localStorage.getItem(getStorageKey()); 
+      if (saved) setData(JSON.parse(saved)); 
+    } catch (err) { 
+      console.error("Error restoring data:", err); 
+    }
   };
 
   const displayImage = licenseFile ? URL.createObjectURL(licenseFile) : data.workshopLicenseUrl;
@@ -317,7 +316,7 @@ const AdditionalTab = () => {
           <label className="text-sm font-bold">موقع الورشة <span className="text-red-500">*</span></label>
           {isEditing && <button onClick={handleGetMyLocation} className="text-blue-500 flex gap-2 items-center text-sm hover:underline"><FaLocationArrow /> تحديد موقعي</button>}
         </div>
-        <MapPicker latitude={data.latitude} longitude={data.longitude} setLocation={(lat, lng) => setData(p => ({ ...p, latitude: lat, longitude: lng }))} isEditing={isEditing} dark={dark} />
+        <MapPicker latitude={data.latitude} longitude={data.longitude} setLocation={(lat: number, lng: number) => setData(p => ({ ...p, latitude: lat, longitude: lng }))} isEditing={isEditing} dark={dark} />
       </div>
 
       {/* SPECIALIZATION */}
