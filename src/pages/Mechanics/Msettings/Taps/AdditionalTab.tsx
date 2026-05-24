@@ -198,50 +198,122 @@ const AdditionalTab = () => {
       }
     }, [data, specializations, selectedMain]); // أضفنا specializations و selectedMain هنا عشان يعمل تحديث صحيح
   // Fetch Specializations
-  useEffect(() => {
-    const fetchSpecializations = async () => {
-      try {
-        const res = await axios.get(
-          "https://gearupapp.runasp.net/api/specializations",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+  // useEffect(() => {
+  //   const fetchSpecializations = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         "https://gearupapp.runasp.net/api/specializations",
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
        
-        const rawData: any[] = res.data;
-        const namesWithSubs = new Set(
-          rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
-        );
+  //       const rawData: any[] = res.data;
+  //       const namesWithSubs = new Set(
+  //         rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
+  //       );
        
-        const filteredRaw = rawData.filter((item: any) => {
-          if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
-            return false;
-          }
-          return true;
-        });
-        const mergedMap = new Map<string, any>();
-        filteredRaw.forEach((item: any) => {
-          if (mergedMap.has(item.name)) {
-            const existing = mergedMap.get(item.name);
-            existing.subSpecializations.push(...item.subSpecializations);
-          } else {
-            mergedMap.set(item.name, {
-              ...item,
-              subSpecializations: [...item.subSpecializations]
+  //       const filteredRaw = rawData.filter((item: any) => {
+  //         if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
+  //           return false;
+  //         }
+  //         return true;
+  //       });
+  //       const mergedMap = new Map<string, any>();
+  //       filteredRaw.forEach((item: any) => {
+  //         if (mergedMap.has(item.name)) {
+  //           const existing = mergedMap.get(item.name);
+  //           existing.subSpecializations.push(...item.subSpecializations);
+  //         } else {
+  //           mergedMap.set(item.name, {
+  //             ...item,
+  //             subSpecializations: [...item.subSpecializations]
+  //           });
+  //         }
+  //       });
+  //       const cleanedData = Array.from(mergedMap.values()).map((main: any) => ({
+  //         ...main,
+  //         subSpecializations: Array.from(
+  //           new Map(main.subSpecializations.map((sub: any) => [sub.name, sub])).values()
+  //         )
+  //       }));
+  //       setSpecializations(cleanedData);
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
+  //   fetchSpecializations();
+  // }, []);
+    // Fetch Specializations
+    useEffect(() => {
+      const fetchSpecializations = async () => {
+        try {
+          const res = await axios.get(
+            "https://gearupapp.runasp.net/api/specializations",
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+         
+          const rawData: any[] = res.data;
+  
+          // 1. Filter Logic (Keeping your existing logic)
+          const namesWithSubs = new Set(
+            rawData.filter((i: any) => i.subSpecializations.length > 0).map((i: any) => i.name)
+          );
+         
+          const filteredRaw = rawData.filter((item: any) => {
+            if (item.subSpecializations.length === 0 && namesWithSubs.has(item.name)) {
+              return false;
+            }
+            return true;
+          });
+  
+          // 2. Merge Main Specs by Name
+          const mergedMap = new Map<string, any>();
+          filteredRaw.forEach((item: any) => {
+            if (mergedMap.has(item.name)) {
+              const existing = mergedMap.get(item.name);
+              existing.subSpecializations.push(...item.subSpecializations);
+            } else {
+              mergedMap.set(item.name, {
+                ...item,
+                subSpecializations: [...item.subSpecializations]
+              });
+            }
+          });
+  
+          // 3. Clean and Normalize Subs (هنا الفرق الجوهري)
+          const cleanedData = Array.from(mergedMap.values()).map((main: any) => {
+            
+            // خطوة Normalize: نضمن إن كل Sub فيه id و name
+            const normalizedSubs = main.subSpecializations.map((sub: any) => {
+              // لو جاي بس كـ String (مثلاً "ميكانيكا")
+              if (typeof sub === 'string') {
+                return { id: sub, name: sub };
+              }
+              // لو جاي كـ Object، نأخذ ID من أي حقل متاح (id, specializationId, etc.)
+              return {
+                id: sub.id || sub.specializationId || sub.subId || sub.name,
+                name: sub.name || sub.subName || sub.id || "بدون اسم"
+              };
             });
-          }
-        });
-        const cleanedData = Array.from(mergedMap.values()).map((main: any) => ({
-          ...main,
-          subSpecializations: Array.from(
-            new Map(main.subSpecializations.map((sub: any) => [sub.name, sub])).values()
-          )
-        }));
-        setSpecializations(cleanedData);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchSpecializations();
-  }, []);
+  
+            // Deduplicate by Name (نزيل التكرار بناءً على الاسم ونحتفظ بالأوبجكت اللي فيه ID)
+            const uniqueSubs = Array.from(
+              new Map(normalizedSubs.map((sub: any) => [sub.name, sub])).values()
+            );
+  
+            return {
+              ...main,
+              subSpecializations: uniqueSubs
+            };
+          });
+  
+          setSpecializations(cleanedData);
+  
+        } catch (err) {
+          console.log(err);
+        }
+      };
+      fetchSpecializations();
+    }, []);
 
   useEffect(() => {
     const fetchSummary = async () => {
