@@ -402,36 +402,132 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
       triggerShake();
     });
 
+    // connection.on("ReceiveServiceRequest", (data: any) => {
+    //   console.log("🔥 NEW REQUEST:", data);
+    //   const idToNameMap: Record<number, string> = { 1: "تشخيص", 2: "إطارات", 3: "جسم", 4: "زيت" };
+    //   const engToArMap: Record<string, string> = { "Diagnosis": "تشخيص", "Tires": "إطارات", "BodyRepair": "جسم", "OilChange": "زيت" };
+
+    //   let categoryName: string | null = null;
+    //   const serviceTypeId = data?.serviceType || data?.ServiceType;
+    //   if (typeof serviceTypeId === 'number' && idToNameMap[serviceTypeId]) {
+    //     categoryName = idToNameMap[serviceTypeId];
+    //   }
+    //   if (!categoryName && data?.serviceType && typeof data?.serviceType === 'string') {
+    //     categoryName = engToArMap[data.serviceType] || null;
+    //   }
+    //   const photoUrl = data?.problemPhotoUrl || data?.ProblemPhotoUrl || null;
+
+    //   const newNotification: NotificationItem = {
+    //     title: "طلب صيانة جديد 🛠️",
+    //     isRequest: true,
+    //     isBooking: false,
+    //     requestId: data?.requestId || data?.serviceRequestId,
+    //     scheduledDateTime: data?.scheduledDateTime,
+    //     carName: data?.car?.brand && data?.car?.model && data?.car?.year ? `${data.car.brand} ${data.car.model} ${data.car.year}` : "سيارة غير محددة",
+    //     plateNumber: data?.car?.plateNumber || "غير متوفر",
+    //     location: data?.location ? { lat: data.location.latitude, lng: data.location.longitude } : null,
+    //     requestDetail: data?.requestType === "Emergency" ? "طلب طارئ 🚨" : data?.requestType === "Scheduled" ? "طلب مجدول 📅" : "طلب صيانة",
+    //     description: data?.issueDescription,
+    //     serviceCategory: categoryName,
+    //     problemPhotoUrl: photoUrl,
+    //     time: getCurrentTime(),
+    //   };
+    //   prependNotification(newNotification);
+    // });
     connection.on("ReceiveServiceRequest", (data: any) => {
       console.log("🔥 NEW REQUEST:", data);
-      const idToNameMap: Record<number, string> = { 1: "تشخيص", 2: "إطارات", 3: "جسم", 4: "زيت" };
-      const engToArMap: Record<string, string> = { "Diagnosis": "تشخيص", "Tires": "إطارات", "BodyRepair": "جسم", "OilChange": "زيت" };
-
+      console.log("🔥 serviceMode =", data?.serviceMode);
+    
+      const idToNameMap: Record<number, string> = {
+        1: "تشخيص",
+        2: "إطارات",
+        3: "جسم",
+        4: "زيت"
+      };
+    
+      const engToArMap: Record<string, string> = {
+        "Diagnosis": "تشخيص",
+        "Tires": "إطارات",
+        "BodyRepair": "جسم",
+        "OilChange": "زيت"
+      };
+    
       let categoryName: string | null = null;
+    
       const serviceTypeId = data?.serviceType || data?.ServiceType;
-      if (typeof serviceTypeId === 'number' && idToNameMap[serviceTypeId]) {
+    
+      if (typeof serviceTypeId === "number" && idToNameMap[serviceTypeId]) {
         categoryName = idToNameMap[serviceTypeId];
       }
-      if (!categoryName && data?.serviceType && typeof data?.serviceType === 'string') {
+    
+      if (
+        !categoryName &&
+        data?.serviceType &&
+        typeof data?.serviceType === "string"
+      ) {
         categoryName = engToArMap[data.serviceType] || null;
       }
-      const photoUrl = data?.problemPhotoUrl || data?.ProblemPhotoUrl || null;
-
+    
+      const photoUrl =
+        data?.problemPhotoUrl ||
+        data?.ProblemPhotoUrl ||
+        null;
+    
+      // ✅ خليهم هنا برا الـ object
+      const serviceModeText =
+        data?.serviceMode === "MechanicComesToCustomer" ||
+        data?.serviceMode === 1
+          ? " الميكانيكي يذهب للعميل"
+          : data?.serviceMode === "CustomerGoesToMechanic" ||
+            data?.serviceMode === 2
+          ? "العميل يذهب للورشة"
+          : "";
+    
+      const requestTypeText =
+        data?.requestType === "Emergency"
+          ? "طلب طارئ 🚨"
+          : data?.requestType === "Scheduled"
+          ? "طلب مجدول 📅"
+          : "طلب صيانة";
+    
+      const requestDetails = `${requestTypeText}${
+        serviceModeText ? ` • ${serviceModeText}` : ""
+      }`;
+    
       const newNotification: NotificationItem = {
         title: "طلب صيانة جديد 🛠️",
         isRequest: true,
         isBooking: false,
         requestId: data?.requestId || data?.serviceRequestId,
         scheduledDateTime: data?.scheduledDateTime,
-        carName: data?.car?.brand && data?.car?.model && data?.car?.year ? `${data.car.brand} ${data.car.model} ${data.car.year}` : "سيارة غير محددة",
+    
+        carName:
+          data?.car?.brand &&
+          data?.car?.model &&
+          data?.car?.year
+            ? `${data.car.brand} ${data.car.model} ${data.car.year}`
+            : "سيارة غير محددة",
+    
         plateNumber: data?.car?.plateNumber || "غير متوفر",
-        location: data?.location ? { lat: data.location.latitude, lng: data.location.longitude } : null,
-        requestDetail: data?.requestType === "Emergency" ? "طلب طارئ 🚨" : data?.requestType === "Scheduled" ? "طلب مجدول 📅" : "طلب صيانة",
+    
+        location: data?.location
+          ? {
+              lat: data.location.latitude,
+              lng: data.location.longitude,
+            }
+          : null,
+    
+        requestDetail: requestDetails,
+    
         description: data?.issueDescription,
+    
         serviceCategory: categoryName,
+    
         problemPhotoUrl: photoUrl,
+    
         time: getCurrentTime(),
       };
+    
       prependNotification(newNotification);
     });
 

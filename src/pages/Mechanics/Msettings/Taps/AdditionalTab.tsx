@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useTheme } from "../../../../contexts/ThemeContext";
@@ -46,7 +47,7 @@ interface AdditionalData {
   latitude?: number;
   longitude?: number;
   mainSpecialty: string[];
-  subSpecialty: string;
+  // subSpecialty: string; // <-- تم الحذف
   fieldVisit: boolean;
   isAvailable: boolean;
   workingHoursFrom: string;
@@ -54,7 +55,7 @@ interface AdditionalData {
   workshopLicenseUrl?: string;
   status?: number;
   savedPrimarySpec?: { id: string; name: string };
-  savedSubSpec?: { id: string; name: string };
+  // savedSubSpec?: { id: string; name: string }; // <-- تم الحذف
 }
 
 // ---------------- HELPERS ----------------
@@ -88,8 +89,8 @@ const getStorageKey = () => {
 };
 
 const defaultData: AdditionalData = {
-  location: "", latitude: undefined, longitude: undefined, mainSpecialty: [], subSpecialty: "",
-  fieldVisit: false, isAvailable: false, workingHoursFrom: "08:00", workingHoursTo: "18:00",
+  location: "", latitude: undefined, longitude: undefined, mainSpecialty: [], fieldVisit: false,
+  isAvailable: false, workingHoursFrom: "08:00", workingHoursTo: "18:00",
   workshopLicenseUrl: undefined, status: 0,
 };
 
@@ -106,7 +107,7 @@ const AdditionalTab = () => {
   const [specializationsList, setSpecializationsList] = useState<any[]>([]);
   
   const [selectedMain, setSelectedMain] = useState("");
-  const [selectedSub, setSelectedSub] = useState("");
+  // const [selectedSub, setSelectedSub] = useState(""); // <-- تم الحذف
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   
   const [data, setData] = useState<AdditionalData>(() => {
@@ -121,14 +122,14 @@ const AdditionalTab = () => {
         const apiData = res.data;
         
         const primary = apiData.primarySpecialization;
-        const sub = apiData.subSpecializations?.[0];
+        // const sub = apiData.subSpecializations?.[0]; // <-- تم الحذف
 
         setData((prev) => {
           const finalPrimaryId = primary?.id || prev.mainSpecialty?.[0] || "";
-          const finalSubId = sub?.id || prev.subSpecialty || "";
+          // const finalSubId = sub?.id || prev.subSpecialty || ""; // <-- تم الحذف
 
           if (finalPrimaryId) setSelectedMain(finalPrimaryId);
-          if (finalSubId) setSelectedSub(finalSubId);
+          // if (finalSubId) setSelectedSub(finalSubId); // <-- تم الحذف
 
           return {
             ...prev,
@@ -141,9 +142,9 @@ const AdditionalTab = () => {
             workingHoursFrom: apiData.workStartTime?.slice(0, 5) ?? prev.workingHoursFrom,
             workingHoursTo: apiData.workEndTime?.slice(0, 5) ?? prev.workingHoursTo, 
             mainSpecialty: finalPrimaryId ? [finalPrimaryId] : [],
-            subSpecialty: finalSubId,
+            // subSpecialty: finalSubId, // <-- تم الحذف
             savedPrimarySpec: primary || prev.savedPrimarySpec,
-            savedSubSpec: sub || prev.savedSubSpec,
+            // savedSubSpec: sub || prev.savedSubSpec, // <-- تم الحذف
           };
         });
 
@@ -163,35 +164,10 @@ const AdditionalTab = () => {
     fetchSpecializations();
   }, [token]);
 
-  useEffect(() => {
-    if (selectedMain && specializationsList.length > 0) {
-      const mainObj = specializationsList.find((s) => s.id === selectedMain);
-      const subs = mainObj?.subSpecializations || [];
-      
-      const isSubExists = subs.some((s: any) => s.id === selectedSub);
-      
-      if (!isSubExists && selectedSub !== "") {
-        setSelectedSub("");
-      }
-    }
-  }, [selectedMain, specializationsList, selectedSub]); 
-
-  const getDisplaySubList = () => {
-    if (!selectedMain) return [];
-    
-    const mainObj = specializationsList.find((s) => s.id === selectedMain);
-    const subs = mainObj ? [...mainObj.subSpecializations] : [];
-
-    if (data.savedSubSpec && selectedSub) {
-      const isMissing = !subs.some((s: any) => s.id === selectedSub);
-      if (isMissing) {
-        subs.push(data.savedSubSpec);
-      }
-    }
-    return subs;
-  };
-
-  const subList = getDisplaySubList();
+  // تم حذف الـ Effect الخاص بالتحقق من التخصص الفرعي عند تغيير الرئيسي
+  
+  // تم حذف دالة getDisplaySubList
+  
   const canEnableAvailability = () => !!data.workshopLicenseUrl && data.status === 1;
 
   const handleGetMyLocation = () => {
@@ -214,7 +190,7 @@ const AdditionalTab = () => {
     
     try {
       const payloadLocation = { latitude: Number(data.latitude), longitude: Number(data.longitude), location: data.location || "تم التحديد عبر الخريطة" };
-      const payloadSpecialization = { primarySpecializationId: selectedMain, subSpecializationId: selectedSub || null };
+      const payloadSpecialization = { primarySpecializationId: selectedMain }; // <-- تم حذف subSpecializationId
       const payloadFieldVisit = { supportsFieldVisit: data.fieldVisit };
       const payloadWorkingHours = { workStartTime: data.workingHoursFrom, workEndTime: data.workingHoursTo };
 
@@ -242,7 +218,7 @@ const AdditionalTab = () => {
         }
       }
 
-      const newData = { ...data, mainSpecialty: [selectedMain], subSpecialty: selectedSub, isAvailable: data.isAvailable };
+      const newData = { ...data, mainSpecialty: [selectedMain], isAvailable: data.isAvailable }; // <-- تم حذف subSpecialty
       setData(newData);
       localStorage.setItem(getStorageKey(), JSON.stringify(newData));
       if (licenseFile) setData(prev => ({ ...prev, workshopLicenseUrl: URL.createObjectURL(licenseFile) }));
@@ -322,7 +298,7 @@ const AdditionalTab = () => {
       </div>
 
       {/* SPECIALIZATION */}
-      <div className={`grid grid-cols-1 ${subList.length > 0 ? "md:grid-cols-2" : ""} gap-4`}>
+      <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-bold">التخصص الرئيسي <span className="text-red-500">*</span></label>
           <select 
@@ -331,8 +307,7 @@ const AdditionalTab = () => {
             onChange={(e) => { 
               const val = e.target.value; 
               setSelectedMain(val); 
-              setSelectedSub(""); 
-              setData((prev) => ({ ...prev, mainSpecialty: val ? [val] : [], subSpecialty: "" })); 
+              setData((prev) => ({ ...prev, mainSpecialty: val ? [val] : [] })); 
             }} 
             className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
           >
@@ -342,27 +317,6 @@ const AdditionalTab = () => {
             ))}
           </select>
         </div>
-
-        {subList.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-bold">التخصص الفرعي</label>
-            <select 
-              disabled={!isEditing} 
-              value={selectedSub} 
-              onChange={(e) => { 
-                const val = e.target.value; 
-                setSelectedSub(val); 
-                setData((prev) => ({ ...prev, subSpecialty: val })); 
-              }} 
-              className={`w-full px-4 py-3 rounded-xl border outline-none ${!dark ? "bg-gray-50 border-gray-300 text-gray-900" : "bg-[#131c2f] border-gray-700 text-white"} ${!isEditing ? "cursor-not-allowed opacity-70" : ""}`}
-            >
-              <option value="">اختر التخصص الفرعي</option>
-              {subList.map((sub: any) => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* SETTINGS */}
