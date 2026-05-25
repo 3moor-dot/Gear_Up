@@ -313,7 +313,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     const handleStorageChange = () => {
       const storageKey = getStorageKey();
       setNotifications(readNotificationsFromStorage(storageKey));
-      triggerShake();
+      // triggerShake();
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
@@ -399,7 +399,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
         };
         return saveNotifications([newNotification, ...filtered]);
       });
-      triggerShake();
+      // triggerShake();
     });
 
     // connection.on("ReceiveServiceRequest", (data: any) => {
