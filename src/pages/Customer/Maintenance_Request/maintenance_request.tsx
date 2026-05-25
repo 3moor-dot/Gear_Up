@@ -78,7 +78,10 @@ const MaintenanceRequest = () => {
   const [isFromChatbot, setIsFromChatbot] = useState(false);
   const [chatbotData, setChatbotData] = useState<any>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
-  const [stateRestored, setStateRestored] = useState(false); // مهم جداً
+ const [stateRestored, setStateRestored] = useState(false); // مهم جداً
+
+
+  const [requestCompleted, setRequestCompleted] = useState(false);
 
   const selectedCar = cars.find(c => c.id === selectedCarId);
 
@@ -206,7 +209,8 @@ const MaintenanceRequest = () => {
 
   // ==================== التايمر ====================
   useEffect(() => {
-    if (currentStep !== 2) return;
+    // if (currentStep !== 2) return;
+    if (currentStep !== 2 || requestCompleted) return;
 
     const timer = setInterval(() => {
       if (acceptedMechanics.length > 0) return;
@@ -510,7 +514,36 @@ const MaintenanceRequest = () => {
 
       if (res.ok) {
         // ⭐ مسح الحالة المحفوظة لأن الطلب اكتمل
+
+        setRequestCompleted(true);
+
+
         clearSavedState();
+
+
+        // setAcceptedMechanics([]);
+        // setPhase("waiting");
+        // setCurrentStep(1);
+
+        setAcceptedMechanics([]);
+setPhase("waiting");
+
+// تصفير كل بيانات الفورم
+setCurrentStep(1);
+setSelectedCarId(cars.length > 0 ? cars[0].id : null);
+setIssueDescription("");
+setImageFile(null);
+setSelectedImagePreview(null);
+setRequestId(null);
+setRequestType(1);
+setServiceMode(2);
+setServiceType(null);
+setScheduledDate("");
+setScheduledTime("");
+setLocation(null);
+setTimeLeft(300);
+setIsFromChatbot(false);
+setChatbotData(null);
 
         Swal.fire({
           title: "تم اختيار الميكانيكي بنجاح",
@@ -520,9 +553,18 @@ const MaintenanceRequest = () => {
           confirmButtonColor: "#137FEC",
         });
 
+
+
+        // if (requestId) {
+        //   navigate(`/Customer/Maintenance_request/request_tracking/${requestId}`);
+        // }
+
         if (requestId) {
-          navigate(`/Customer/Maintenance_request/request_tracking/${requestId}`);
+          setTimeout(() => {
+            navigate(`/Customer/Maintenance_request/request_tracking/${requestId}`);
+          }, 100);
         }
+
       } else {
         Swal.fire("خطأ", "فشل اختيار الميكانيكي", "error");
       }
@@ -779,7 +821,9 @@ const MaintenanceRequest = () => {
           ) : (
             <div className="animate-in slide-in-from-left duration-500">
               <div className="mb-6 mt-6 w-full text-right">
-                {acceptedMechanics.length > 0 ? (
+                {/* {acceptedMechanics.length > 0 ? ( */}
+                {!requestCompleted && (
+  acceptedMechanics.length > 0 ? (
                   <div className="space-y-4">
                     <h2 className="font-bold text-lg dark:text-white">الميكانيكيين الذين قبلوا الطلب</h2>
                     {acceptedMechanics.map((m: any) => (
@@ -883,7 +927,8 @@ const MaintenanceRequest = () => {
                       </>
                     )}
                   </div>
-                )}
+              ))
+}
               </div>
               <div className="mt-[400px] pt-8 border-t border-gray-200 dark:border-gray-700 w-full" />
             </div>
