@@ -26,6 +26,8 @@ const Reviewing = () => {
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [loadingRating, setLoadingRating] = useState(true);
 
+
+
 const getMechanicId = () => {
   if (!token) {
     console.error("❌ No token found!");
@@ -56,9 +58,10 @@ const getMechanicId = () => {
       // استخراج القيمة مع التعامل مع احتمالات مختلفة (تم تأكيد avgRating من الـ Console)
       let ratingValue = "0";
       if (typeof data === 'number') {
-        ratingValue = String(data);
+        ratingValue = Number(data).toFixed(2);
       } else if (typeof data === 'object' && data !== null) {
-        ratingValue = data.avgRating ?? data.averageRating ?? data.rating ?? "0";
+        const val = data.avgRating ?? data.averageRating ?? data.rating ?? 0;
+        ratingValue = Number(val).toFixed(2);
       }
       
       setAverageRating(ratingValue);
@@ -100,6 +103,7 @@ useEffect(() => {
 };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchAverageRating();
     fetchReviews();
   }, []);
@@ -117,6 +121,8 @@ useEffect(() => {
   };
 
   const starPercents = getStarPercentages();
+
+
 
   return (
     <div
@@ -165,50 +171,48 @@ useEffect(() => {
             ) : reviews.length === 0 ? (
               <div className="text-center py-10 text-gray-400">لا توجد مراجعات حالياً</div>
             ) : (
-              <div className="space-y-4 md:space-y-6">
+              <div className="max-h-[600px] md:max-h-[750px] overflow-y-auto pr-2 space-y-4 md:space-y-6">
                 {reviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className={`p-4 rounded-xl border
-                      ${
-                        dark
-                          ? "border-gray-800 bg-[#0f1a2f]"
-                          : "border-gray-200 bg-gray-50"
-                      }
-                    `}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-3">
-                        {/* Avatar افتراضي لأن الـ API لا يعيد الصورة */}
-                        <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
-                                ${dark ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600"}
-                            `}
-                        >
-                            {review.userName ? review.userName.charAt(0).toUpperCase() : "U"}
+                    <div
+                      key={review.id}
+                      className={`p-4 rounded-xl border
+                        ${
+                          dark
+                            ? "border-gray-800 bg-[#0f1a2f]"
+                            : "border-gray-200 bg-gray-50"
+                        }
+                      `}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-3">
+                          {/* Avatar افتراضي لأن الـ API لا يعيد الصورة */}
+                          <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+                                  ${dark ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600"}
+                              `}
+                          >
+                              {review.userName ? review.userName.charAt(0).toUpperCase() : "U"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm md:text-base">{review.userName}</p>
+                            <span className="text-xs text-gray-400">
+                              {new Date(review.createdAt).toLocaleDateString("ar-EG")}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-sm md:text-base">{review.userName}</p>
-                          <span className="text-xs text-gray-400">
-                            {new Date(review.createdAt).toLocaleDateString("ar-EG")}
-                          </span>
+
+                        <div className="flex gap-1 text-yellow-400">
+                          {Array.from({ length: review.rating }).map((_, i) => (
+                            <FaStar key={i} size={14} />
+                          ))}
                         </div>
                       </div>
 
-                      <div className="flex gap-1 text-yellow-400">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <FaStar key={i} size={14} />
-                        ))}
-                      </div>
+                      <p className="text-sm leading-relaxed text-gray-300 md:text-gray-600">
+                        {review.comment}
+                      </p>
                     </div>
-
-                    <p className="text-sm leading-relaxed text-gray-300 md:text-gray-600">
-                      {review.comment}
-                    </p>
-
-                    {/* تمت إزالة زر الرد والردود بالكامل كما طلبت */}
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>

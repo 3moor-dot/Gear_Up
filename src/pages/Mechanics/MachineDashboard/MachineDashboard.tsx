@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import NotificationBell from "../../../components/NotificationBell/notification_bell";
 import ThemeToggle from "../../../components/ThemeToggle/theme_toggle";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -212,7 +213,6 @@ const fetchLatestReviews = async () => {
   const cardBase = `rounded-xl transition-all ${
     !dark ? "bg-white shadow-md" : "bg-[#0d1629]"
   }`;
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Confirmed":
@@ -222,6 +222,11 @@ const fetchLatestReviews = async () => {
         return "bg-yellow-600/20 text-yellow-400";
       case "In-Progress":
         return "bg-blue-600/20 text-blue-400";
+      case "Completed":
+        return "bg-sky-600/20 text-sky-400";
+      case "Rejected":
+      case "Cancelled":
+        return "bg-red-600/20 text-red-400";
       default:
         return "bg-gray-600/20 text-gray-400";
     }
@@ -233,6 +238,9 @@ const fetchLatestReviews = async () => {
       case "Accepted": return "مقبول";
       case "Pending": return "قيد الانتظار";
       case "In-Progress": return "قيد التنفيذ";
+      case "Completed": return "مكتمل";
+      case "Rejected": return "مرفوض";
+      case "Cancelled": return "ملغي";
       default: return status;
     }
   };
@@ -361,34 +369,43 @@ const fetchLatestReviews = async () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
 
           {/* المواعيد */}
-          <div className={cardBase}>
+          <div className={`${cardBase} flex flex-col h-full`}>
             <div className={`p-4 sm:p-6 border-b ${!dark ? "border-gray-200" : "border-gray-700"}`}>
               <h2 className="text-lg sm:text-xl font-bold">مواعيد اليوم</h2>
             </div>
-            <div className="p-3 sm:p-6 space-y-3 max-h-[380px] overflow-y-auto">
+            <div className="p-3 sm:p-6 space-y-3 flex-1 overflow-y-auto min-h-[300px]">
               {loadingToday ? (
                  <div className="text-center py-6 text-gray-400">جاري التحميل...</div>
               ) : todayAppointments.length === 0 ? (
                  <div className="text-center py-6 text-gray-400">لا توجد مواعيد لليوم</div>
               ) : (
-                todayAppointments.map((apt) => (
-                  <div key={apt.id} className={`p-3 sm:p-4 rounded-xl border ${
-                    !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
-                  }`}>
-                    <div className="flex justify-between items-start mb-2 gap-2">
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-sm">{apt.customerName}</h4>
-                        <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{apt.subSpecializationName}</p>
+                <>
+                  {todayAppointments.slice(0, 4).map((apt) => (
+                    <div key={apt.id} className={`p-3 sm:p-4 rounded-xl border ${
+                      !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
+                    }`}>
+                      <div className="flex justify-between items-start mb-2 gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-sm">{apt.customerName}</h4>
+                          <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{apt.subSpecializationName}</p>
+                        </div>
+                        <span className="text-blue-400 font-semibold text-xs sm:text-sm flex-shrink-0">
+                          {apt.slotStart.slice(0, 5)} - {apt.slotEnd.slice(0, 5)}
+                        </span>
                       </div>
-                      <span className="text-blue-400 font-semibold text-xs sm:text-sm flex-shrink-0">
-                        {apt.slotStart.slice(0, 5)} - {apt.slotEnd.slice(0, 5)}
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
+                        {getStatusText(apt.status)}
                       </span>
                     </div>
-                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(apt.status)}`}>
-                      {getStatusText(apt.status)}
-                    </span>
-                  </div>
-                ))
+                  ))}
+                  {todayAppointments.length > 0 && (
+                    <div className="text-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <Link to="/mechanics/booking" className="text-sm font-semibold text-blue-500 hover:text-blue-600 transition">
+                        عرض كل الحجوزات
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -404,25 +421,34 @@ const fetchLatestReviews = async () => {
               ) : reviews.length === 0 ? (
                 <div className="text-center py-6 text-gray-400">لا توجد مراجعات حتى الآن</div>
               ) : (
-                reviews.slice(0, 4).map((review) => (
-                  <div key={review.id} className={`p-3 sm:p-4 rounded-xl border ${
-                    !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
-                  }`}>
-                    <div className="flex items-center justify-between mb-2 gap-2">
-                      <h4 className="font-semibold text-sm">{review.clientName}</h4>
-                      <div className="flex gap-0.5 flex-shrink-0">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <FaStar key={i} className="text-yellow-500 text-xs sm:text-sm" />
-                        ))}
+                <>
+                  {reviews.slice(0, 4).map((review) => (
+                    <div key={review.id} className={`p-3 sm:p-4 rounded-xl border ${
+                      !dark ? "bg-gray-50 border-gray-200" : "bg-[#131c2f] border-gray-800"
+                    }`}>
+                      <div className="flex items-center justify-between mb-2 gap-2">
+                        <h4 className="font-semibold text-sm">{review.clientName}</h4>
+                        <div className="flex gap-0.5 flex-shrink-0">
+                          {[...Array(review.rating)].map((_, i) => (
+                            <FaStar key={i} className="text-yellow-500 text-xs sm:text-sm" />
+                          ))}
+                        </div>
                       </div>
+                      <p className="text-xs sm:text-sm text-gray-400 mb-2 line-clamp-2">{review.comment}</p>
+                      {/* ملاحظة: هنا نستعرض التاريخ كما جاء من الـ API أو نقوم بتنسيقه */}
+                      <span className="text-xs text-gray-500">
+                          {review.date ? new Date(review.date).toLocaleDateString('ar-EG') : ""}
+                      </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-400 mb-2 line-clamp-2">{review.comment}</p>
-                    {/* ملاحظة: هنا نستعرض التاريخ كما جاء من الـ API أو نقوم بتنسيقه */}
-                    <span className="text-xs text-gray-500">
-                        {review.date ? new Date(review.date).toLocaleDateString('ar-EG') : ""}
-                    </span>
-                  </div>
-                ))
+                  ))}
+                  {reviews.length > 0 && (
+                    <div className="text-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <Link to="/mechanics/reviewing" className="text-sm font-semibold text-blue-500 hover:text-blue-600 transition">
+                        عرض كل المراجعات
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

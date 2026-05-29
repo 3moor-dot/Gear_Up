@@ -56,8 +56,11 @@ const PasswordField = ({
         <button
           type="button"
           onClick={onToggle}
+          disabled={!isEditing}
           aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
+          className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10 ${
+            !isEditing ? "text-gray-300 cursor-not-allowed dark:text-gray-600" : "text-gray-400 hover:text-[#137FEC]"
+          }`}
         >
           {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
         </button>

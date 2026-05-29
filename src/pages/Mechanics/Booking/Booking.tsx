@@ -30,7 +30,7 @@ const Booking = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 7;
 
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,7 @@ const Booking = () => {
 
   // Fetch all bookings
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchBookings = async () => {
       try {
         setLoading(true);
@@ -408,11 +409,11 @@ const Booking = () => {
         {/* TABLE - Desktop */}
         {filteredBookings.length > 0 && (
           <div
-            className={`hidden md:block rounded-xl overflow-hidden ${
+            className={`hidden md:flex md:flex-col justify-between rounded-xl overflow-hidden min-h-[650px] ${
               !dark ? "bg-white shadow-xl" : "bg-[#0d1629]"
             }`}
           >
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr
@@ -523,8 +524,9 @@ const Booking = () => {
 
         {/* CARDS - Mobile */}
         {filteredBookings.length > 0 && (
-          <div className="md:hidden space-y-3">
-            {paginatedBookings.map((booking) => (
+          <div className="md:hidden flex flex-col justify-between min-h-[1200px]">
+            <div className="space-y-3 flex-1">
+              {paginatedBookings.map((booking) => (
               <div
                 key={booking.id}
                 className={`p-4 rounded-xl ${
@@ -580,8 +582,9 @@ const Booking = () => {
                 </div>
                 {getStatusButton(booking.status, booking.id)}
               </div>
-            ))}
-            <div className="flex justify-center gap-2 mt-4">
+              ))}
+            </div>
+            <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
               {Array.from(
                 { length: totalPages },
                 (_, i) => i + 1

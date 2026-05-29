@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
-import { FaSave, FaSpinner, FaLock } from "react-icons/fa";
+import { FaSave, FaSpinner, FaLock, FaEdit } from "react-icons/fa";
 import {
   MdVisibility,
   MdVisibilityOff,
@@ -16,6 +16,7 @@ const PasswordField = ({
   onToggle,
   onChange,
   dark,
+  disabled,
 }: {
   label: string;
   name: string;
@@ -24,12 +25,13 @@ const PasswordField = ({
   onToggle: () => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   dark: boolean;
+  disabled?: boolean;
 }) => {
   const inputClass = `w-full text-right font-semibold py-3 px-4 pl-12 rounded-2xl transition-all duration-200 border outline-none ${
     !dark
       ? "bg-white border-[#D7E7FF] focus:border-[#137FEC] focus:ring-2 focus:ring-[#137FEC]/15 text-gray-900 shadow-sm"
       : "bg-[#131c2f] border-[#24324A] focus:border-[#137FEC] focus:ring-2 focus:ring-[#137FEC]/25 text-white"
-  }`;
+  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
 
   return (
     <div>
@@ -45,14 +47,18 @@ const PasswordField = ({
           onChange={onChange}
           placeholder="••••••••"
           required
+          disabled={disabled}
           className={inputClass}
         />
 
         <button
           type="button"
           onClick={onToggle}
+          disabled={disabled}
           aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#137FEC] transition-colors z-10"
+          className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors z-10 ${
+            disabled ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-[#137FEC]"
+          }`}
         >
           {show ? <MdVisibility size={20} /> : <MdVisibilityOff size={20} />}
         </button>
@@ -75,6 +81,7 @@ const SecuritySettings = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [status, setStatus] = useState<{
     type: "success" | "error" | null;
@@ -137,6 +144,7 @@ const SecuritySettings = () => {
           newPassword: "",
           confirmPassword: "",
         });
+        setIsEditing(false);
 
         setTimeout(() => window.location.reload(), 1000);
       } else {
@@ -177,28 +185,39 @@ const SecuritySettings = () => {
           </div>
         </div>
 
-        <button
-          type="submit"
-          form="password-form"
-          disabled={loading}
-          className={`w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-blue-500/20 ${
-            loading
-              ? "bg-gray-400 cursor-wait text-white shadow-none"
-              : "bg-[#137FEC] hover:bg-blue-600 text-white"
-          }`}
-        >
-          {loading ? (
-            <>
-              <FaSpinner className="animate-spin" />
-              <span>جاري الحفظ...</span>
-            </>
-          ) : (
-            <>
-              <FaSave />
-              <span>حفظ التغييرات</span>
-            </>
-          )}
-        </button>
+        {!isEditing ? (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-blue-500/20 bg-[#137FEC] hover:bg-blue-600 text-white"
+          >
+            <FaEdit />
+            <span>تعديل</span>
+          </button>
+        ) : (
+          <button
+            type="submit"
+            form="password-form"
+            disabled={loading}
+            className={`w-full md:w-auto px-6 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-blue-500/20 ${
+              loading
+                ? "bg-gray-400 cursor-wait text-white shadow-none"
+                : "bg-[#137FEC] hover:bg-blue-600 text-white"
+            }`}
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin" />
+                <span>جاري الحفظ...</span>
+              </>
+            ) : (
+              <>
+                <FaSave />
+                <span>حفظ التغييرات</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Fields */}
@@ -231,6 +250,7 @@ const SecuritySettings = () => {
                 onToggle={() => setShowCurrent(!showCurrent)}
                 onChange={handleInputChange}
                 dark={dark}
+                disabled={!isEditing}
               />
             </div>
 
@@ -242,6 +262,7 @@ const SecuritySettings = () => {
               onToggle={() => setShowNew(!showNew)}
               onChange={handleInputChange}
               dark={dark}
+              disabled={!isEditing}
             />
 
             <PasswordField
@@ -252,6 +273,7 @@ const SecuritySettings = () => {
               onToggle={() => setShowConfirm(!showConfirm)}
               onChange={handleInputChange}
               dark={dark}
+              disabled={!isEditing}
             />
           </div>
 
