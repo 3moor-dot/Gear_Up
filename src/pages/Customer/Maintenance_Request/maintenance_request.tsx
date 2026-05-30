@@ -522,7 +522,7 @@ const MaintenanceRequest = () => {
           confirmButtonColor: "#137FEC",
         });
       } else {
-        Swal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
+        themedSwal.fire("خطأ", "فشل الإرسال، تأكد من البيانات", "error");
       }
     } catch (err) {
       console.error(err);
