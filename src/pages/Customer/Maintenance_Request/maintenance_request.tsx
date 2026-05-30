@@ -54,6 +54,12 @@ const MaintenanceRequest = () => {
   const { dark } = useTheme();
   const navigate = useNavigate();
 
+  const themedSwal = Swal.mixin({
+    background: dark ? "#0B1220" : "#ffffff",
+    color: dark ? "#ffffff" : "#1f2937",
+    confirmButtonColor: "#137FEC",
+  });
+
   // ==================== الـ States ====================
   const [currentStep, setCurrentStep] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
@@ -219,7 +225,7 @@ const MaintenanceRequest = () => {
         if (prev > 0) return prev - 1;
 
         if (phase === "waiting") {
-          Swal.fire({
+          themedSwal.fire({
             title: "جاري توسيع دائرة البحث 🔍",
             text: "لم يتم العثور على ميكانيكي",
             icon: "info",
@@ -233,7 +239,7 @@ const MaintenanceRequest = () => {
 
         if (phase === "expanding") {
           if (acceptedMechanics.length === 0) {
-            Swal.fire({
+            themedSwal.fire({
               title: "تم إلغاء الطلب ❌",
               text: "لم يتم العثور على ميكانيكي",
               icon: "error",
@@ -402,13 +408,40 @@ const MaintenanceRequest = () => {
     if (!validateStepOne()) return;
 
     if (requestType === 2) {
+      // const selectedDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+      const now = new Date();
+    
       const selectedDate = new Date(scheduledDate);
       const today = new Date();
-      selectedDate.setHours(0, 0, 0, 0);
+    
+      // صفّر الوقت عشان نقارن تاريخ بس
       today.setHours(0, 0, 0, 0);
-      if (selectedDate <= today) {
-        Swal.fire({ icon: "error", title: "موعد غير صالح", text: "يجب أن يكون تاريخ الطلب بعد تاريخ اليوم" });
+      selectedDate.setHours(0, 0, 0, 0);
+    
+      // 1) لو التاريخ في الماضي
+      if (selectedDate < today) {
+        themedSwal.fire({
+          icon: "error",
+          title: "تاريخ غير صالح",
+          text: "لا يمكن اختيار تاريخ في الماضي",
+        });
         return;
+      }
+    
+      // 2) لو نفس اليوم → قارن الوقت
+      if (selectedDate.getTime() === today.getTime()) {
+        const selectedTime = scheduledTime.split(":").map(Number);
+        const nowTime = now.getHours() * 60 + now.getMinutes();
+        const chosenTime = selectedTime[0] * 60 + selectedTime[1];
+    
+        if (chosenTime < nowTime) {
+          themedSwal.fire({
+            icon: "error",
+            title: "الوقت غير صالح ⏰",
+            text: "الوقت المختار قد تم تجاوزه، اختر وقتًا لاحقًا",
+          });
+          return;
+        }
       }
     }
 
@@ -493,7 +526,8 @@ const MaintenanceRequest = () => {
       }
     } catch (err) {
       console.error(err);
-      Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
+      // Swal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
+      themedSwal.fire("خطأ", "فشل الاتصال بالسيرفر", "error");
     } finally {
       setLoading(false);
     }
