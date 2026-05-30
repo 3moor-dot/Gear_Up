@@ -55,11 +55,13 @@ const BOOKING_TITLE_MAP: Record<string, string> = {
   "تم رفض الحجز": "تم رفض الحجز ❌",
   "تم إلغاء الحجز": "تم إلغاء الحجز 🚫",
   "تم تغيير موعد الحجز": "تم تغيير موعد الحجز 📅",
+  "تم تغيير معاد الحجز": "تم تغيير موعد الحجز 📅",
   "تم إكمال الحجز": "تم إكمال الحجز 🎉",
+  "تم إنهاء الحجز": "تم إكمال الحجز 🎉",
+  "اكمال الحجز": "تم إكمال الحجز 🎉",
   "تم تحديث حالة الحجز": "تم تحديث حالة الحجز 🔄",
 };
 
-const BOOKING_TITLES = Object.keys(BOOKING_TITLE_MAP);
 
 const getStorageKeyByToken = (token: string | null) => {
   if (!token) return "guest_notifications";
@@ -72,8 +74,58 @@ const getCurrentTime = () =>
     minute: "2-digit",
   });
 
+const normalizeNotificationText = (value?: string | null) =>
+  (value || "")
+    .toString()
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/ـ/g, "")
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .toLowerCase();
+
+const getNotificationSearchText = (item: Partial<NotificationItem> & Record<string, any>) =>
+  normalizeNotificationText(
+    [
+      item.title,
+      item.message,
+      item.description,
+      item.type,
+      item.notificationType,
+      item.eventName,
+      item.category,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+const looksLikeBookingNotification = (item: Partial<NotificationItem> & Record<string, any>) => {
+  const text = getNotificationSearchText(item);
+
+  const hasBookingWord =
+    text.includes("حجز") ||
+    text.includes("الحجز") ||
+    text.includes("booking") ||
+    text.includes("appointment");
+
+  const hasBookingAppointmentPhrase =
+    text.includes("معاد الحجز") ||
+    text.includes("ميعاد الحجز") ||
+    text.includes("موعد الحجز");
+
+  return Boolean(item.isBooking || item.bookingId || hasBookingWord || hasBookingAppointmentPhrase);
+};
+
 const normalizeBookingTitle = (title?: string) => {
-  const safeTitle = title || "";
+  const safeTitle = (title || "").trim();
+  if (safeTitle.includes("تغيير")) return "تم تغيير موعد الحجز 📅";
+  if (safeTitle.includes("إنهاء") || safeTitle.includes("اكمال") || safeTitle.includes("إكمال")) return "تم إكمال الحجز 🎉";
+  if (safeTitle.includes("قبول")) return "تم قبول الحجز ✅";
+  if (safeTitle.includes("إلغاء") || safeTitle.includes("الغاء")) return "تم إلغاء الحجز 🚫";
+  if (safeTitle.includes("رفض")) return "تم رفض الحجز ❌";
+  if (safeTitle.includes("طلب")) return "طلب حجز جديد 📋";
+  if (safeTitle.includes("تحديث")) return "تم تحديث حالة الحجز 🔄";
+  
   const directMatch = BOOKING_TITLE_MAP[safeTitle];
   if (directMatch) return directMatch;
   const partialMatch = Object.entries(BOOKING_TITLE_MAP).find(([key]) =>
@@ -83,25 +135,13 @@ const normalizeBookingTitle = (title?: string) => {
 };
 
 const isBookingNotification = (n: NotificationItem) => {
-  const title = n.title || "";
-  return Boolean(
-    n.isBooking ||
-      n.bookingId ||
-      BOOKING_TITLES.some((bookingTitle) => title.includes(bookingTitle))
-  );
+  return looksLikeBookingNotification(n as NotificationItem & Record<string, any>);
 };
 
 const isRequestNotification = (n: NotificationItem) => {
   return Boolean(n.isRequest && !isBookingNotification(n));
 };
 
-const isReminderNotification = (n: NotificationItem) => {
-  return Boolean(
-    !isBookingNotification(n) &&
-      !isRequestNotification(n) &&
-      n.reminderId
-  );
-};
 
 const migrateNotifications = (notifications: NotificationItem[]) => {
   return notifications.map((n) => {
@@ -109,13 +149,22 @@ const migrateNotifications = (notifications: NotificationItem[]) => {
     if (isBooking) {
       return {
         ...n,
-        title: normalizeBookingTitle(n.title),
+        title: normalizeBookingTitle(n.title || n.message),
         isBooking: true,
         isRequest: false,
+        isSelected: false,
         reminderId: undefined,
         carId: undefined,
         carName: undefined,
         plateNumber: undefined,
+        requestId: undefined,
+        hasTracking: false,
+        requestDetail: undefined,
+        scheduledDateTime: undefined,
+        status: undefined,
+        location: null,
+        problemPhotoUrl: null,
+        serviceCategory: null,
       };
     }
     return n;
@@ -386,17 +435,39 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
     };
 
     connection.on("ReceiveReminderNotification", (data: any) => {
+      const incomingIsBooking = looksLikeBookingNotification(data || {});
+
       setNotifications((oldNotifications) => {
         const filtered = oldNotifications.filter((n) => n.reminderId !== data?.reminderId);
-        const newNotification: NotificationItem = {
-          title: data?.title || "تنبيه صيانة",
-          message: data?.message || "لديك تنبيه جديد",
-          reminderId: data?.reminderId,
-          isBooking: false,
-          isRequest: false,
-          carId: data?.carId,
-          time: getCurrentTime(),
-        };
+
+        const newNotification: NotificationItem = incomingIsBooking
+          ? {
+              title: normalizeBookingTitle(data?.title || data?.message || "تم تحديث حالة الحجز"),
+              message: data?.message || "تم تحديث الحجز",
+              isBooking: true,
+              isRequest: false,
+              reminderId: undefined,
+              carId: undefined,
+              carName: undefined,
+              plateNumber: undefined,
+              bookingId: data?.bookingId || data?.booking?.id || data?.id,
+              customerName: data?.customerName || data?.customerFullName || data?.userName || "",
+              mechanicName: data?.mechanicName || "",
+              date: data?.date || data?.newDate || data?.bookingDate || "",
+              slotStart: data?.slotStart || data?.newSlotStart || data?.startTime || "",
+              slotEnd: data?.slotEnd || data?.newSlotEnd || data?.endTime || "",
+              time: getCurrentTime(),
+            }
+          : {
+              title: data?.title || "تنبيه صيانة",
+              message: data?.message || "لديك تنبيه جديد",
+              reminderId: data?.reminderId,
+              isBooking: false,
+              isRequest: false,
+              carId: data?.carId,
+              time: getCurrentTime(),
+            };
+
         return saveNotifications([newNotification, ...filtered]);
       });
       // triggerShake();
@@ -687,8 +758,8 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
               notifications.map((n, i) => {
                 const isBooking = isBookingNotification(n);
                 const isRequest = isRequestNotification(n);
-                const isReminder = isReminderNotification(n);
-                const displayTitle = isBooking ? normalizeBookingTitle(n.title) : n.title;
+                const showReminderControls = Boolean(n.reminderId && !isBooking && !isRequest);
+                const displayTitle = isBooking ? normalizeBookingTitle(n.title || n.message) : n.title;
 
                 return (
                   <div key={`${n.title}-${n.time}-${i}`} className={`relative p-3.5 rounded-xl border transition-all ${dark ? "bg-white/[0.03] border-white/[0.05]" : "bg-blue-50 border-blue-100"}`}>
@@ -704,13 +775,13 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                         </button>
                       </div>
 
-                      {(n.carName || n.carId) && !isBooking && (
+                      {(isRequest || showReminderControls) && (n.carName || n.carId) && (
                         <div className="mb-1">
                           <div className="text-[11px] font-bold flex items-center gap-1 dark:text-slate-200">
                             {n.plateNumber && <span className="text-[10px] opacity-70">{n.plateNumber}</span>}
                             <span>{n.carName || getCarName(n.carId)}</span>
                           </div>
-                          {isReminder && <div className="text-[10px] text-blue-500 font-bold mt-1">تنبيه صيانة</div>}
+                          {showReminderControls && <div className="text-[10px] text-blue-500 font-bold mt-1">تنبيه صيانة</div>}
                         </div>
                       )}
 
@@ -760,7 +831,7 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                         </div>
                       )}
 
-                      {!isRequest && !isBooking && !isReminder && n.message && <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5 mb-2">{n.message}</div>}
+                      {!isRequest && !isBooking && !showReminderControls && n.message && <div className="text-[11px] bg-blue-500/10 p-2 rounded-lg border-r-2 border-blue-400 leading-5 mb-2">{n.message}</div>}
 
                       {/* NEW: Rating Button for Customer when Status is Completed */}
                       {isRequest && 
@@ -781,14 +852,14 @@ const NotificationBell = ({ size = 25 }: NotificationBellProps) => {
                         </button>
                       )}
 
-                      {isReminder && (
+                      {showReminderControls && (
                         <div className="flex gap-2 mt-2">
                           <button onClick={() => { if (!n.reminderId) return; completeReminder(n.reminderId, i); }} className="flex-1 text-[11px] py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition font-bold">إتمام</button>
                           <button onClick={() => setActiveSnoozeIndex(activeSnoozeIndex === i ? null : i)} className="flex-1 text-[11px] py-1 rounded bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white transition font-bold">تأجيل</button>
                         </div>
                       )}
 
-                      {isReminder && activeSnoozeIndex === i && (
+                      {showReminderControls && activeSnoozeIndex === i && (
                         <div className={`fixed z-[999999] w-32 rounded-lg shadow-2xl p-1.5 border ${dark ? "bg-slate-800 border-white/20 text-white" : "bg-white border-gray-200 text-gray-800"}`} style={{ right: "auto", transform: "translateY(-100%)" }}>
                           <div className="text-[9px] font-bold mb-1 pb-1 border-b border-gray-500/10 opacity-60 text-center">مدة التأجيل</div>
                           <div className="flex flex-col">
