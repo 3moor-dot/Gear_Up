@@ -892,15 +892,31 @@ const ChatbotPage = () => {
       const selectedCar = currentCars.find((c) => c.id === currentCarId);
 
       const formData = new FormData();
-      formData.append("Message", msgText || "");
-      curImages.forEach((img) => {
-        formData.append("Images", img);
-      });
-      if (selectedCar) formData.append("CarId", selectedCar.id);
 
+      // إذا كان النص فارغاً وهناك صور، نرسل نصاً افتراضياً ليتخطى فحص السيرفر ويقوم الـ AI بتحليل الصورة
+      if (!msgText && curImages.length > 0) {
+        formData.append("Message", "برجاء فحص الصور المرفقة وتشخيص المشكلة.");
+      } else {
+        formData.append("Message", msgText || "");
+      }
+      formData.append("Message", msgText || "");
+
+      // 1️⃣ إرسال المعرف الخاص بالسيارة
+      if (selectedCar) {
+        formData.append("CarId", selectedCar.id);
+      }
+
+      // 2️⃣ إرسال الحقول الثلاثة إجبارياً لتجنب خطأ الـ Validation (400)
+      // إذا كانت الصورة موجودة نرسلها، وإذا لم تكن موجودة نرسل نص فارغ كما يطلب السيرفر
+      formData.append("file1", curImages[0] || "");
+      formData.append("file2", curImages[1] || "");
+      formData.append("file3", curImages[2] || "");
+
+      // 3️⃣ إرسال الطلب مع تحديد الـ Headers بدقة
       const response = await axios.post(API_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data", // إجبار المتصفح على قراءته كملفات متعددة
           Accept: "*/*",
         },
       });
@@ -912,17 +928,14 @@ const ChatbotPage = () => {
       let replyData: any = null;
       let success = true;
 
-      // الحالة 1: الرد مغلف (فيه success و reply)
       if (rawData.hasOwnProperty('success') && rawData.hasOwnProperty('reply')) {
         success = rawData.success;
         replyData = rawData.reply;
       }
-      // الحالة 2: الرد مباشر (فيه ai_answer أو offers_reminder)
       else if (rawData.hasOwnProperty('ai_answer') || rawData.hasOwnProperty('offers_reminder')) {
         replyData = rawData;
       }
 
-      // لو فيه خطأ
       if (!success || rawData.error) {
         setMessages((p) => [
           ...p,
@@ -966,7 +979,7 @@ const ChatbotPage = () => {
           technicians: technicians,
 
           requires_mechanic: parsedReply?.requires_mechanic === true,
-          is_emergency: parsedReply?.is_emergency === true, // 👈 جديد
+          is_emergency: parsedReply?.is_emergency === true,
           required_service: (parsedReply as any)?.required_service,
           recommended_mechanics: (parsedReply as any)?.recommended_mechanics,
           car_id: (parsedReply as any)?.car_id,
@@ -975,12 +988,15 @@ const ChatbotPage = () => {
         },
       ]);
     } catch (err: any) {
-      console.error("❌ API Error Details:", err.response || err);
+      // 4️⃣ تعديل الطباعة هنا لقراءة كائن الخطأ الفعلي القادم من السيرفر بدلاً من كلمة Object مبهمة
+      console.error("❌ API Error Details:", err.response?.data ? JSON.stringify(err.response.data) : err.message);
 
       const s = err.response?.status;
       const msg =
         s === 400
-          ? err.response?.data?.error || "البيانات المرسلة غير صحيحة."
+          ? err.response?.data?.errors
+            ? "تفاصيل الخطأ: " + JSON.stringify(err.response.data.errors)
+            : err.response?.data?.error || "البيانات المرسلة غير صحيحة (400)."
           : s === 401
             ? "يجب تسجيل الدخول أولًا أو التوكين انتهت صلاحيته."
             : s === 403
