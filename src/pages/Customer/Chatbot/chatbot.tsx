@@ -50,7 +50,7 @@ interface Message {
   role: "bot" | "user";
   text: string;
   time: string;
-  imagePreview?: string;
+  imagePreviews?: string[];
   offersReminder?: boolean;
   reminder?: ReminderData | null;
   followUpQuestions?: string[];
@@ -444,12 +444,17 @@ const MessageBubble = ({
               : "bg-white dark:bg-[#111827] text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 rounded-tl-md"
               }`}
           >
-            {msg.imagePreview && (
-              <img
-                src={msg.imagePreview}
-                alt="uploaded"
-                className="max-w-full w-40 sm:w-52 md:w-56 rounded-xl mb-3 border border-white/20 object-cover"
-              />
+            {msg.imagePreviews?.length && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {msg.imagePreviews.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`uploaded-${index}`}
+                    className="w-24 h-24 md:w-32 md:h-32 rounded-xl border border-white/20 object-cover"
+                  />
+                ))}
+              </div>
             )}
 
             <p className="break-words whitespace-pre-wrap [word-break:break-word]">
@@ -663,8 +668,8 @@ const ChatbotPage = () => {
   });
 
   const [inputText, setInputText] = useState("");
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(() => {
     try {
@@ -732,33 +737,69 @@ const ChatbotPage = () => {
 
   useEffect(() => {
     return () => {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      // imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [imagePreview]);
+  }, [imagePreviews]);
 
   const startNewChat = () => {
     sessionStorage.removeItem(CHAT_STORAGE_KEY);
+
+    // imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+
+    setSelectedImages([]);
+    setImagePreviews([]);
+
     setMessages([{ ...initialBotMessage, time: getTime() }]);
     setInputText("");
-    removeImage();
     setIsTyping(false);
     setShowSuggestions(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
 
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setSelectedImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    if (!files.length) return;
+
+    // حد أقصى 3 صور
+    if (selectedImages.length + files.length > 3) {
+      toast.error("يمكنك رفع 3 صور فقط كحد أقصى");
+      return;
+    }
+
+    // السماح بـ JPG و PNG فقط
+    const validFiles = files.filter((file) => {
+      const validTypes = ["image/jpeg", "image/png"];
+      const extension = file.name.split(".").pop()?.toLowerCase();
+
+      return (
+        validTypes.includes(file.type) &&
+        ["jpg", "jpeg", "png"].includes(extension || "")
+      );
+    });
+
+    if (validFiles.length !== files.length) {
+      toast.error("مسموح فقط بصور JPG و PNG");
+      return;
+    }
+
+    const newPreviews = validFiles.map((file) =>
+      URL.createObjectURL(file)
+    );
+
+    setSelectedImages((prev) => [...prev, ...validFiles]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
   };
 
-  const removeImage = () => {
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setSelectedImage(null);
-    setImagePreview("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const removeImage = (index: number) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+
+    setSelectedImages((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
+
+    setImagePreviews((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
   };
 
   const handleCreateReminder = (reminder: ReminderData) => {
@@ -803,7 +844,7 @@ const ChatbotPage = () => {
 
   const sendMessage = async (text?: string) => {
     const msgText = (text ?? inputText).trim();
-    if (!msgText && !selectedImage) return;
+    if (!msgText && selectedImages.length === 0) return;
 
     const token = sessionStorage.getItem("userToken");
     if (!token) {
@@ -821,8 +862,8 @@ const ChatbotPage = () => {
 
     setShowSuggestions(false);
 
-    const curImg = selectedImage;
-    const curPrev = imagePreview;
+    const curImages = [...selectedImages];
+    const curPreviews = [...imagePreviews];
 
     setMessages((p) => [
       ...p,
@@ -831,15 +872,18 @@ const ChatbotPage = () => {
         role: "user",
         text: msgText || "تم إرسال صورة",
         time: getTime(),
-        imagePreview: curPrev || undefined,
-
+        imagePreviews: curPreviews.length
+          ? curPreviews
+          : undefined,
       },
     ]);
 
     setInputText("");
     setIsTyping(true);
-    setSelectedImage(null);
-    setImagePreview("");
+    // imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+
+    setSelectedImages([]);
+    setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
 
     try {
@@ -849,7 +893,9 @@ const ChatbotPage = () => {
 
       const formData = new FormData();
       formData.append("Message", msgText || "");
-      if (curImg) formData.append("Image", curImg);
+      curImages.forEach((img) => {
+        formData.append("Images", img);
+      });
       if (selectedCar) formData.append("CarId", selectedCar.id);
 
       const response = await axios.post(API_URL, formData, {
@@ -1074,22 +1120,25 @@ const ChatbotPage = () => {
               )}
 
               <div className="sticky bottom-0 rounded-t-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111827] shadow-lg p-2 md:p-3">
-                {imagePreview && (
-                  <div className="mb-3 px-2">
-                    <div className="relative inline-block">
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        className="w-24 h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-700"
-                      />
-                      <button
-                        onClick={removeImage}
-                        className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full p-1 shadow"
-                        type="button"
-                      >
-                        <MdClose size={16} />
-                      </button>
-                    </div>
+                {imagePreviews.length > 0 && (
+                  <div className="mb-3 px-2 flex gap-2 flex-wrap">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={preview}
+                          alt={`preview-${index}`}
+                          className="w-24 h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-700"
+                        />
+
+                        <button
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full p-1 shadow"
+                          type="button"
+                        >
+                          <MdClose size={16} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -1097,7 +1146,8 @@ const ChatbotPage = () => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                    multiple
                     onChange={handleImageChange}
                     className="hidden"
                   />
@@ -1130,7 +1180,7 @@ const ChatbotPage = () => {
 
                   <button
                     onClick={() => sendMessage()}
-                    disabled={!inputText.trim() && !selectedImage}
+                    disabled={!inputText.trim() && selectedImages.length === 0}
                     className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#137FEC] to-[#0EA5E9] text-white flex items-center justify-center shadow-md shadow-[#137FEC]/25 hover:scale-[1.03] active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
                     type="button"
                   >
