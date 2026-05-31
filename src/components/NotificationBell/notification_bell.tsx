@@ -63,6 +63,8 @@ const BOOKING_TITLE_MAP: Record<string, string> = {
   "تم انتهاء الحجز": "تم إكمال الحجز 🎉",
   "اكمال الحجز": "تم إكمال الحجز 🎉",
   "إكمال الحجز": "تم إكمال الحجز 🎉",
+  "تم إنشاء حجز جديد": "طلب حجز جديد 📋",
+  "حجز جديد": "طلب حجز جديد 📋",
   "تم تحديث حالة الحجز": "تم تحديث حالة الحجز 🔄",
 };
 
@@ -121,7 +123,7 @@ const migrateNotifications = (notifications: NotificationItem[]) => {
     if (isBooking) {
       return {
         ...n,
-        title: normalizeBookingTitle(`${n.title || ""} ${n.message || ""}`.trim()),
+        title: normalizeBookingTitle(n.title),
         isBooking: true,
         isRequest: false,
         reminderId: undefined,
