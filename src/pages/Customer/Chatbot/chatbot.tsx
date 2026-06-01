@@ -43,7 +43,10 @@ interface Technician {
   lat?: number;
   lng?: number;
 }
-
+interface ExternalLink {
+  link_title: string;
+  url: string;
+}
 interface Message {
   issue_summary?: string;
   id: number;
@@ -61,6 +64,7 @@ interface Message {
   required_service?: string;
   recommended_mechanics?: any[];
   car_id?: string;
+  external_links?: ExternalLink[];
 }
 
 interface ParsedReply {
@@ -82,6 +86,7 @@ interface ParsedReply {
   required_service?: string;
   recommended_mechanics?: any[];
   car_id?: string;
+  external_links?: ExternalLink[];
 }
 
 interface CarItem {
@@ -588,7 +593,26 @@ const MessageBubble = ({
                 </div>
               </div>
             )}
-
+            {/* 👇 كود عرض الروابط الخارجية المضافة حديثاً */}
+            {!isUser && msg.external_links && msg.external_links.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50 space-y-2">
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">🔗 روابط شراء مقترحة لك:</p>
+                <div className="flex flex-wrap gap-2">
+                  {msg.external_links.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-gray-50 dark:bg-gray-800 text-[#137FEC] hover:bg-[#137FEC]/10 border border-gray-200 dark:border-gray-700 transition-all shadow-sm"
+                    >
+                      <span>🛒</span>
+                      <span>{link.link_title}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
             {!isUser && msg.requires_feedback && (
               <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-3">
                 <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 text-right">
@@ -899,7 +923,6 @@ const ChatbotPage = () => {
       } else {
         formData.append("Message", msgText || "");
       }
-      formData.append("Message", msgText || "");
 
       // 1️⃣ إرسال المعرف الخاص بالسيارة
       if (selectedCar) {
@@ -977,6 +1000,9 @@ const ChatbotPage = () => {
           reminder: formatted.reminder,
           followUpQuestions: formatted.followUpQuestions,
           technicians: technicians,
+
+          // 👇 قم بإضافة هذا السطر لاستخلاص الروابط من الرد
+          external_links: parsedReply?.external_links || (replyData as any)?.external_links,
 
           requires_mechanic: parsedReply?.requires_mechanic === true,
           is_emergency: parsedReply?.is_emergency === true,
